@@ -1,0 +1,50 @@
+name: Test Codebase
+
+on:
+  push:
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: 3.11
+
+jobs:
+
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: pipx install poetry poetry-version-plugin
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'poetry'
+
+      - name: "Install Packages"
+        run: poetry install
+
+      - name: "Run checks"
+        run: poetry run pre-commit run -a
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: pipx install poetry poetry-version-plugin
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'poetry'
+
+      - name: "Install Packages"
+        run: poetry install
+
+      - name: "Test Codebase"
+        run: poetry run pytest --cov --cov-config=pyproject.toml --cov-report=xml
