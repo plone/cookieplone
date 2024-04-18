@@ -73,6 +73,7 @@ def test_validate_language_code(value: str, expected: str):
         ("project-title", "'project-title' is not a valid Python identifier."),
         ("projecttitle", ""),
         ("projectTitle", ""),
+        ("project.title", ""),
     ),
 )
 def test_validate_python_package_name(value: str, expected: str):

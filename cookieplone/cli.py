@@ -1,6 +1,5 @@
 """Main `cookieplone` CLI."""
 
-import json
 import os
 import sys
 from pathlib import Path
@@ -8,12 +7,12 @@ from typing import Annotated
 
 import typer
 from cookiecutter import __version__ as __cookiecutter_version__
-from cookiecutter import exceptions as exc
 from cookiecutter.log import configure_logger
-from cookiecutter.main import cookiecutter
 from rich import print
 
 from cookieplone import __version__, data
+from cookieplone.exceptions import GeneratorException
+from cookieplone.generator import generate
 
 
 def validate_extra_context(value: list[str] | None = None):
@@ -43,7 +42,6 @@ def version_info() -> str:
 
 
 def cli(
-    repository: Annotated[str, typer.Argument()] = "",
     template: Annotated[str, typer.Argument(help="Template to be used.")] = "",
     extra_context: Annotated[
         data.OptionalListStr,
@@ -113,8 +111,11 @@ def cli(
         info = version_info
         print(info)
         raise typer.Exit()
+    repository = os.environ.get("COOKIEPLONE_REPOSITORY")
     if not repository:
-        repository = "gh:plone/cookiecutter-plone"
+        # repository = "gh:plone/cookiecutter-plone"
+        repository = "/Users/ericof/Projects/Plone/Core/cookiecutter-plone"
+
     if replay_file:
         replay = replay_file
     passwd = os.environ.get(
@@ -123,42 +124,29 @@ def cli(
     if not output_dir:
         output_dir = Path().cwd()
     configure_logger(stream_level="DEBUG" if verbose else "INFO", debug_file=debug_file)
+    # Run generator
     try:
-        cookiecutter(
+        generate(
             repository,
             tag,
             no_input,
-            extra_context=extra_context,
-            replay=replay,
-            overwrite_if_exists=overwrite_if_exists,
-            output_dir=output_dir,
-            config_file=config_file,
-            default_config=default_config,
-            password=passwd,
-            directory=template,
-            skip_if_file_exists=skip_if_file_exists,
-            accept_hooks=True,
-            keep_project_on_failure=keep_project_on_failure,
+            extra_context,
+            replay,
+            overwrite_if_exists,
+            output_dir,
+            config_file,
+            default_config,
+            passwd,
+            template,
+            skip_if_file_exists,
+            keep_project_on_failure,
         )
-    except (
-        exc.ContextDecodingException,
-        exc.OutputDirExistsException,
-        exc.InvalidModeException,
-        exc.FailedHookException,
-        exc.UnknownExtension,
-        exc.InvalidZipRepository,
-        exc.RepositoryNotFound,
-        exc.RepositoryCloneFailed,
-    ) as e:
-        print(e)
-        raise typer.Exit(code=1)  # noQA:B904
-    except exc.UndefinedVariableInTemplate as undefined_err:
-        print(f"{undefined_err.message}")
-        print(f"Error message: {undefined_err.error.message}")
-
-        context_str = json.dumps(undefined_err.context, indent=4, sort_keys=True)
-        print(f"Context: {context_str}")
-        raise typer.Exit(code=1)  # noQA:B904
+    except GeneratorException:
+        # TODO: Handle error
+        raise typer.Exit(1)  # noQA:B904
+    except Exception:
+        # TODO: Handle error
+        raise typer.Exit(1)  # noQA:B904
 
 
 def main():

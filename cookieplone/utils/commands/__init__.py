@@ -2,24 +2,7 @@ import re
 import subprocess
 import sys
 
-SUPPORTED_PYTHON_VERSIONS = [
-    "3.8",
-    "3.9",
-    "3.10",
-    "3.11",
-    "3.12",
-]
-
-
-SUPPORTED_NODE_VERSIONS = [
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-]
-
-MIN_DOCKER_VERSION = "20.10"
+from cookieplone import settings
 
 
 def _get_command_version(cmd: str) -> str:
@@ -51,9 +34,11 @@ def _parse_docker_version(value: str) -> str:
     return ""
 
 
-def check_python_version(supported_versions: list[str]) -> str:
+def check_python_version(supported_versions: list[str] | None = None) -> str:
     """Check if Python version is supported."""
-    supported = supported_versions if supported_versions else SUPPORTED_PYTHON_VERSIONS
+    supported = (
+        supported_versions if supported_versions else settings.SUPPORTED_PYTHON_VERSIONS
+    )
     version = f"{sys.version_info.major}.{sys.version_info.minor}"
     return (
         ""
@@ -62,9 +47,11 @@ def check_python_version(supported_versions: list[str]) -> str:
     )
 
 
-def check_node_version(supported_versions: list[str]) -> str:
+def check_node_version(supported_versions: list[str] | None = None) -> str:
     """Check if node version is supported."""
-    supported = supported_versions if supported_versions else SUPPORTED_NODE_VERSIONS
+    supported = (
+        supported_versions if supported_versions else settings.SUPPORTED_NODE_VERSIONS
+    )
     raw_version = _get_command_version("node")
     if not raw_version:
         return "NodeJS not found."
@@ -79,7 +66,7 @@ def check_node_version(supported_versions: list[str]) -> str:
 
 def check_docker_version(min_version: str) -> str:
     """Check if docker version is supported."""
-    min_version = min_version if min_version else MIN_DOCKER_VERSION
+    min_version = min_version if min_version else settings.MIN_DOCKER_VERSION
     raw_version = _get_command_version("docker")
     if not raw_version:
         return "Docker not found."
@@ -87,7 +74,7 @@ def check_docker_version(min_version: str) -> str:
         version = _parse_docker_version(raw_version)
         return (
             ""
-            if version >= MIN_DOCKER_VERSION
+            if version >= settings.MIN_DOCKER_VERSION
             else f"Docker version is not supported: Got {raw_version}"
         )
 

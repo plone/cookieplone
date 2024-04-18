@@ -1,9 +1,10 @@
 import re
+from typing import Any
 from urllib.parse import urlparse
 
 from packaging.version import InvalidVersion, Version
 
-from cookieplone import data
+from cookieplone import data, settings
 
 
 def _version_from_str(value: str) -> Version | None:
@@ -15,9 +16,18 @@ def _version_from_str(value: str) -> Version | None:
     return version
 
 
-def validate_not_empty(value: str, key: str = "") -> str:
+def validate_not_empty(value: Any, key: str = "") -> str:
     """Value should not be empty."""
-    return "" if value.strip() else f"{key} should be provided"
+    status = True
+    if isinstance(value, str):
+        status = bool(value.strip())
+    elif isinstance(value, int | float):
+        # We accept 0 as valid
+        status = True
+    else:
+        status = bool(value)
+
+    return "" if status else f"{key} should be provided"
 
 
 def validate_component_version(component: str, version: str, min_version: str) -> str:
@@ -38,9 +48,13 @@ def validate_language_code(value: str) -> str:
 
 def validate_python_package_name(value: str) -> str:
     """Validate python_package_name is an identifier."""
-    return (
-        "" if value.isidentifier() else f"'{value}' is not a valid Python identifier."
-    )
+    status = False
+    if "." in value:
+        namespace, package = value.split(".")
+        status = namespace.isidentifier() and package.isidentifier()
+    else:
+        status = value.isidentifier()
+    return "" if status else f"'{value}' is not a valid Python identifier."
 
 
 def validate_hostname(value: str) -> str:
@@ -65,6 +79,24 @@ def validate_npm_package_name(value: str) -> str:
     return "" if re.match(pattern, value) else f"'{value}' is not a valid package name."
 
 
+def validate_plone_version(value: str) -> str:
+    """Validate Plone Version."""
+    status = False
+    version = _version_from_str(value)
+    if version:
+        status = version >= _version_from_str(settings.PLONE_MIN_VERSION)
+    return "" if status else f"{value} is not a valid Plone version."
+
+
+def validate_volto_version(value: str) -> str:
+    """Validate Volto Version."""
+    status = False
+    version = _version_from_str(value)
+    if version:
+        status = version >= _version_from_str(settings.VOLTO_MIN_VERSION)
+    return "" if status else f"{value} is not a valid Volto version."
+
+
 def run_context_validations(
     context: dict, validations: list[data.ItemValidator], allow_empty: bool = False
 ) -> data.ContextValidatorResult:
@@ -74,6 +106,9 @@ def run_context_validations(
     if not allow_empty:
         func = validate_not_empty
         for key in context:
+            if key.startswith("_"):
+                # Ignore computed values
+                continue
             validations.append(data.ItemValidator(key, func, "error"))
     for validation in validations:
         key = validation.key

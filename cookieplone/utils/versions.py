@@ -1,6 +1,8 @@
 import requests
 from packaging.version import Version
 
+from cookieplone import settings
+
 
 def get_npm_package_versions(package: str) -> list[str]:
     """Get versions for a NPM package."""
@@ -82,3 +84,9 @@ def latest_plone(
         max_version=max_version,
         allow_prerelease=allow_prerelease,
     )
+
+
+def node_version_for_volto(volto_version: str) -> int:
+    """Return the Node Version to be used with Volto."""
+    major = Version(volto_version).major
+    return settings.VOLTO_NODE.get(major, settings.DEFAULT_NODE)
