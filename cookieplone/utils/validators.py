@@ -3,6 +3,8 @@ from urllib.parse import urlparse
 
 from packaging.version import InvalidVersion, Version
 
+from cookieplone import data
+
 
 def _version_from_str(value: str) -> Version | None:
     """Parse a value and return a Version"""
@@ -13,7 +15,7 @@ def _version_from_str(value: str) -> Version | None:
     return version
 
 
-def validate_not_empty(key: str, value: str) -> str:
+def validate_not_empty(value: str, key: str = "") -> str:
     """Value should not be empty."""
     return "" if value.strip() else f"{key} should be provided"
 
@@ -49,3 +51,49 @@ def validate_hostname(value: str) -> str:
         result = urlparse(value_with_protocol)
         valid = str(result.hostname) == value
     return "" if valid else f"'{value}' is not a valid hostname."
+
+
+def validate_volto_addon_name(value: str) -> str:
+    """Validate the volto addon name is valid."""
+    pattern = "^[a-z0-9-~][a-z0-9-._~]*$"
+    return "" if re.match(pattern, value) else f"'{value}' is not a valid name."
+
+
+def validate_npm_package_name(value: str) -> str:
+    """Validate the npm package name is valid."""
+    pattern = r"^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$"
+    return "" if re.match(pattern, value) else f"'{value}' is not a valid package name."
+
+
+def run_context_validations(
+    context: dict, validations: list[data.ItemValidator], allow_empty: bool = False
+) -> data.ContextValidatorResult:
+    """Run validations for context."""
+    global_status = True
+    results = []
+    if not allow_empty:
+        func = validate_not_empty
+        for key in context:
+            validations.append(data.ItemValidator(key, func, "error"))
+    for validation in validations:
+        key = validation.key
+        func = validation.func
+        value = context.get(key, "")
+        level = validation.level
+        message = func(value, key) if func == validate_not_empty else func(value)
+        if not message:
+            status = True
+            message = "✓"
+        elif level == "warning":
+            status = True
+        elif level == "error":
+            status = False
+        global_status = global_status and status
+        results.append(data.ItemValidatorResult(key, status, message))
+    global_message = (
+        f"Ran {len(results)} validations and "
+        f"they {'passed' if global_status else 'failed'}."
+    )
+    return data.ContextValidatorResult(
+        status=global_status, message=global_message, validations=results
+    )

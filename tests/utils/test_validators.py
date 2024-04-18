@@ -7,12 +7,13 @@ from cookieplone.utils import validators
     "key,value,expected",
     [
         ["foo", "", "foo should be provided"],
+        ["", "", " should be provided"],
         ["foo", "not empty", ""],
     ],
 )
 def test_validate_not_empty(key: str, value: str, expected: str):
     func = validators.validate_not_empty
-    assert func(key, value) == expected
+    assert func(value, key) == expected
 
 
 @pytest.mark.parametrize(
@@ -93,3 +94,68 @@ def test_validate_hostname(value: str, expected: str):
     """Test validate_hostname function."""
     result = validators.validate_hostname(value)
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    (
+        ("volto-addon", ""),
+        ("@plone/volto", "'@plone/volto' is not a valid name."),
+        ("123 ", "'123 ' is not a valid name."),
+        ("", "'' is not a valid name."),
+    ),
+)
+def test_validate_volto_addon_name(value: str, expected: str):
+    """Test validate_volto_addon_name function."""
+    result = validators.validate_volto_addon_name(value)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    (
+        ("volto-addon", ""),
+        ("@plone/volto", ""),
+        ("123 ", "'123 ' is not a valid package name."),
+        ("", "'' is not a valid package name."),
+    ),
+)
+def test_validate_npm_package_name(value: str, expected: str):
+    """Test validate_volto_addon_name function."""
+    result = validators.validate_npm_package_name(value)
+    assert result == expected
+
+
+@pytest.fixture
+def context():
+    return {
+        "addon_name": "volto-code-block",
+        "npm_package_name": "@plonegovbr/volto-code-block",
+        "another": "",
+    }
+
+
+@pytest.fixture
+def my_validators():
+    from cookieplone import data
+    from cookieplone.utils import validators
+
+    return [
+        data.ItemValidator("addon_name", validators.validate_volto_addon_name),
+        data.ItemValidator("npm_package_name", validators.validate_npm_package_name),
+    ]
+
+
+@pytest.mark.parametrize(
+    "allow_empty,expected",
+    (
+        (True, True),
+        (False, False),
+    ),
+)
+def test_run_context_validations(
+    context, my_validators, allow_empty: bool, expected: bool
+):
+    """Test run_context_validations function."""
+    result = validators.run_context_validations(context, my_validators, allow_empty)
+    assert result.status is expected

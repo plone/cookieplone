@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "cookieplone"
 version = "0"
-description = "Generate Plone codebases."
+description = "Create Plone projects, addons, documentation with ease!"
 authors = ["Plone Community <dev@plone.org>"]
 repository = "https://github.com/plone/cookieplone"
 documentation = "https://plone.github.io/cookieplone/"
 readme = "README.md"
 classifiers = [
-  "Development Status :: 5 - Production/Stable",
+  "Development Status :: 3 - Alpha",
   "Environment :: Console",
   "Intended Audience :: Developers",
   "Natural Language :: English",
@@ -20,6 +20,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python",
   "Topic :: Software Development",
+  "Topic :: Software Development :: Code Generators"
 ]
 packages = [
   {include = "cookieplone"}

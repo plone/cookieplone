@@ -9,6 +9,7 @@ from typing import Annotated
 import typer
 from cookiecutter import __version__ as __cookiecutter_version__
 from cookiecutter import exceptions as exc
+from cookiecutter.log import configure_logger
 from cookiecutter.main import cookiecutter
 from rich import print
 
@@ -121,6 +122,7 @@ def cli(
     )
     if not output_dir:
         output_dir = Path().cwd()
+    configure_logger(stream_level="DEBUG" if verbose else "INFO", debug_file=debug_file)
     try:
         cookiecutter(
             repository,

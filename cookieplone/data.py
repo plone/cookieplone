@@ -33,3 +33,30 @@ class SanityCheckResults:
     status: bool
     checks: list[SanityCheckResult]
     message: str = ""
+
+
+@dataclass
+class ItemValidator:
+    """Validate an answer provided by the user."""
+
+    key: str
+    func: Callable
+    level: Literal["info", "warning", "error"] = "error"
+
+
+@dataclass
+class ItemValidatorResult:
+    """Result of an item validation."""
+
+    key: str
+    status: bool
+    message: str = ""
+
+
+@dataclass
+class ContextValidatorResult:
+    """Results of all validations checks."""
+
+    status: bool
+    validations: list[ItemValidatorResult]
+    message: str = ""
