@@ -113,8 +113,7 @@ def cli(
         raise typer.Exit()
     repository = os.environ.get("COOKIEPLONE_REPOSITORY")
     if not repository:
-        # repository = "gh:plone/cookiecutter-plone"
-        repository = "/Users/ericof/Projects/Plone/Core/cookiecutter-plone"
+        repository = "gh:plone/cookiecutter-plone"
 
     if replay_file:
         replay = replay_file
