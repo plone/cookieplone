@@ -2,7 +2,6 @@ import json
 from collections import OrderedDict
 from pathlib import Path
 
-import typer
 from cookiecutter import exceptions as exc
 from cookiecutter.main import cookiecutter
 
@@ -16,6 +15,23 @@ def _remove_internal_keys(context: OrderedDict) -> dict:
         key: value for key, value in context.items() if not key.startswith("_")
     }
     return new_context
+
+
+def _get_repository_root(context: OrderedDict, template: str) -> Path:
+    """Return the templates root."""
+    repository = context.get("_checkout") or context.get("_template")
+    if not repository:
+        raise exc.RepositoryNotFound()
+    repository = Path(repository).resolve()
+    if not repository:
+        raise exc.RepositoryNotFound()
+    elif not (repository / template).exists():
+        # We are probably inside a template folder,
+        # try to check the parent
+        repository = repository.parent
+        if not (repository / template).exists():
+            raise exc.RepositoryNotFound()
+    return repository
 
 
 def generate(
@@ -76,11 +92,7 @@ def generate_subtemplate(
     template: str, output_dir: Path, folder_name: str, context: OrderedDict
 ) -> Path:
     # Extract path to repository
-    repository = context.get("_checkout") or context.get("_template")
-
-    if not repository or not (Path(repository) / template).exists():
-        # TODO: Error message
-        raise typer.Exit(code=1)
+    repository = _get_repository_root(context, template)
     # Cleanup context
     extra_context = _remove_internal_keys(context)
     ## Add folder name again
