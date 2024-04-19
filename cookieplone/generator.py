@@ -8,8 +8,6 @@ from cookiecutter.main import cookiecutter
 from cookieplone.exceptions import GeneratorException
 from cookieplone.utils import console, files
 
-REMOVE_FILES = [".github"]
-
 
 def _remove_internal_keys(context: OrderedDict) -> dict:
     """Remove internal and computed keys."""
@@ -107,7 +105,7 @@ def generate_subtemplate(
     console.enable_quiet_mode()
     # Files to be removed
     if remove_files is None:
-        remove_files = REMOVE_FILES
+        remove_files = []
     # Call generate
     try:
         result = generate(
