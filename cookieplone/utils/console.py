@@ -4,6 +4,7 @@ from textwrap import dedent
 from rich import print as base_print
 from rich.markup import escape
 from rich.panel import Panel
+from rich.table import Table
 
 from cookieplone.settings import QUIET_MODE_VAR
 
@@ -100,6 +101,27 @@ def panel(title: str, msg: str = "", subtitle: str = "", url: str = ""):
             subtitle=subtitle,
         )
     )
+
+
+def table_available_templates(title: str, rows: list[list[str]]):
+    """Display a table of options."""
+    table = Table(title=title, expand=True)
+
+    table.add_column("#", justify="center", style="cyan", no_wrap=True)
+    table.add_column("Title", style="blue")
+    table.add_column("Description", justify="left", style="blue")
+
+    for idx, _, title, description in rows:
+        table.add_row(idx, title, description)
+
+    return table
+
+
+def welcome_screen(templates: list[list[str]] | None = None):
+    print_plone_banner()
+    if templates:
+        table = table_available_templates("Templates", templates)
+        _print(table)
 
 
 def enable_quiet_mode():

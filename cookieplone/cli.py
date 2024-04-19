@@ -9,10 +9,13 @@ import typer
 from cookiecutter import __version__ as __cookiecutter_version__
 from cookiecutter.log import configure_logger
 from rich import print
+from rich.prompt import Prompt
 
 from cookieplone import __version__, data
 from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate
+from cookieplone.repository import get_base_repository, get_template_options
+from cookieplone.utils import console
 
 
 def validate_extra_context(value: list[str] | None = None):
@@ -28,6 +31,15 @@ def validate_extra_context(value: list[str] | None = None):
     # Convert list -- e.g.: ['program_name=foobar', 'startsecs=66']
     # to dict -- e.g.: {'program_name': 'foobar', 'startsecs': '66'}
     return dict([s.split("=", 1) for s in value])
+
+
+def prompt_for_template(base_path: Path) -> str:
+    """Parse cookiecutter.json in base_path and prompt user to choose."""
+    templates = get_template_options(base_path)
+    choices = {i[0]: i[1] for i in templates}
+    console.welcome_screen(templates)
+    answer = Prompt.ask("Select a template", choices=list(choices.keys()), default=1)
+    return choices[answer]
 
 
 def version_info() -> str:
@@ -114,6 +126,13 @@ def cli(
     repository = os.environ.get("COOKIEPLONE_REPOSITORY")
     if not repository:
         repository = "gh:plone/cookiecutter-plone"
+
+    if not template:
+        # Display template options
+        repo_path = get_base_repository(repository)
+        template = prompt_for_template(Path(repo_path))
+    else:
+        console.welcome_screen()
 
     if replay_file:
         replay = replay_file
