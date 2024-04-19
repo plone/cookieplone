@@ -241,7 +241,7 @@ setuptools = "*"
 name = "packaging"
 version = "24.0"
 description = "Core utilities for Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -553,7 +553,7 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "4e71c296814ccdb4104ba4697c0689876e37e58a846bd10db7652a63d7ee1573"
+content-hash = "1818e647579444fec85d7ab028105f2430c53a77aaec9632a7c0c635d6476f9c"
 
 [metadata.files]
 arrow = [

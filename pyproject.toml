@@ -31,6 +31,7 @@ python = "^3.10"
 cookiecutter = "^2.6.0"
 semver = "^3.0.2"
 typer = {extras = ["all"], version = "^0.12.3"}
+packaging = "^24.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.1.1"
