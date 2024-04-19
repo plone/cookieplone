@@ -8,6 +8,8 @@ from cookiecutter.main import cookiecutter
 from cookieplone.exceptions import GeneratorException
 from cookieplone.utils import console, files
 
+REMOVE_FILES = [".github"]
+
 
 def _remove_internal_keys(context: OrderedDict) -> dict:
     """Remove internal and computed keys."""
@@ -89,7 +91,11 @@ def generate(
 
 
 def generate_subtemplate(
-    template: str, output_dir: Path, folder_name: str, context: OrderedDict
+    template: str,
+    output_dir: Path,
+    folder_name: str,
+    context: OrderedDict,
+    remove_files: list[str] | None = None,
 ) -> Path:
     # Extract path to repository
     repository = _get_repository_root(context, template)
@@ -97,10 +103,11 @@ def generate_subtemplate(
     extra_context = _remove_internal_keys(context)
     ## Add folder name again
     extra_context["__folder_name"] = folder_name
-    ## Disable GHA for subcomponent
-    extra_context["__gha_enable"] = False
     # Enable quiet mode
     console.enable_quiet_mode()
+    # Files to be removed
+    if remove_files is None:
+        remove_files = REMOVE_FILES
     # Call generate
     try:
         result = generate(
@@ -124,7 +131,7 @@ def generate_subtemplate(
     else:
         console.disable_quiet_mode()
         path = Path(result)
-        # Remove GHA folder
-        files.remove_gha(path)
+        if remove_files:
+            files.remove_files(path, remove_files)
         # Return path
         return path
