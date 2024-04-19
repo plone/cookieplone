@@ -51,7 +51,7 @@ def generate(
 ) -> Path:
     try:
         result = cookiecutter(
-            repository,
+            f"{repository}",  # cookiecutter expects this to be a string
             tag,
             no_input,
             extra_context=extra_context,
