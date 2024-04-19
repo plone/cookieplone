@@ -38,7 +38,7 @@ def prompt_for_template(base_path: Path) -> str:
     templates = get_template_options(base_path)
     choices = {i[0]: i[1] for i in templates}
     console.welcome_screen(templates)
-    answer = Prompt.ask("Select a template", choices=list(choices.keys()), default=1)
+    answer = Prompt.ask("Select a template", choices=list(choices.keys()), default="1")
     return choices[answer]
 
 
