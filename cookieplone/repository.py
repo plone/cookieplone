@@ -13,7 +13,7 @@ def get_base_repository(
     password: str = "",
     config_file: data.OptionalPath = None,
     default_config: bool = False,
-):
+) -> Path:
     config_dict = get_user_config(
         config_file=config_file,
         default_config=default_config,
@@ -27,6 +27,7 @@ def get_base_repository(
         password=password,
         directory="",
     )
+    base_repo_dir = Path(base_repo_dir).resolve()
     return base_repo_dir
 
 

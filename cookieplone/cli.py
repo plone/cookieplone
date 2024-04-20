@@ -116,7 +116,7 @@ def cli(
     repo_path = get_base_repository(repository)
     if not template:
         # Display template options
-        template = prompt_for_template(Path(repo_path))
+        template = prompt_for_template(repo_path)
     else:
         console.welcome_screen()
 
