@@ -1,21 +1,19 @@
 """Main `cookieplone` CLI."""
 
 import os
-import sys
 from pathlib import Path
 from typing import Annotated
 
 import typer
-from cookiecutter import __version__ as __cookiecutter_version__
 from cookiecutter.log import configure_logger
 from rich import print
 from rich.prompt import Prompt
 
-from cookieplone import __version__, data
+from cookieplone import data, settings
 from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate
 from cookieplone.repository import get_base_repository, get_template_options
-from cookieplone.utils import console
+from cookieplone.utils import console, internal
 
 
 def validate_extra_context(value: list[str] | None = None):
@@ -40,17 +38,6 @@ def prompt_for_template(base_path: Path) -> str:
     console.welcome_screen(templates)
     answer = Prompt.ask("Select a template", choices=list(choices.keys()), default="1")
     return choices[answer]
-
-
-def version_info() -> str:
-    """Return the Cookieplone version, location and Python powering it."""
-    python_version = sys.version
-    location = Path(__file__).parent
-    return (
-        f"Cookieplone {__version__} from {location} "
-        f"(Cookiecutter {__cookiecutter_version__}, "
-        f"Python {python_version})"
-    )
 
 
 def cli(
@@ -120,16 +107,15 @@ def cli(
 ):
     """Generate a new Plone codebase."""
     if version:
-        info = version_info
-        print(info)
+        print(internal.version_info)
         raise typer.Exit()
-    repository = os.environ.get("COOKIEPLONE_REPOSITORY")
+    repository = os.environ.get(settings.REPO_LOCATION)
     if not repository:
         repository = "gh:plone/cookiecutter-plone"
 
+    repo_path = get_base_repository(repository)
     if not template:
         # Display template options
-        repo_path = get_base_repository(repository)
         template = prompt_for_template(Path(repo_path))
     else:
         console.welcome_screen()
@@ -137,11 +123,14 @@ def cli(
     if replay_file:
         replay = replay_file
     passwd = os.environ.get(
-        "COOKIECUTTER_REPO_PASSWORD", os.environ.get("COOKIEPLONE_REPO_PASSWORD")
+        settings.REPO_PASSWORD, os.environ.get("COOKIECUTTER_REPO_PASSWORD")
     )
     if not output_dir:
         output_dir = Path().cwd()
     configure_logger(stream_level="DEBUG" if verbose else "INFO", debug_file=debug_file)
+    # Annotate extra_context
+    extra_context = extra_context if extra_context else {}
+    extra_context["__generator_signature"] = internal.signature_md(repo_path)
     # Run generator
     try:
         generate(

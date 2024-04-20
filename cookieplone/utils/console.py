@@ -2,6 +2,8 @@ import os
 from textwrap import dedent
 
 from rich import print as base_print
+from rich.align import Align
+from rich.console import Group
 from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
@@ -118,10 +120,16 @@ def table_available_templates(title: str, rows: list[list[str]]):
 
 
 def welcome_screen(templates: list[list[str]] | None = None):
-    print_plone_banner()
+    items = [
+        Align.center(f"[bold blue]{BANNER}[/bold blue]"),
+    ]
     if templates:
-        table = table_available_templates("Templates", templates)
-        _print(table)
+        items.append(Panel(table_available_templates("Templates", templates)))
+    panel = Panel(
+        Group(*items),
+        title="cookieplone",
+    )
+    base_print(panel)
 
 
 def enable_quiet_mode():
