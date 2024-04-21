@@ -17,13 +17,14 @@ def tmp_files(tmp_path):
 def test_remove_files(tmp_path, tmp_files):
     files_to_remove = tmp_files
     folders_to_remove = tmp_files.parent
+    func = files.remove_files
 
     assert files_to_remove.exists()
-    files.remove_files(tmp_path, [files_to_remove])
+    func(tmp_path, [files_to_remove])
     assert not files_to_remove.exists()
 
     assert folders_to_remove.exists()
-    files.remove_files(tmp_path, [folders_to_remove])
+    func(tmp_path, [folders_to_remove])
     assert not folders_to_remove.exists()
 
 
@@ -34,9 +35,10 @@ def test_remove_files_nonexistent_file(tmp_path):
 
 
 def test_remove_gha(tmp_files):
+    func = files.remove_gha
     base_path = tmp_files.parent
 
     gha = base_path / ".github"
     assert gha.exists()
-    files.remove_gha(base_path)
+    func(base_path)
     assert not gha.exists()
