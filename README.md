@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">
-  cookieplone 🍪
+  Cookieplone 🍪
 </h1>
 
 
@@ -15,7 +15,6 @@
 [![PyPI - License](https://img.shields.io/pypi/l/cookieplone)](https://pypi.org/project/cookieplone/)
 [![PyPI - Status](https://img.shields.io/pypi/status/cookieplone)](https://pypi.org/project/cookieplone/)
 
-
 [![Tests](https://github.com/plone/cookieplone/actions/workflows/main.yml/badge.svg)](https://github.com/plone/cookieplone/actions/workflows/main.yml)
 
 [![GitHub contributors](https://img.shields.io/github/contributors/plone/cookieplone)](https://github.com/plone/cookieplone)
@@ -23,58 +22,57 @@
 
 </div>
 
-Welcome to Cookieplone, a powerful wrapper around Cookiecutter designed to streamline the development of Plone codebases. Whether you're building a backend addon, a new Volto addon, a full project with both backend and frontend, or even documentation, Cookieplone simplifies the process using robust Cookiecutter templates.
+Welcome to Cookieplone, a powerful wrapper around Cookiecutter designed to streamline the development of Plone codebases.
+Whether you're building a backend add-on, a new Volto add-on, a full project with both backend and frontend, or even documentation, Cookieplone simplifies the process using robust Cookiecutter templates.
 
-## Key Features 🌟
+## Key features 🌟
 
-### For Users
+Cookieplone offers the following key features for each audience.
 
-- **One Stop for All Plone Templates**: Cookieplone helps you to find the correct template to start your new Plone project.
+### For users
 
-- **Simplified Usage**: Cookieplone provides an enhanced experience over standard Cookiecutter usage by offering predefined sane defaults and a unified approach to generating various Plone projects.
+- **One stop for all Plone templates**: Cookieplone helps you find the correct template to start your new Plone project.
+- **Simplified usage**: Cookieplone provides an enhanced experience over standard Cookiecutter usage by offering predefined sane defaults and a unified approach to generating various Plone projects.
+- **Batteries included**: No need to install lots of dependencies. Run `pipx run cookieplone`, and you will quickly generate your codebase.
 
-- **Batteries Included**: No need to install lot's of dependencies, just run `pipx run cookieplone` and you will be able to quickly generate your codebase.
 
+### For template creators
 
-### For Template Creators
-
-- **Built-in Validators**: Includes built-in validators to ensure user inputs are correct.
-- **Jinja2 Filters**: Includes Jinja2 filters for advanced template control.
-- **Sub-Templates**: Mechanism to easily instantiate "sub templates" within cookiecutter hooks -- i.e. post_gen_hook -- , facilitating greater code reuse.
+- **Built-in validators**: Includes built-in validators to ensure user inputs are correct.
+- **Jinja2 filters**: Includes Jinja2 filters for advanced template control.
+- **Sub-templates**: Mechanism to easily instantiate "sub templates" within cookiecutter hooks -- i.e. post_gen_hook -- , facilitating greater code reuse.
 
 
 ## Installation 💾
 
-First, ensure you have Python, pip and pipx installed on your system.
+First, ensure you have Python, pip, and pipx installed on your system.
 
-Then install cookieplone using `pipx`:
+Then install Cookieplone using `pipx`:
 
-```bash
+```shell
 # pipx is strongly recommended.
 pipx install cookieplone
 ```
 
-Or, if pipx is not an option, you can install cookieplone in your Python user directory.
+Or, if pipx is not an option, you can install Cookieplone in your Python user directory.
 
-```bash
+```shell
 python -m pip install --user cookieplone
 ```
 
 ## Usage 🛠️
 
-### Running Cookieplone
+To see all available template options, run:
 
-To see all available template options, just run:
-
-```bash
+```shell
 pipx run cookieplone
 ```
 
 Cookieplone will walk you through the necessary steps, using sensible defaults and offering customization options where needed.
 
-### Specifying a template
+### Specify a template
 
-You can also specify other templates like:
+You can also specify other templates.
 
 | Template | Description | Command |
 | --- | --- | --- |
@@ -82,7 +80,7 @@ You can also specify other templates like:
 | **plone_addon** | Create a Plone add-on to be used with the backend. | `pipx run cookieplone plone_addon ` |
 | **volto_addon** | Create a Plone add-on to be used with the frontend. | `pipx run cookieplone volto_addon ` |
 
-### Configuring cookieplone
+### Configure Cookieplone
 
 | Environment Variable | Description | Example |
 | --- | --- | --- |
@@ -90,9 +88,9 @@ You can also specify other templates like:
 | **COOKIEPLONE_REPOSITORY_REF** | Which tag/branch to use from a remote repository. | `COOKIEPLONE_REPOSITORY_REF=experimental pipx run cookieplone` |
 | **COOKIEPLONE_REPO_PASSWORD** | Password to use when using a remote repository that is password protected. | `COOKIEPLONE_REPO_PASSWORD=very-secure pipx run cookieplone` |
 
-## Contributing 🤝
+## Contribute 🤝
 
-We welcome contributions to `cookieplone`.
+We welcome contributions to Cookieplone.
 
 You can create an issue in the issue tracker, or contact a maintainer.
 
@@ -102,47 +100,47 @@ You can create an issue in the issue tracker, or contact a maintainer.
 ### Development requirements
 
 - Python 3.10 or later
-- [`hatch`](https://hatch.pypa.io/)
+- [Hatch](https://hatch.pypa.io/)
 
 ### Setup
 
-Install all development dependencies -- including `hatch` -- and create a local virtual environment with:
+Install all development dependencies, including Hatch, and create a local virtual environment with the following command.
 
-```bash
+```shell
 make install
 ```
 
-### Check / Format codebase
+### Check and format the codebase
 
-```bash
+```shell
 make check
 ```
 
 ### Run tests
 
-Testing of this package is done with [`pytest`](https://docs.pytest.org/).
+[`pytest`](https://docs.pytest.org/) is this package's test runner.
 
-Run all tests with:
+Run all tests with the following command.
 
-```bash
+```shell
 make test
 ```
 
-Run all tests but stop on the first error and open a `pdb` session:
+Run all tests, but stop on the first error and open a `pdb` session with the following command.
 
-```bash
+```shell
 hatch run test -x --pdb
 ```
 
-Run only tests that match `test_run_sanity_checks_fail`:
+Run only tests that match `test_run_sanity_checks_fail` with the following command.
 
-```bash
+```shell
 hatch run test -k test_run_sanity_checks_fail
 ```
 
-Run only tests that match `test_run_sanity_checks_fail`, but stop on the first error and open a `pdb` session:
+Run only tests that match `test_run_sanity_checks_fail`, but stop on the first error and open a `pdb` session with the following command.
 
-```bash
+```shell
 hatch run test -k test_run_sanity_checks_fail -x --pdb
 ```
 
@@ -162,4 +160,5 @@ Thank you for choosing Cookieplone for your Plone development needs!
 </p>
 
 ## License
-The project is released under the [MIT License](./LICENSE)
+
+The project is released under the [MIT License](./LICENSE).
