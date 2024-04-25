@@ -47,4 +47,4 @@ jobs:
         run: hatch env create
 
       - name: "Test Codebase"
-        run: hatch run tests
+        run: hatch run test
