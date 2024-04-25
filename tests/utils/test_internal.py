@@ -1,9 +1,8 @@
 import sys
 from pathlib import Path
 
-import pytest
-
 from cookiecutter import __version__ as __cookiecutter_version__
+
 from cookieplone import __version__
 from cookieplone.utils import internal
 

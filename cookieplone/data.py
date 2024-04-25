@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
+#
+# SPDX-License-Identifier: MIT
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
