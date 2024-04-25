@@ -31,7 +31,7 @@ def test_remove_files(tmp_path, tmp_files):
 def test_remove_files_nonexistent_file(tmp_path):
     files_to_remove = ["nonexistent_file.txt"]
     base_path = tmp_path
-    assert files.remove_files(base_path, files_to_remove) == None
+    assert files.remove_files(base_path, files_to_remove) is None
 
 
 def test_remove_gha(tmp_files):

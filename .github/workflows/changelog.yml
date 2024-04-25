@@ -1,0 +1,37 @@
+name: Changelog check
+on:
+  pull_request:
+    types: [assigned, opened, synchronize, reopened, labeled, unlabeled]
+    branches:
+      - main
+
+env:
+  PYTHON_VERSION: 3.11
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch all history
+          fetch-depth: '0'
+
+      - name: Install hatch
+        run: pipx install hatch
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: "Install Environment"
+        run: hatch env create
+
+      - name: Check for presence of a Change Log fragment (only pull requests)
+        run: |
+          git fetch --no-tags origin ${BASE_BRANCH}
+          hatch run towncrier check
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+        if: github.event_name == 'pull_request'

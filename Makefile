@@ -42,41 +42,29 @@ all: help
 help: ## This help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
+.PHONY: clean
+clean: ## Clean up the environment
+	@echo "🚀 Cleanup the current environment"
+	@rm -rf .pytest_cache .ruff_cache .coverage coverage.xml .tox .venv
+
 .PHONY: install
-install: ## Install the poetry environment and install the pre-commit hooks
-	@echo "🚀 Creating virtual environment using pyenv and poetry"
-	@poetry install
-	if [ -d $(GIT_FOLDER) ]; then poetry run pre-commit install; else echo "$(RED) Not installing pre-commit$(RESET)";fi
-	@poetry shell
+install: ## Install the default environment
+	@echo "🚀 Creating virtual environment using hatch"
+	@pipx install hatch
+	@hatch env create
+	if [ -d $(GIT_FOLDER) ]; then hatch run pre-commit install; else echo "$(RED) Not installing pre-commit$(RESET)";fi
 
 .PHONY: check
 check: ## Run code quality tools.
-	@echo "🚀 Checking Poetry lock file consistency with 'pyproject.toml': Running poetry lock --check"
-	@poetry lock --check
 	@echo "🚀 Linting code: Running pre-commit"
-	@poetry run pre-commit run -a
+	@hatch run check
 
 .PHONY: test
 test: ## Test the code with pytest
 	@echo "🚀 Testing code: Running pytest"
-	@poetry run pytest --cov --cov-config=pyproject.toml --cov-report=xml
+	@hatch run test
 
-.PHONY: build
-build: clean-build ## Build wheel file using poetry
-	@echo "🚀 Creating wheel file"
-	@poetry build
-
-.PHONY: clean-build
-clean-build: ## clean build artifacts
-	@rm -rf dist
-
-.PHONY: publish
-publish: ## publish a release to pypi.
-	@echo "🚀 Publishing: Dry run."
-	@poetry config pypi-token.pypi $(PYPI_TOKEN)
-	@poetry publish --dry-run
-	@echo "🚀 Publishing."
-	@poetry publish
-
-.PHONY: build-and-publish
-build-and-publish: build publish ## Build and publish.
+.PHONY: release
+release: ## Release the package to pypi.org
+	@echo "🚀 Release package"
+	@hatch run fullrelease

@@ -1,6 +1,5 @@
 import pytest
-
-from git import Repo, Commit
+from git import Commit, Repo
 
 from cookieplone.utils import git
 

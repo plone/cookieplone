@@ -1,28 +1,25 @@
 import json
-import pytest
-
 from pathlib import Path
 
+import pytest
 from cookiecutter.generate import generate_context
 from cookiecutter.utils import create_env_with_context
 
+
 @pytest.fixture
 def generate_context_file(tmp_path):
-    def func(filter: str) -> Path:
+    def func(filter_: str) -> Path:
         # Create cookiecutter.json
         path = tmp_path / "cookiecutter.json"
-        context = {
-            "_extensions": [
-                f"cookieplone.filters.{filter}"
-            ]
-        }
+        context = {"_extensions": [f"cookieplone.filters.{filter_}"]}
         path.write_text(json.dumps(context))
         return path
+
     return func
 
 
 @pytest.mark.parametrize(
-    "filter,raw,expected",
+    "filter_,raw,expected",
     [
         ["package_name", "{{'foo.bar' | package_name}}", "bar"],
         ["package_namespace", "{{'foo.bar' | package_namespace}}", "foo"],
@@ -33,11 +30,11 @@ def generate_context_file(tmp_path):
         ["gs_language_code", "{{'es-MX' | gs_language_code}}", "es-mx"],
         ["locales_language_code", "{{'es-mx' | locales_language_code}}", "es_MX"],
         ["image_prefix", "{{'github' | image_prefix}}", "ghcr.io/"],
-        ["image_prefix", "{{'bitbucket' | image_prefix}}", ""]
-    ]
+        ["image_prefix", "{{'bitbucket' | image_prefix}}", ""],
+    ],
 )
-def test_filters(generate_context_file, filter: str, raw: str, expected: str):
-    path = generate_context_file(filter)
+def test_filters(generate_context_file, filter_: str, raw: str, expected: str):
+    path = generate_context_file(filter_)
     context = generate_context(path)
     env = create_env_with_context(context)
     result = env.from_string(raw)

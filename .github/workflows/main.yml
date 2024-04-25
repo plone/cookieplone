@@ -15,19 +15,19 @@ jobs:
       - name: Checkout codebase
         uses: actions/checkout@v4
 
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install hatch
+        run: pipx install hatch
 
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'poetry'
+          cache: 'pip'
 
-      - name: "Install Packages"
-        run: poetry install
+      - name: "Install Environment"
+        run: hatch env create
 
       - name: "Run checks"
-        run: poetry run pre-commit run -a
+        run: hatch run check
 
   test:
     runs-on: ubuntu-latest
@@ -35,16 +35,16 @@ jobs:
       - name: Checkout codebase
         uses: actions/checkout@v4
 
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install hatch
+        run: pipx install hatch
 
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'poetry'
+          cache: 'pip'
 
-      - name: "Install Packages"
-        run: poetry install
+      - name: "Install Environment"
+        run: hatch env create
 
       - name: "Test Codebase"
-        run: poetry run pytest --cov --cov-config=pyproject.toml --cov-report=xml
+        run: hatch run test
