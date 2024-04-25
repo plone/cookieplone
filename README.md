@@ -155,7 +155,7 @@ Thank you for choosing Cookieplone for your Plone development needs!
 
 <p align="left">
     <a href="https://plone.org/foundation/">
-      <img alt="Plone Logo" width="200px" src="https://raw.githubusercontent.com/plone/.github/main/plone-foundation.png">
+      <img alt="Plone Foundation Logo" width="200px" src="https://raw.githubusercontent.com/plone/.github/main/plone-foundation.png">
     </a>
 </p>
 
