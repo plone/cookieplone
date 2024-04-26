@@ -77,8 +77,8 @@ def check_docker_version(min_version: str) -> str:
         version = _parse_docker_version(raw_version)
         return (
             ""
-            if version >= settings.MIN_DOCKER_VERSION
-            else f"Docker version is not supported: Got {raw_version}"
+            if version >= min_version
+            else f"Docker version is not supported: Got {version}"
         )
 
 

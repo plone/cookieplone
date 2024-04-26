@@ -9,6 +9,7 @@ def run_sanity_checks(checks: list[data.SanityCheck]) -> data.SanityCheckResults
     global_status = True
     results = []
     for check in checks:
+        status = False
         name = check.name
         func = check.func
         args = check.args
@@ -19,8 +20,6 @@ def run_sanity_checks(checks: list[data.SanityCheck]) -> data.SanityCheckResults
             message = "✓"
         elif level == "warning":
             status = True
-        elif level == "error":
-            status = False
         global_status = global_status and status
         results.append(data.SanityCheckResult(name, status, message))
     global_message = (

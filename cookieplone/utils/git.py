@@ -26,6 +26,8 @@ def initialize_repository(path: Path) -> Repo:
     if not check_path_is_repository(path):
         repo = Repo.init(path)
         repo.git.add(path)
+    else:
+        repo = Repo(path)
     return repo
 
 

@@ -9,6 +9,10 @@ from cookieplone.utils import validators
         ["foo", "", "foo should be provided"],
         ["", "", " should be provided"],
         ["foo", "not empty", ""],
+        ["foo", 0, ""],
+        ["foo", 0.0, ""],
+        ["foo", [0], ""],
+        ["foo", [], "foo should be provided"],
     ],
 )
 def test_validate_not_empty(key: str, value: str, expected: str):
@@ -130,6 +134,7 @@ def test_validate_npm_package_name(value: str, expected: str):
 @pytest.fixture
 def context():
     return {
+        "__foo": "",
         "addon_name": "volto-code-block",
         "npm_package_name": "@plonegovbr/volto-code-block",
         "another": "",
@@ -144,6 +149,7 @@ def my_validators():
     return [
         data.ItemValidator("addon_name", validators.validate_volto_addon_name),
         data.ItemValidator("npm_package_name", validators.validate_npm_package_name),
+        data.ItemValidator("another", validators.validate_plone_version, "warning"),
     ]
 
 
@@ -160,3 +166,31 @@ def test_run_context_validations(
     """Test run_context_validations function."""
     result = validators.run_context_validations(context, my_validators, allow_empty)
     assert result.status is expected
+
+
+@pytest.mark.parametrize(
+    "version,expected",
+    (
+        ("5.2.99", "5.2.99 is not a valid Plone version."),
+        ("6.0.1", ""),
+        ("6.1.0a3", ""),
+        ("7.0.0", ""),
+    ),
+)
+def test_validate_plone_version(version: str, expected: str):
+    func = validators.validate_plone_version
+    assert func(version) == expected
+
+
+@pytest.mark.parametrize(
+    "version,expected",
+    (
+        ("14.0.0", "14.0.0 is not a valid Volto version."),
+        ("18.0.0-alpha.21", ""),
+        ("17.0.0", ""),
+        ("16.15.1", ""),
+    ),
+)
+def test_validate_volto_version(version: str, expected: str):
+    func = validators.validate_volto_version
+    assert func(version) == expected

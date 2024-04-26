@@ -84,19 +84,19 @@ def validate_npm_package_name(value: str) -> str:
 
 def validate_plone_version(value: str) -> str:
     """Validate Plone Version."""
-    status = False
     version = _version_from_str(value)
-    if version:
-        status = version >= _version_from_str(settings.PLONE_MIN_VERSION)
+    status = bool(version) and (
+        version >= _version_from_str(settings.PLONE_MIN_VERSION)
+    )
     return "" if status else f"{value} is not a valid Plone version."
 
 
 def validate_volto_version(value: str) -> str:
     """Validate Volto Version."""
-    status = False
     version = _version_from_str(value)
-    if version:
-        status = version >= _version_from_str(settings.VOLTO_MIN_VERSION)
+    status = bool(version) and (
+        version >= _version_from_str(settings.VOLTO_MIN_VERSION)
+    )
     return "" if status else f"{value} is not a valid Volto version."
 
 
@@ -114,6 +114,7 @@ def run_context_validations(
                 continue
             validations.append(data.ItemValidator(key, func, "error"))
     for validation in validations:
+        status = False
         key = validation.key
         func = validation.func
         value = context.get(key, "")
@@ -124,8 +125,6 @@ def run_context_validations(
             message = "✓"
         elif level == "warning":
             status = True
-        elif level == "error":
-            status = False
         global_status = global_status and status
         results.append(data.ItemValidatorResult(key, status, message))
     global_message = (
