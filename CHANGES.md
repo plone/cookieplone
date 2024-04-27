@@ -8,3 +8,15 @@
 -->
 
 <!-- towncrier release notes start -->
+
+## 0.5.0 (2024-04-27)
+
+
+### Internal:
+
+- Move from poetry to hatch to manage the environment [@ericof] [#9](https://github.com/plone/cookieplone/issues/9)
+
+
+### Documentation:
+
+- Initial documentation (README.md) for cookieplone [@ericof] [#8](https://github.com/plone/cookieplone/issues/8)
