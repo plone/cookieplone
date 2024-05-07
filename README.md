@@ -76,9 +76,10 @@ You can also specify other templates.
 
 | Template | Description | Command |
 | --- | --- | --- |
-| **project** | Create a Plone project with Backend and frontend. | `pipx run cookieplone project ` |
-| **plone_addon** | Create a Plone add-on to be used with the backend. | `pipx run cookieplone plone_addon ` |
-| **volto_addon** | Create a Plone add-on to be used with the frontend. | `pipx run cookieplone volto_addon ` |
+| **backend_addon** | Create a Plone add-on to be used with the backend. | `pipx run cookieplone backend_addon ` |
+| **frontend_addon** | Create a Plone add-on to be used with the frontend. | `pipx run cookieplone frontend_addon ` |
+
+The updated list of templates can be found at the [cookieplone-templates](https://github.com/plone/cookieplone-templates) repository.
 
 ### Configure Cookieplone
 
