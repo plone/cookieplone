@@ -114,7 +114,7 @@ def cli(
         raise typer.Exit()
     repository = os.environ.get(settings.REPO_LOCATION)
     if not repository:
-        repository = "gh:plone/cookiecutter-plone"
+        repository = "gh:plone/cookieplone-templates"
 
     repo_path = get_base_repository(repository)
     if not template:
