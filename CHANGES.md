@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.5.1 (2024-05-07)
+
+
+### Internal:
+
+- Use `gh:plone/cookieplone-templates` as the default repository [@ericof] [#13](https://github.com/plone/cookieplone/issues/13)
+
 ## 0.5.0 (2024-04-27)
 
 
