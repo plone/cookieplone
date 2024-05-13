@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.5.2 (2024-05-13)
+
+
+### Bug fixes:
+
+- Set default `tag` value to **main** instead of the empty string [@ericof] [#15](https://github.com/plone/cookieplone/issues/15)
+
 ## 0.5.1 (2024-05-07)
 
 
