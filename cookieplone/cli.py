@@ -53,7 +53,7 @@ def cli(
         data.OptionalPath,
         typer.Option("--output-dir", "-o", help="Where to generate the code."),
     ] = None,
-    tag: Annotated[str, typer.Option(help="Tag.")] = "",
+    tag: Annotated[str, typer.Option(help="Tag.")] = "main",
     version: Annotated[
         bool, typer.Option("--version", help="Display the version of cookieplone.")
     ] = False,

@@ -87,6 +87,8 @@ def generate(
         Context: {context_str}
         """
         raise GeneratorException(message=msg, original=undefined_err)  # noQA:B904
+    except Exception as e:
+        raise GeneratorException(message=str(e), original=e)  # noQA:B904
     else:
         return Path(result)
 
