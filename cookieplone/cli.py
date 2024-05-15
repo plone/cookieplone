@@ -19,19 +19,24 @@ from cookieplone.repository import get_base_repository, get_template_options
 from cookieplone.utils import console, internal
 
 
-def validate_extra_context(value: list[str] | None = None):
+def validate_extra_context(value: list[str] | None = None) -> list[str]:
     """Validate extra content follows the correct pattern."""
     if not value:
-        return {}
-    for string in value:
-        if "=" not in string:
+        return []
+    for item in value:
+        if "=" not in item:
             raise typer.BadParameter(
                 f"EXTRA_CONTEXT should contain items of the form key=value; "
-                f"'{string}' doesn't match that form"
+                f"'{item}' doesn't match that form"
             )
-    # Convert list -- e.g.: ['program_name=foobar', 'startsecs=66']
-    # to dict -- e.g.: {'program_name': 'foobar', 'startsecs': '66'}
-    return dict([s.split("=", 1) for s in value])
+    return value
+
+
+def parse_extra_content(value: list[str]) -> dict:
+    """Parse extra content and return a dictionary with options."""
+    if not value:
+        return {}
+    return dict([s.split("=") for s in value])
 
 
 def prompt_for_template(base_path: Path) -> str:
@@ -132,7 +137,7 @@ def cli(
         output_dir = Path().cwd()
     configure_logger(stream_level="DEBUG" if verbose else "INFO", debug_file=debug_file)
     # Annotate extra_context
-    extra_context = extra_context if extra_context else {}
+    extra_context = parse_extra_content(extra_context)
     extra_context["__generator_signature"] = internal.signature_md(repo_path)
     # Run generator
     try:
