@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.5.3 (2024-05-15)
+
+
+### Bug fixes:
+
+- Fix extra_context parsing [@ericof] [#18](https://github.com/plone/cookieplone/issues/18)
+
 ## 0.5.2 (2024-05-13)
 
 
