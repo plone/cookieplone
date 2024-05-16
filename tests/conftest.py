@@ -1,5 +1,6 @@
 import random
 import string
+from pathlib import Path
 
 import pytest
 from git import Repo
@@ -20,3 +21,16 @@ def no_repo(tmp_path):
     path = tmp_path / sub_path
     path.mkdir(parents=True)
     return path
+
+
+@pytest.fixture()
+def read_data_file():
+    def func(filepath: str) -> str:
+        data = ""
+        cwd = Path.cwd()
+        path = (cwd / "tests" / "_resources" / filepath).resolve()
+        if path.exists():
+            data = path.read_text()
+        return data
+
+    return func
