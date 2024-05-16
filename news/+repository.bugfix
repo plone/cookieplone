@@ -1,0 +1,1 @@
+Handle in `cookieplone.generator._get_repository_root` the local development of templates containing pre_prompt hooks [@ericof]

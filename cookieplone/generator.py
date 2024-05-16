@@ -22,19 +22,19 @@ def _remove_internal_keys(context: OrderedDict) -> dict:
 
 def _get_repository_root(context: OrderedDict, template: str) -> Path:
     """Return the templates root."""
-    repository = context.get("_repo_dir") or context.get("_template")
-    if not repository:
-        raise exc.RepositoryNotFound()
-    repository = Path(repository).resolve()
-    if not repository:
-        raise exc.RepositoryNotFound()
-    elif not (repository / template).exists():
-        # We are probably inside a template folder,
-        # try to check the parent
-        repository = repository.parent
-        if not (repository / template).exists():
-            raise exc.RepositoryNotFound()
-    return repository
+    possible_keys = [
+        "__cookieplone_repository_path",
+        "_repo_dir",
+        "_template",
+    ]
+    for key in possible_keys:
+        repository_path = context.get(key)
+        if not repository_path:
+            continue
+        repository = Path(repository_path).resolve()
+        if (repository / template).exists() or (repository.parent / template).exists():
+            return repository
+    raise exc.RepositoryNotFound()
 
 
 def generate(

@@ -138,6 +138,8 @@ def cli(
     # Annotate extra_context
     extra_context = parse_extra_content(extra_context)
     extra_context["__generator_signature"] = internal.signature_md(repo_path)
+    extra_context["__cookieplone_repository_path"] = f"{repo_path}"
+    extra_context["__cookieplone_template"] = f"{template}"
     # Run generator
     try:
         generate(
