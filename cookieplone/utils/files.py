@@ -6,6 +6,13 @@ from pathlib import Path
 from cookiecutter.utils import rmtree
 
 
+def resolve_path(path: Path | str) -> Path:
+    """Resolve a path, including home user expansion."""
+    if f"{path}".startswith("~"):
+        path = path.expanduser()
+    return path.resolve()
+
+
 def remove_files(base_path: Path, paths: list[str]):
     """Remove files."""
     for filepath in paths:
