@@ -14,7 +14,7 @@
 
 ### Bug fixes:
 
-- Fix `cookieplone --version` cli command [@ericof] 
+- Fix `cookieplone --version` cli command [@ericof]
 
 ## 0.5.4 (2024-05-16)
 
