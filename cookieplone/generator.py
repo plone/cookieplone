@@ -22,7 +22,7 @@ def _remove_internal_keys(context: OrderedDict) -> dict:
 
 def _get_repository_root(context: OrderedDict, template: str) -> Path:
     """Return the templates root."""
-    repository = context.get("_checkout") or context.get("_template")
+    repository = context.get("_repo_dir") or context.get("_template")
     if not repository:
         raise exc.RepositoryNotFound()
     repository = Path(repository).resolve()

@@ -1,0 +1,1 @@
+Fix `cookieplone.generator._get_repository_root` to get the repository from the **_repo_dir** context variable [@ericof]
