@@ -9,7 +9,6 @@ from typing import Annotated
 
 import typer
 from cookiecutter.log import configure_logger
-from rich import print
 from rich.prompt import Prompt
 
 from cookieplone import data, settings
@@ -115,7 +114,7 @@ def cli(
 ):
     """Generate a new Plone codebase."""
     if version:
-        print(internal.version_info)
+        console.base_print(internal.version_info())
         raise typer.Exit()
     repository = os.environ.get(settings.REPO_LOCATION)
     if not repository:

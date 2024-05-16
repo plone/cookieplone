@@ -11,12 +11,13 @@ from cookieplone.utils import internal
 def test_version_info():
     result = internal.version_info()
     location = Path(__file__).parent.parent.parent / "cookieplone"
-    expected = (
-        f"Cookieplone {__version__} from {location} "
-        f"(Cookiecutter {__cookiecutter_version__}, "
-        f"Python {sys.version})"
-    )
-    assert result == expected
+    expected = [
+        f"Cookieplone {__version__} from {location} ",
+        f"(Cookiecutter {__cookiecutter_version__}, ",
+        f"Python {sys.version})",
+    ]
+    for entry in expected:
+        assert entry in result
 
 
 def test_signature_md_without_commit(no_repo):

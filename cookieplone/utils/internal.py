@@ -22,7 +22,9 @@ def version_info() -> str:
     return (
         f"Cookieplone {__version__} from {location} "
         f"(Cookiecutter {__cookiecutter_version__}, "
-        f"Python {python_version})"
+        f"Python {python_version})\n\n"
+        f"Made with [bold][red]❤️[/red][/bold] by the"
+        " [bold][blue]Plone Community[/blue][/bold]"
     )
 
 
