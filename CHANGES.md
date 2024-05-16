@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.5.4 (2024-05-16)
+
+
+### Bug fixes:
+
+- Fix `cookieplone.generator._get_repository_root` to get the repository from the **_repo_dir** context variable [@ericof] [#20](https://github.com/plone/cookieplone/issues/20)
+
 ## 0.5.3 (2024-05-15)
 
 
