@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.5.6 (2024-05-16)
+
+
+### Bug fixes:
+
+- Handle in `cookieplone.generator._get_repository_root` the local development of templates containing pre_prompt hooks [@ericof]
+
 ## 0.5.5 (2024-05-16)
 
 
