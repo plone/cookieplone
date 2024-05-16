@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.5.7 (2024-05-16)
+
+
+### Bug fixes:
+
+- Fix usage of `--replay-file` [@ericof] [#23](https://github.com/plone/cookieplone/issues/23)
+
 ## 0.5.6 (2024-05-16)
 
 
