@@ -15,7 +15,7 @@ from cookieplone import data, settings
 from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate
 from cookieplone.repository import get_base_repository, get_template_options
-from cookieplone.utils import console, internal
+from cookieplone.utils import console, files, internal
 
 
 def validate_extra_context(value: list[str] | None = None) -> list[str]:
@@ -116,6 +116,8 @@ def cli(
     if version:
         console.base_print(internal.version_info())
         raise typer.Exit()
+
+    configure_logger(stream_level="DEBUG" if verbose else "INFO", debug_file=debug_file)
     repository = os.environ.get(settings.REPO_LOCATION)
     if not repository:
         repository = "gh:plone/cookieplone-templates"
@@ -127,19 +129,22 @@ def cli(
     else:
         console.welcome_screen()
 
-    if replay_file:
-        replay = replay_file
     passwd = os.environ.get(
         settings.REPO_PASSWORD, os.environ.get("COOKIECUTTER_REPO_PASSWORD")
     )
     if not output_dir:
         output_dir = Path().cwd()
-    configure_logger(stream_level="DEBUG" if verbose else "INFO", debug_file=debug_file)
-    # Annotate extra_context
-    extra_context = parse_extra_content(extra_context)
-    extra_context["__generator_signature"] = internal.signature_md(repo_path)
-    extra_context["__cookieplone_repository_path"] = f"{repo_path}"
-    extra_context["__cookieplone_template"] = f"{template}"
+
+    replay_file = files.resolve_path(replay_file) if replay_file else replay_file
+    if replay_file and replay_file.exists():
+        # Use replay_file
+        replay = replay_file
+    else:
+        # Annotate extra_context
+        extra_context = parse_extra_content(extra_context)
+        extra_context["__generator_signature"] = internal.signature_md(repo_path)
+        extra_context["__cookieplone_repository_path"] = f"{repo_path}"
+        extra_context["__cookieplone_template"] = f"{template}"
     # Run generator
     try:
         generate(
@@ -157,10 +162,12 @@ def cli(
             skip_if_file_exists,
             keep_project_on_failure,
         )
-    except GeneratorException:
+    except GeneratorException as exc:
+        console.error(exc.message)
         # TODO: Handle error
         raise typer.Exit(1)  # noQA:B904
-    except Exception:
+    except Exception as exc:
+        console.error(exc)
         # TODO: Handle error
         raise typer.Exit(1)  # noQA:B904
 
