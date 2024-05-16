@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.5.5 (2024-05-16)
+
+
+### Bug fixes:
+
+- Fix `cookieplone --version` cli command [@ericof] 
+
 ## 0.5.4 (2024-05-16)
 
 
