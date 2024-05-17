@@ -1,9 +1,9 @@
-import subprocess
 from pathlib import Path
 
 import xmltodict
 
 from cookieplone.logger import logger
+from cookieplone.utils import formatters
 
 
 def add_dependency_profile_to_metadata(profile: str, raw_xml: str) -> str:
@@ -33,9 +33,9 @@ def add_dependency_to_zcml(package: str, raw_xml: str) -> str:
 
 
 PY_FORMATTERS = (
-    ("zpretty", "-i", "./"),
-    ("isort", "./"),
-    ("black", "./"),
+    ("zpretty", formatters.run_zpretty),
+    ("isort", formatters.run_isort),
+    ("black", formatters.run_black),
 )
 
 
@@ -46,9 +46,6 @@ def format_python_codebase(path: Path):
     if not pyproject.exists():
         logger.info(f"Format codebase: No pyproject.toml found in {path}, stopping")
     # Run formatters
-    for cmd in PY_FORMATTERS:
+    for cmd, func in PY_FORMATTERS:
         logger.debug(f"Format codebase: Running {cmd}")
-        proc = subprocess.run(cmd, shell=False, cwd=path, capture_output=True)  # noQA:S603
-        if proc.returncode:
-            # Write errors to the main process stderr
-            logger.info(f"Error while running {cmd}:")
+        func(path)
