@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.6.3 (2024-05-17)
+
+
+### Bug fixes:
+
+- Fix usage of formatter functions in a pipx environment [@ericof]
+
 ## 0.6.2 (2024-05-17)
 
 
