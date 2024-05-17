@@ -14,7 +14,7 @@
 
 ### Bug fixes:
 
-- Small fixes to cookieplone/utils/plone.py functions [@ericof] 
+- Small fixes to cookieplone/utils/plone.py functions [@ericof]
 
 ## 0.6.0 (2024-05-17)
 

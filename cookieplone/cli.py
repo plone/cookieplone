@@ -8,12 +8,12 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from cookiecutter.log import configure_logger
 from rich.prompt import Prompt
 
 from cookieplone import data, settings
 from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate
+from cookieplone.logger import configure_logger
 from cookieplone.repository import get_base_repository, get_template_options
 from cookieplone.utils import console, files, internal
 

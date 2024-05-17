@@ -32,6 +32,9 @@ dependencies = [
   "packaging==24.0",
   "gitpython==3.1.43",
   "xmltodict==0.13.0",
+  "black",
+  "isort",
+  "zpretty"
 ]
 
 [project.scripts]
