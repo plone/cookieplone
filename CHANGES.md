@@ -9,6 +9,18 @@
 
 <!-- towncrier release notes start -->
 
+## 0.6.2 (2024-05-17)
+
+
+### New features:
+
+- Add helper function to format a Python codebase [@ericof]
+
+
+### Internal:
+
+- Configure logger for cookieplone [@ericof]
+
 ## 0.6.1 (2024-05-17)
 
 
