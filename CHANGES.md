@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.6.0 (2024-05-17)
+
+
+### New features:
+
+- Add functions `add_dependency_profile_to_metadata` and `add_dependency_to_zcml` to manipulate Plone files [@ericof] [#25](https://github.com/plone/cookieplone/issues/25)
+
 ## 0.5.7 (2024-05-16)
 
 
