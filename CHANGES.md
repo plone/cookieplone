@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.6.1 (2024-05-17)
+
+
+### Bug fixes:
+
+- Small fixes to cookieplone/utils/plone.py functions [@ericof] 
+
 ## 0.6.0 (2024-05-17)
 
 
