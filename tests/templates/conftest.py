@@ -21,7 +21,7 @@ def testdir(pytester, project_folder):
         from pathlib import Path
         import pytest
 
-        pytest_plugins = ["cookieplone.templates.fixtures"]
+        # pytest_plugins = ["cookieplone.templates.fixtures"]
 
         @pytest.fixture(scope="session")
         def template_repository_root() -> Path:
