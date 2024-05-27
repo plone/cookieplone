@@ -63,17 +63,16 @@ def valid_key() -> types.VariableValidator:
     return func
 
 
-@pytest.fixture
-def configuration_data(template_repository_root) -> dict:
-    """Return configuration from cookiecutter.json."""
-    file_ = template_repository_root / "cookiecutter.json"
+def _read_configuration(base_folder: Path) -> dict:
+    """Read cookiecutter.json."""
+    file_ = base_folder / "cookiecutter.json"
     return json.loads(file_.read_text())
 
 
 @pytest.fixture
-def configuration_variables(configuration_data, valid_key) -> set[str]:
-    """Return a set of variables available in cookiecutter.json."""
-    return {key for key in configuration_data if valid_key(key)}
+def configuration_data(template_repository_root) -> dict:
+    """Return configuration from cookiecutter.json."""
+    return _read_configuration(template_repository_root)
 
 
 @pytest.fixture
@@ -89,6 +88,19 @@ def sub_templates(configuration_data, template_repository_root) -> list[Path]:
             sub_template_path = (parent.parent / sub_template_id).resolve()
         templates.append(sub_template_path)
     return templates
+
+
+@pytest.fixture
+def configuration_variables(configuration_data, sub_templates, valid_key) -> set[str]:
+    """Return a set of variables available in cookiecutter.json."""
+    # Variables
+    variables = {key for key in configuration_data if valid_key(key)}
+    for sub_template in sub_templates:
+        sub_config = _read_configuration(sub_template)
+        variables.update({
+            key for key in sub_config if valid_key(key) and key.startswith("__")
+        })
+    return variables
 
 
 def _all_files_in_template(
