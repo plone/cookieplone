@@ -9,6 +9,14 @@
 
 <!-- towncrier release notes start -->
 
+## 0.7.0 (2024-05-27)
+
+
+### New features:
+
+- Add --info option to display current settings [@ericof] [#27](https://github.com/plone/cookieplone/issues/27)
+- Add pytest fixtures to be used in template development [@ericof] [#29](https://github.com/plone/cookieplone/issues/29)
+
 ## 0.6.3 (2024-05-17)
 
 
