@@ -2,9 +2,10 @@ import re
 import sys
 from pathlib import Path
 
+import pytest
 from cookiecutter import __version__ as __cookiecutter_version__
 
-from cookieplone import __version__
+from cookieplone import __version__, settings
 from cookieplone.utils import internal
 
 
@@ -18,6 +19,27 @@ def test_version_info():
     ]
     for entry in expected:
         assert entry in result
+
+
+@pytest.mark.parametrize(
+    "panel_id,panel_title",
+    [
+        ["cookieplone", "Installation :zap:"],
+        ["repository", "Repository :link:"],
+        ["cookiecutter", "Cookiecutter :cookie:"],
+        ["python", "Python :snake:"],
+    ],
+)
+def test_cookieplone_info(panel_id: str, panel_title: str):
+    result = internal.cookieplone_info(settings.REPO_DEFAULT)
+    assert isinstance(result, dict)
+    assert result["title"] == "cookieplone"
+    assert result["subtitle"] == internal.SIGNATURE
+    panels = result["panels"]
+    assert isinstance(panels, dict)
+    panel = panels[panel_id]
+    assert isinstance(panel, dict)
+    assert panel["title"] == panel_title
 
 
 def test_signature_md_without_commit(no_repo):

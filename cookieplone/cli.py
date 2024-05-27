@@ -58,6 +58,12 @@ def cli(
         typer.Option("--output-dir", "-o", help="Where to generate the code."),
     ] = None,
     tag: Annotated[str, typer.Option(help="Tag.")] = "main",
+    info: Annotated[
+        bool,
+        typer.Option(
+            "--info", help="Display information about cookieplone installation."
+        ),
+    ] = False,
     version: Annotated[
         bool, typer.Option("--version", help="Display the version of cookieplone.")
     ] = False,
@@ -114,13 +120,22 @@ def cli(
 ):
     """Generate a new Plone codebase."""
     if version:
-        console.base_print(internal.version_info())
+        console.version_screen()
         raise typer.Exit()
 
     configure_logger(stream_level="DEBUG" if verbose else "INFO", debug_file=debug_file)
     repository = os.environ.get(settings.REPO_LOCATION)
     if not repository:
-        repository = "gh:plone/cookieplone-templates"
+        repository = settings.REPO_DEFAULT
+
+    passwd = os.environ.get(
+        settings.REPO_PASSWORD, os.environ.get("COOKIECUTTER_REPO_PASSWORD")
+    )
+    tag = os.environ.get(settings.REPO_TAG) or tag
+
+    if info:
+        console.info_screen(repository=repository, passwd=passwd, tag=tag)
+        raise typer.Exit()
 
     repo_path = get_base_repository(repository)
     if not template:
@@ -129,9 +144,6 @@ def cli(
     else:
         console.welcome_screen()
 
-    passwd = os.environ.get(
-        settings.REPO_PASSWORD, os.environ.get("COOKIECUTTER_REPO_PASSWORD")
-    )
     if not output_dir:
         output_dir = Path().cwd()
 
