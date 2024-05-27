@@ -29,8 +29,13 @@ VOLTO_NODE = {
 }
 MIN_DOCKER_VERSION = "20.10"
 
+## DEFAULT
+COOKIEPLONE_REPO = "https://github.com/plone/cookieplone"
+TEMPLATES_REPO = "https://github.com/plone/cookiecutter-plone"
+REPO_DEFAULT = "gh:plone/cookieplone-templates"
 
 ## Config
 QUIET_MODE_VAR = "COOKIEPLONE_QUIET_MODE_SWITCH"
 REPO_LOCATION = "COOKIEPLONE_REPOSITORY"
+REPO_TAG = "COOKIEPLONE_REPOSITORY_TAG"
 REPO_PASSWORD = "COOKIEPLONE_REPO_PASSWORD"  # noQA:S105
