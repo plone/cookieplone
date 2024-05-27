@@ -5,6 +5,8 @@ from pathlib import Path
 import pytest
 from git import Repo
 
+pytest_plugins = "pytester"
+
 
 @pytest.fixture()
 def tmp_repo(tmp_path):
@@ -34,3 +36,9 @@ def read_data_file():
         return data
 
     return func
+
+
+@pytest.fixture(scope="session")
+def project_source() -> Path:
+    path = (Path(__file__).parent / "_resources" / "templates").resolve()
+    return path

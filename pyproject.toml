@@ -32,10 +32,13 @@ dependencies = [
   "packaging==24.0",
   "gitpython==3.1.43",
   "xmltodict==0.13.0",
-  "black",
+  "black==24.4.2",
   "isort",
   "zpretty"
 ]
+
+[project.entry-points.pytest11]
+cookieplone = "cookieplone.templates.fixtures"
 
 [project.scripts]
 cookieplone = 'cookieplone.__main__:main'
