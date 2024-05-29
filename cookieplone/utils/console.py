@@ -140,7 +140,9 @@ def welcome_screen(templates: list[list[str]] | None = None):
         Align.center(f"[bold blue]{BANNER}[/bold blue]"),
     ]
     if templates:
-        items.append(Panel(table_available_templates(templates, title="Templates")))
+        items.append(
+            Panel(table_available_templates(title="Templates", rows=templates))
+        )
     panel = Panel(
         Group(*items),
         title="cookieplone",
