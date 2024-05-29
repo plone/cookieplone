@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.7.1 (2024-05-29)
+
+
+### Bug fixes:
+
+- Fix issue with Welcome Screen display [@ericof] 
+
 ## 0.7.0 (2024-05-27)
 
 
