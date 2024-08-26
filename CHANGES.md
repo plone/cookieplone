@@ -14,7 +14,7 @@
 
 ### Bug fixes:
 
-- Fix issue with Welcome Screen display [@ericof] 
+- Fix issue with Welcome Screen display [@ericof]
 
 ## 0.7.0 (2024-05-27)
 
