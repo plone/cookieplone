@@ -151,7 +151,7 @@ def cli(
     if replay_file and replay_file.exists():
         # Use replay_file
         replay = replay_file
-    else:
+    elif not replay:
         # Annotate extra_context
         extra_context = parse_extra_content(extra_context)
         extra_context["__generator_signature"] = internal.signature_md(repo_path)
