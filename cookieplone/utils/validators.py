@@ -52,6 +52,11 @@ def validate_language_code(value: str) -> str:
 def validate_python_package_name(value: str) -> str:
     """Validate python_package_name is an identifier."""
     status = False
+    if value.count(".") != 1:
+        return (
+            "The Python package name must contain a single namespace "
+            "(e.g. collective.something)"
+        )
     if "." in value:
         namespace, package = value.split(".")
         status = namespace.isidentifier() and package.isidentifier()
