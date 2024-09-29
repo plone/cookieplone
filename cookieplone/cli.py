@@ -70,7 +70,7 @@ def cli(
     no_input: Annotated[
         bool,
         typer.Option(
-            "--no_input",
+            "--no-input",
             help=(
                 "Do not prompt for parameters and only use cookiecutter.json "
                 "file content. Defaults to deleting any cached resources and "
