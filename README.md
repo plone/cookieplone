@@ -100,7 +100,7 @@ The updated list of templates can be found at the [cookieplone-templates](https:
 | Environment Variable | Description | Example |
 | --- | --- | --- |
 | **COOKIEPLONE_REPOSITORY** | Where to look for templates to be used. | `COOKIEPLONE_REPOSITORY=/home/plone/cookiecutter-plone/ pipx run cookieplone` |
-| **COOKIEPLONE_REPOSITORY_REF** | Which tag/branch to use from a remote repository. | `COOKIEPLONE_REPOSITORY_REF=experimental pipx run cookieplone` |
+| **COOKIEPLONE_REPOSITORY_TAG** | Which tag/branch to use from a remote repository. | `COOKIEPLONE_REPOSITORY_TAG=experimental pipx run cookieplone` |
 | **COOKIEPLONE_REPO_PASSWORD** | Password to use when using a remote repository that is password protected. | `COOKIEPLONE_REPO_PASSWORD=very-secure pipx run cookieplone` |
 
 ## Contribute 🤝
