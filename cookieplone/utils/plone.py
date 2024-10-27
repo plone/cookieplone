@@ -49,3 +49,15 @@ def format_python_codebase(path: Path):
     for cmd, func in PY_FORMATTERS:
         logger.debug(f"Format codebase: Running {cmd}")
         func(path)
+
+
+def create_namespace_packages(path: Path, package_name: str):
+    """Create namespace packages to hold an existing package."""
+    current = path.parent
+    for namespace in package_name.split(".")[:-1]:
+        current = current / namespace
+        current.mkdir()
+        (current / "__init__.py").write_text(
+            '__import__("pkg_resources").declare_namespace(__name__)\n'
+        )
+    path.rename(current / package_name.split(".")[-1])

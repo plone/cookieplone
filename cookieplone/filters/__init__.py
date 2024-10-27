@@ -11,13 +11,33 @@ from cookieplone.utils import containers, versions
 @simple_filter
 def package_name(v) -> str:
     """Return the Python package name (without namespace)."""
-    return v.split(".")[1]
+    return v.split(".")[-1]
 
 
 @simple_filter
 def package_namespace(v) -> str:
     """Return the Python package namespace."""
-    return v.split(".")[0]
+    parts = v.rsplit(".", 1)
+    if len(parts) > 1:
+        return parts[0]
+    return ""
+
+
+@simple_filter
+def package_namespaces(v) -> str:
+    """Return Python package namespaces formatted for setup.py."""
+    result = []
+    nsparts = []
+    for ns in v.split(".")[:-1]:
+        nsparts.append(ns)
+        result.append(".".join(nsparts))
+    return ", ".join(f'"{item}"' for item in result)
+
+
+@simple_filter
+def package_path(v) -> str:
+    """Return path to the package code within the src directory."""
+    return "/".join(v.split("."))
 
 
 @simple_filter

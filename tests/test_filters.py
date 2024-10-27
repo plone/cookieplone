@@ -21,8 +21,20 @@ def generate_context_file(tmp_path):
 @pytest.mark.parametrize(
     "filter_,raw,expected",
     [
+        ["package_name", "{{'foo' | package_name}}", "foo"],
         ["package_name", "{{'foo.bar' | package_name}}", "bar"],
+        ["package_namespace", "{{'foo' | package_namespace}}", ""],
         ["package_namespace", "{{'foo.bar' | package_namespace}}", "foo"],
+        ["package_namespaces", "{{'foo' | package_namespaces}}", ""],
+        ["package_namespaces", "{{'foo.bar' | package_namespaces}}", '"foo"'],
+        [
+            "package_namespaces",
+            "{{'foo.bar.baz' | package_namespaces}}",
+            '"foo", "foo.bar"',
+        ],
+        ["package_path", "{{'foo' | package_path}}", "foo"],
+        ["package_path", "{{'foo.bar' | package_path}}", "foo/bar"],
+        ["package_path", "{{'foo.bar.baz' | package_path}}", "foo/bar/baz"],
         ["pascal_case", "{{'foo_bar' | pascal_case}}", "FooBar"],
         ["use_prerelease_versions", "{{ '' | use_prerelease_versions }}", "No"],
         ["node_version_for_volto", "{{'17' | node_version_for_volto}}", "18"],

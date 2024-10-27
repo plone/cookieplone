@@ -73,22 +73,9 @@ def test_validate_language_code(value: str, expected: str):
         (" ", "' ' is not a valid Python identifier."),
         ("", "'' is not a valid Python identifier."),
         ("project title", "'project title' is not a valid Python identifier."),
-        (
-            "project_title",
-            "The Python package name must contain a single namespace "
-            "(e.g. collective.something)",
-        ),
+        ("project_title", ""),
         ("project-title", "'project-title' is not a valid Python identifier."),
-        (
-            "projecttitle",
-            "The Python package name must contain a single namespace "
-            "(e.g. collective.something)",
-        ),
-        (
-            "projectTitle",
-            "The Python package name must contain a single namespace "
-            "(e.g. collective.something)",
-        ),
+        ("projecttitle", ""),
         ("project.title", ""),
     ),
 )
