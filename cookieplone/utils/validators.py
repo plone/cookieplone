@@ -54,11 +54,6 @@ def validate_python_package_name(value: str) -> str:
     parts = value.split(".")
     if any(not part.isidentifier() for part in parts):
         return f"'{value}' is not a valid Python identifier."
-    if len(parts) != 2:
-        return (
-            "The Python package name must contain a single namespace "
-            "(e.g. collective.something)"
-        )
     return ""
 
 
