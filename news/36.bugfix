@@ -1,1 +1,0 @@
-Show a more helpful error message if user enters a Python package name without a namespace. @davisagli

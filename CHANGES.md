@@ -9,6 +9,26 @@
 
 <!-- towncrier release notes start -->
 
+## 0.8.0 (2024-11-07)
+
+
+### New features:
+
+- Support Python package names with no namespace or multiple namespaces. @davisagli [#43](https://github.com/plone/cookieplone/issues/43)
+
+
+### Bug fixes:
+
+- Show a more helpful error message if user enters a Python package name without a namespace. @davisagli [#36](https://github.com/plone/cookieplone/issues/36)
+- Fix error with `--replay`. @davisagli [#37](https://github.com/plone/cookieplone/issues/37)
+- Rename the `--no_input` option to `--no-input` for consistency with other options. @davisagli [#41](https://github.com/plone/cookieplone/issues/41)
+
+
+### Documentation:
+
+- Fix environment variable name
+  [erral] [#42](https://github.com/plone/cookieplone/issues/42)
+
 ## 0.7.1 (2024-05-29)
 
 
