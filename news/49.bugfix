@@ -1,1 +1,1 @@
-Don't fail validation when using Node 22. @davisagli
+Fix validation of Volto and Node versions. @davisagli

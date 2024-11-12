@@ -94,7 +94,7 @@ def validate_volto_version(value: str) -> str:
     status = bool(version) and (
         version >= _version_from_str(settings.VOLTO_MIN_VERSION)
     )
-    return "" if status else f"{value} is not a valid Volto version."
+    return "" if status else f"Volto version {value} is not supported by this template."
 
 
 def run_context_validations(
