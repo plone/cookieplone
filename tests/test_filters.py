@@ -37,7 +37,7 @@ def generate_context_file(tmp_path):
         ["package_path", "{{'foo.bar.baz' | package_path}}", "foo/bar/baz"],
         ["pascal_case", "{{'foo_bar' | pascal_case}}", "FooBar"],
         ["use_prerelease_versions", "{{ '' | use_prerelease_versions }}", "No"],
-        ["node_version_for_volto", "{{'17' | node_version_for_volto}}", "18"],
+        ["node_version_for_volto", "{{'17' | node_version_for_volto}}", "20"],
         ["gs_language_code", "{{'ES' | gs_language_code}}", "es"],
         ["gs_language_code", "{{'es-MX' | gs_language_code}}", "es-mx"],
         ["locales_language_code", "{{'es-mx' | locales_language_code}}", "es_MX"],

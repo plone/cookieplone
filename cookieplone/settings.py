@@ -11,13 +11,14 @@ SUPPORTED_PYTHON_VERSIONS = [
     "3.12",
 ]
 
-DEFAULT_NODE = 18
+DEFAULT_NODE = 20
 SUPPORTED_NODE_VERSIONS = [
     "16",
     "17",
     "18",
     "19",
     "20",
+    "22",
 ]
 
 
@@ -25,7 +26,7 @@ VOLTO_MIN_VERSION = "16"
 VOLTO_NODE = {
     16: 16,
     17: DEFAULT_NODE,
-    18: 20,
+    18: 22,
 }
 MIN_DOCKER_VERSION = "20.10"
 
