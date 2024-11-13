@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.8.1 (2024-11-13)
+
+
+### Bug fixes:
+
+- Fix validation of Volto and Node versions. @davisagli [#49](https://github.com/plone/cookieplone/issues/49)
+
 ## 0.8.0 (2024-11-07)
 
 
