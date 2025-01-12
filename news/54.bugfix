@@ -1,0 +1,1 @@
+Add support for Python 3.13, and add a validator to check compatibility between Plone and Python version. @davisagli

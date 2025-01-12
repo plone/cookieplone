@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 PLONE_MIN_VERSION = "6"
+PLONE_PYTHON_VERSIONS = {
+    (6, 0): ["3.8", "3.9", "3.10", "3.11", "3.12"],
+    (6, 1): ["3.10", "3.11", "3.12", "3.13"],
+}
 
 SUPPORTED_PYTHON_VERSIONS = [
     "3.8",
@@ -9,6 +13,7 @@ SUPPORTED_PYTHON_VERSIONS = [
     "3.10",
     "3.11",
     "3.12",
+    "3.13",
 ]
 
 DEFAULT_NODE = 22

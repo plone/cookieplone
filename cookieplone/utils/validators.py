@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 import re
+import sys
 from typing import Any
 from urllib.parse import urlparse
 
@@ -86,6 +87,23 @@ def validate_plone_version(value: str) -> str:
         version >= _version_from_str(settings.PLONE_MIN_VERSION)
     )
     return "" if status else f"{value} is not a valid Plone version."
+
+
+def validate_python_version(plone_version: str) -> str:
+    """Validate current Python is compatible with specified Plone version."""
+    plone_version_tuple = tuple(_version_from_str(plone_version).release[:2])
+    supported_python_versions = (
+        settings.PLONE_PYTHON_VERSIONS.get(plone_version_tuple) or []
+    )
+    if not supported_python_versions:
+        return f"Cookieplone doesn't support Plone version {plone_version}"
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    return (
+        ""
+        if python_version in supported_python_versions
+        else f"You have Python {python_version} but Plone {plone_version} "
+        f"requires one of the following Pythons: {', '.join(supported_python_versions)}"
+    )
 
 
 def validate_volto_version(value: str) -> str:
