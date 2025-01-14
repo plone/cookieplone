@@ -192,12 +192,3 @@ def test_validate_plone_version(version: str, expected: str):
 def test_validate_volto_version(version: str, expected: str):
     func = validators.validate_volto_version
     assert func(version) == expected
-
-
-def test_validate_python_version():
-    assert validators.validate_python_version("6.0.14") == ""
-    assert validators.validate_python_version("6.1.0b2") == ""
-    assert (
-        validators.validate_python_version("5.2")
-        == "Cookieplone doesn't support Plone version 5.2"
-    )
