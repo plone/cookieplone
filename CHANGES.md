@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.8.2 (2025-01-14)
+
+
+### Bug fixes:
+
+- Add support for Python 3.13. @davisagli [#54](https://github.com/plone/cookieplone/issues/54)
+
 ## 0.8.1 (2024-11-13)
 
 
