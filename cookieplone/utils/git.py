@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: MIT
 from pathlib import Path
 
-from git import Commit, Repo
-from git.exc import InvalidGitRepositoryError
+from git import Commit, Git, Repo
+from git.exc import GitCommandError, InvalidGitRepositoryError
 
 
 def repo_from_path(path: Path) -> Repo | None:
@@ -24,7 +24,11 @@ def check_path_is_repository(path: Path) -> bool:
 def initialize_repository(path: Path) -> Repo:
     """Initialize a git repository and add all files."""
     if not check_path_is_repository(path):
-        repo = Repo.init(path)
+        try:
+            initial_branch = Git().config("init.defaultBranch")
+        except GitCommandError:
+            initial_branch = "main"
+        repo = Repo.init(path, initial_branch=initial_branch)
         repo.git.add(path)
     else:
         repo = Repo(path)

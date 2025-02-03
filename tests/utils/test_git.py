@@ -29,6 +29,7 @@ def test_initialize_repository_existing_repo(tmp_repo):
 def test_initialize_repository_new_repo(no_repo):
     repo = git.initialize_repository(no_repo)
     assert isinstance(repo, Repo)
+    assert repo.active_branch.name == "main"
 
 
 def test_get_last_commit(tmp_repo):
