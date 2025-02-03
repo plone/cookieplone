@@ -1,2 +1,2 @@
-Use `main` as the default branch for new git repositories, unless it has been
+Use the `init.defaultBranch` setting in git `config` if available, else `main`, as the branch name for new git repositories. @davisagli
 customized via the `init.defaultBranch` setting in git config. @davisagli
