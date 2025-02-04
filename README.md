@@ -125,6 +125,12 @@ Install all development dependencies, including Hatch, and create a local virtua
 make install
 ```
 
+### Run the checked out branch of Cookieplone
+
+```shell
+hatch run cookieplone
+```
+
 ### Check and format the codebase
 
 ```shell
