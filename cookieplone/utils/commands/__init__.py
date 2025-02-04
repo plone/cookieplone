@@ -16,9 +16,7 @@ def _get_command_version(cmd: str) -> str:
             .stdout.decode()
             .strip()
         )
-    except FileNotFoundError:
-        raw_version = ""
-    except PermissionError:
+    except (FileNotFoundError, PermissionError):
         raw_version = ""
     return raw_version
 
