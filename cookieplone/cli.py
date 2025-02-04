@@ -38,6 +38,10 @@ def parse_extra_content(value: list[str]) -> dict:
     return dict([s.split("=") for s in value])
 
 
+def parse_boolean(value: str) -> bool:
+    return value.lower() in ("1", "yes", "y")
+
+
 def prompt_for_template(base_path: Path) -> str:
     """Parse cookiecutter.json in base_path and prompt user to choose."""
     templates = get_template_options(base_path)
