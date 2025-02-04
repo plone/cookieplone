@@ -18,6 +18,8 @@ def _get_command_version(cmd: str) -> str:
         )
     except FileNotFoundError:
         raw_version = ""
+    except PermissionError:
+        raw_version = ""
     return raw_version
 
 
