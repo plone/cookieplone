@@ -9,6 +9,15 @@
 
 <!-- towncrier release notes start -->
 
+## 0.8.3 (2025-02-04)
+
+
+### Bug fixes:
+
+- Fix parsing of boolean values for use_prerelease_versions. @davisagli [#47](https://github.com/plone/cookieplone/issues/47)
+- Use the `init.defaultBranch` setting in git `config` if available, else `main`, as the branch name for new git repositories. @davisagli
+  customized via the `init.defaultBranch` setting in git config. @davisagli [#135](https://github.com/plone/cookieplone/issues/135)
+
 ## 0.8.2 (2025-01-14)
 
 
