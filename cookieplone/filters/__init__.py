@@ -5,6 +5,7 @@ import os
 
 from cookiecutter.utils import simple_filter
 
+from cookieplone.cli import parse_boolean
 from cookieplone.utils import containers, versions
 
 
@@ -64,14 +65,14 @@ def use_prerelease_versions(_: str) -> str:
 @simple_filter
 def latest_volto(use_prerelease_versions: str) -> str:
     """Return the latest released version of Volto."""
-    allow_prerelease = use_prerelease_versions == "Yes"
+    allow_prerelease = parse_boolean(use_prerelease_versions)
     return versions.latest_volto(allow_prerelease=allow_prerelease)
 
 
 @simple_filter
 def latest_plone(use_prerelease_versions: str) -> str:
     """Return the latest released version of Plone."""
-    allow_prerelease = use_prerelease_versions == "Yes"
+    allow_prerelease = parse_boolean(use_prerelease_versions)
     return versions.latest_plone(allow_prerelease=allow_prerelease)
 
 
