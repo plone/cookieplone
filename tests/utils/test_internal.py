@@ -46,11 +46,11 @@ def test_signature_md_without_commit(no_repo):
     result = internal.signature_md(no_repo)
     assert isinstance(result, str)
     assert result.startswith(f"Generated using [Cookieplone ({__version__})]")
-    assert "[cookiecutter-plone]" in result
+    assert "[cookieplone-templates]" in result
 
 
 def test_signature_md_with_commit(tmp_repo):
     result = internal.signature_md(tmp_repo)
     assert isinstance(result, str)
     assert result.startswith(f"Generated using [Cookieplone ({__version__})]")
-    assert re.search(r"\[cookiecutter-plone \([a-f0-9]{7}\)]\([^\)]*\)", result)
+    assert re.search(r"\[cookieplone-templates \([a-f0-9]{7}\)]\([^\)]*\)", result)

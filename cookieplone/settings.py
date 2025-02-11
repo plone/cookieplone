@@ -25,7 +25,7 @@ MIN_DOCKER_VERSION = "20.10"
 
 ## DEFAULT
 COOKIEPLONE_REPO = "https://github.com/plone/cookieplone"
-TEMPLATES_REPO = "https://github.com/plone/cookiecutter-plone"
+TEMPLATES_REPO = "https://github.com/plone/cookieplone-templates"
 REPO_DEFAULT = "gh:plone/cookieplone-templates"
 
 ## Config

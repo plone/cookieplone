@@ -83,7 +83,7 @@ def signature_md(path: Path) -> str:
     date_info = f"{datetime.now()}"
     cookieplone = f"[Cookieplone ({__version__})]({settings.COOKIEPLONE_REPO})"
     commit = git.get_last_commit(path)
-    template_title = "cookiecutter-plone"
+    template_title = "cookieplone-templates"
     if not commit:
         template_link = settings.TEMPLATES_REPO
     else:
