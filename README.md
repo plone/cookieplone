@@ -48,7 +48,7 @@ Cookieplone offers the following key features for each audience.
 First, ensure you have Python, pip, and pipx installed on your system.
 
 See [how to install these and check Plone's prerequisites](https://6.docs.plone.org/install/create-project-cookieplone.html#prerequisites-for-installation).
-
+Set up your system with [Plone's prerequisites](https://6.docs.plone.org/install/create-project-cookieplone.html#prerequisites-for-installation).
 Then install Cookieplone using `pipx`:
 
 ```shell
