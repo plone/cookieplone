@@ -106,3 +106,9 @@ def locales_language_code(code: str) -> str:
 def image_prefix(registry: str) -> str:
     """Return the a prefix to be used with all Docker images."""
     return containers.image_prefix(registry)
+
+
+@simple_filter
+def image_separator(registry: str) -> str:
+    """ return the separator to be used for Docker images"""
+    return containers.image_separator(registry)
