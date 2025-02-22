@@ -9,6 +9,14 @@
 
 <!-- towncrier release notes start -->
 
+## 0.8.4 (2025-02-22)
+
+
+### Bug fixes:
+
+- Added an exception for sanity check command failure due to permission error. @ewohnlich [#62](https://github.com/plone/cookieplone/issues/62)
+- Fix outdated references to cookiecutter-plone. @davisagli [#65](https://github.com/plone/cookieplone/issues/65)
+
 ## 0.8.3 (2025-02-04)
 
 
