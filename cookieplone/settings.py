@@ -1,6 +1,18 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
+from dataclasses import dataclass
+
+
+@dataclass
+class PythonVersionSupport:
+    """Python version support for Plone."""
+
+    supported: list[str]
+    oldest: str
+    latest: str
+
+
 PLONE_MIN_VERSION = "6"
 
 SUPPORTED_PYTHON_VERSIONS = [
@@ -9,6 +21,28 @@ SUPPORTED_PYTHON_VERSIONS = [
     "3.12",
     "3.13",
 ]
+
+PLONE_PYTHON = {
+    "6.0": PythonVersionSupport(
+        [
+            "3.10",
+            "3.11",
+            "3.12",
+        ],
+        "3.10",
+        "3.12",
+    ),
+    "6.1": PythonVersionSupport(
+        [
+            "3.10",
+            "3.11",
+            "3.12",
+            "3.13",
+        ],
+        "3.10",
+        "3.13",
+    ),
+}
 
 DEFAULT_NODE = 22
 SUPPORTED_NODE_VERSIONS = [
@@ -23,12 +57,12 @@ VOLTO_NODE = {
 }
 MIN_DOCKER_VERSION = "20.10"
 
-## DEFAULT
+# DEFAULT
 COOKIEPLONE_REPO = "https://github.com/plone/cookieplone"
 TEMPLATES_REPO = "https://github.com/plone/cookieplone-templates"
 REPO_DEFAULT = "gh:plone/cookieplone-templates"
 
-## Config
+# Config
 QUIET_MODE_VAR = "COOKIEPLONE_QUIET_MODE_SWITCH"
 REPO_LOCATION = "COOKIEPLONE_REPOSITORY"
 REPO_TAG = "COOKIEPLONE_REPOSITORY_TAG"

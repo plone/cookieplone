@@ -77,6 +77,27 @@ def latest_plone(use_prerelease_versions: str) -> str:
 
 
 @simple_filter
+def python_versions(plone_version: str) -> list[str]:
+    """Return a list of supported Python versions for a Plone version."""
+    versions_info = versions.python_versions_for_plone(plone_version)
+    return versions_info.supported
+
+
+@simple_filter
+def python_version_oldest(plone_version: str) -> str:
+    """Return a list of supported Python versions for a Plone version."""
+    versions_info = versions.python_versions_for_plone(plone_version)
+    return versions_info.oldest
+
+
+@simple_filter
+def python_version_latest(plone_version: str) -> str:
+    """Return a list of supported Python versions for a Plone version."""
+    versions_info = versions.python_versions_for_plone(plone_version)
+    return versions_info.latest
+
+
+@simple_filter
 def node_version_for_volto(volto_version: str) -> int:
     """Return the Node Version to be used."""
     return versions.node_version_for_volto(volto_version)

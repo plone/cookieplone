@@ -43,6 +43,20 @@ def generate_context_file(tmp_path):
         ["locales_language_code", "{{'es-mx' | locales_language_code}}", "es_MX"],
         ["image_prefix", "{{'github' | image_prefix}}", "ghcr.io/"],
         ["image_prefix", "{{'bitbucket' | image_prefix}}", ""],
+        [
+            "python_versions",
+            "{{'6.0' | python_versions}}",
+            "['3.10', '3.11', '3.12']",
+        ],
+        [
+            "python_versions",
+            "{{'6.1' | python_versions}}",
+            "['3.10', '3.11', '3.12', '3.13']",
+        ],
+        ["python_version_oldest", "{{'6.0' | python_version_oldest}}", "3.10"],
+        ["python_version_oldest", "{{'6.1' | python_version_oldest}}", "3.10"],
+        ["python_version_latest", "{{'6.0' | python_version_latest}}", "3.12"],
+        ["python_version_latest", "{{'6.1' | python_version_latest}}", "3.13"],
     ],
 )
 def test_filters(generate_context_file, filter_: str, raw: str, expected: str):
