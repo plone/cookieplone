@@ -19,7 +19,8 @@ def tmp_repo(tmp_path):
 
 @pytest.fixture()
 def no_repo(tmp_path):
-    sub_path = "".join(random.choice(string.ascii_lowercase) for _ in range(20))  # noQA:S311
+    letters = string.ascii_lowercase
+    sub_path = "".join(random.choice(letters) for _ in range(20))  # noQA: S311
     path = tmp_path / sub_path
     path.mkdir(parents=True)
     return path

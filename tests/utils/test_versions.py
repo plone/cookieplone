@@ -1,5 +1,6 @@
 import pytest
 
+from cookieplone.settings import PythonVersionSupport
 from cookieplone.utils import versions
 
 
@@ -168,14 +169,14 @@ def test_get_pypi_package_versions():
         ["17", "17.99", True, "17.15.5"],
     ],
 )
-def test_latest_version(
+def test_version_latest(
     volto_versions,
     min_version: str,
     max_version: str,
     allow_prerelease: bool,
     expected: str,
 ):
-    func = versions.latest_version
+    func = versions.version_latest
     assert func(volto_versions, min_version, max_version, allow_prerelease) == expected
 
 
@@ -220,3 +221,37 @@ def test_latest_plone(
 ):
     func = versions.latest_plone
     assert func(min_version, max_version, allow_prerelease) == expected
+
+
+@pytest.mark.parametrize(
+    "plone_version,supported,oldest,latest",
+    [
+        ["6.0", ["3.10", "3.11", "3.12"], "3.10", "3.12"],
+        ["6.0.14", ["3.10", "3.11", "3.12"], "3.10", "3.12"],
+        ["6.1.0", ["3.10", "3.11", "3.12", "3.13"], "3.10", "3.13"],
+    ],
+)
+def test_python_versions_for_plone(
+    plone_version: str, supported: list[str], oldest: str, latest: str
+):
+    func = versions.python_versions_for_plone
+    result = func(plone_version)
+    assert isinstance(result, PythonVersionSupport)
+    assert result.supported == supported
+    assert result.oldest == oldest
+    assert result.latest == latest
+
+
+@pytest.mark.parametrize(
+    "plone_version,expected",
+    [
+        ["6.0", "3.12"],
+        ["6.0.14", "3.12"],
+        ["6.1.0", "3.13"],
+    ],
+)
+def test_python_version_for_plone(plone_version: str, expected: str):
+    func = versions.python_version_for_plone
+    result = func(plone_version)
+    assert isinstance(result, str)
+    assert result == expected

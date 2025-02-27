@@ -10,7 +10,9 @@ from cookieplone import settings
 def get_npm_package_versions(package: str) -> list[str]:
     """Get versions for a NPM package."""
     url: str = f"https://registry.npmjs.org/{package}"
-    resp = requests.get(url, headers={"Accept": "application/vnd.npm.install-v1+json"})  # noQA: S113
+    resp = requests.get(  # noQA: S113
+        url, headers={"Accept": "application/vnd.npm.install-v1+json"}
+    )
     data = resp.json()
     return list(data["dist-tags"].values())
 
@@ -40,7 +42,7 @@ def is_valid_version(
     return status
 
 
-def latest_version(
+def version_latest(
     versions: list[str],
     min_version: str | None = None,
     max_version: str | None = None,
@@ -66,7 +68,7 @@ def latest_volto(
 ) -> str | None:
     """Return the latest volto version."""
     versions = get_npm_package_versions("@plone/volto")
-    return latest_version(
+    return version_latest(
         versions,
         min_version=min_version,
         max_version=max_version,
@@ -81,7 +83,7 @@ def latest_plone(
 ) -> str | None:
     """Return the latest Plone version."""
     versions = get_pypi_package_versions("Plone")
-    return latest_version(
+    return version_latest(
         versions,
         min_version=min_version,
         max_version=max_version,
@@ -93,3 +95,17 @@ def node_version_for_volto(volto_version: str) -> int:
     """Return the Node Version to be used with Volto."""
     major = Version(volto_version).major
     return settings.VOLTO_NODE.get(major, settings.DEFAULT_NODE)
+
+
+def python_versions_for_plone(plone_version: str) -> settings.PythonVersionSupport:
+    """Return the Python version information for a given Plone version."""
+    major = Version(plone_version).major
+    minor = Version(plone_version).minor
+    version = f"{major}.{minor}"
+    return settings.PLONE_PYTHON.get(version)
+
+
+def python_version_for_plone(plone_version: str) -> str:
+    """Return the Node Version to be used with Volto."""
+    version_support = python_versions_for_plone(plone_version)
+    return version_support.latest
