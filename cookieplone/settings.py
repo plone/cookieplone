@@ -57,7 +57,7 @@ SUPPORTED_NODE_VERSIONS = [
 ]
 
 
-VOLTO_MIN_VERSION = "18.0.0-alpha.1"
+VOLTO_MIN_VERSION = "18.0.0-alpha.43"
 VOLTO_NODE = {
     18: 22,
 }
