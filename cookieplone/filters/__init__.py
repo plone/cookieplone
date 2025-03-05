@@ -78,21 +78,21 @@ def latest_plone(use_prerelease_versions: str) -> str:
 
 @simple_filter
 def python_versions(plone_version: str) -> list[str]:
-    """Return a list of supported Python versions for a Plone version."""
+    """Return a list of supported Python versions for a given Plone version."""
     versions_info = versions.python_versions_for_plone(plone_version)
     return versions_info.supported
 
 
 @simple_filter
-def python_version_oldest(plone_version: str) -> str:
-    """Return a list of supported Python versions for a Plone version."""
+def python_version_earliest(plone_version: str) -> str:
+    """Return the earliest supported Python version for a given Plone version."""
     versions_info = versions.python_versions_for_plone(plone_version)
-    return versions_info.oldest
+    return versions_info.earliest
 
 
 @simple_filter
 def python_version_latest(plone_version: str) -> str:
-    """Return a list of supported Python versions for a Plone version."""
+    """Return the latest supported Python version for a given Plone version."""
     versions_info = versions.python_versions_for_plone(plone_version)
     return versions_info.latest
 

@@ -224,7 +224,7 @@ def test_latest_plone(
 
 
 @pytest.mark.parametrize(
-    "plone_version,supported,oldest,latest",
+    "plone_version,supported,earliest,latest",
     [
         ["6.0", ["3.10", "3.11", "3.12"], "3.10", "3.12"],
         ["6.0.14", ["3.10", "3.11", "3.12"], "3.10", "3.12"],
@@ -232,13 +232,13 @@ def test_latest_plone(
     ],
 )
 def test_python_versions_for_plone(
-    plone_version: str, supported: list[str], oldest: str, latest: str
+    plone_version: str, supported: list[str], earliest: str, latest: str
 ):
     func = versions.python_versions_for_plone
     result = func(plone_version)
     assert isinstance(result, PythonVersionSupport)
     assert result.supported == supported
-    assert result.oldest == oldest
+    assert result.oldest == earliest
     assert result.latest == latest
 
 

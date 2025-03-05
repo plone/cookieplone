@@ -106,6 +106,6 @@ def python_versions_for_plone(plone_version: str) -> settings.PythonVersionSuppo
 
 
 def python_version_for_plone(plone_version: str) -> str:
-    """Return the Node Version to be used with Volto."""
+    """Return the latest supported Python version for a given Plone version."""
     version_support = python_versions_for_plone(plone_version)
     return version_support.latest

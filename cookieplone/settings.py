@@ -9,7 +9,7 @@ class PythonVersionSupport:
     """Python version support for Plone."""
 
     supported: list[str]
-    oldest: str
+    earliest: str
     latest: str
 
 
@@ -22,6 +22,12 @@ SUPPORTED_PYTHON_VERSIONS = [
     "3.13",
 ]
 
+# A matrix of Plone and Python version support.
+# For each version of Plone, its Python support is a tuple,
+# where the corresponding elements are
+# a list of supported Python versions,
+# its earliest supported Python version, and
+# its latest supported Python version.
 PLONE_PYTHON = {
     "6.0": PythonVersionSupport(
         [
