@@ -92,7 +92,7 @@ def latest_plone(
 
 
 def node_version_for_volto(volto_version: str) -> int:
-    """Return the Node Version to be used with Volto."""
+    """Return the Node.js version to use with Volto."""
     major = Version(volto_version).major
     return settings.VOLTO_NODE.get(major, settings.DEFAULT_NODE)
 
