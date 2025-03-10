@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 from black import main as black_main
@@ -44,3 +45,15 @@ def run_black(base_path: Path):
     pyproject = base_path / "pyproject.toml"
     args = ["--config", f"{pyproject}", f"{base_path}"]
     _ = CliRunner().invoke(black_main, args)
+
+
+def run_ruff(base_path: Path):
+    """Run ruff on the given path."""
+    pyproject = base_path / "pyproject.toml"
+    # Format codebase
+    cmds = [
+        ["ruff", "check", "--select", "I", "--fix", "--config", f"{pyproject}"],
+        ["ruff", "format", "--config", f"{pyproject}"],
+    ]
+    for cmd in cmds:
+        subprocess.run(cmd, shell=True, capture_output=True)  # noQA: S602
