@@ -184,7 +184,11 @@ def test_validate_plone_version(version: str, expected: str):
 @pytest.mark.parametrize(
     "version,expected",
     (
-        ("18.0.0-alpha.21", ""),
+        ("18.9.1", ""),
+        (
+            "18.0.0-alpha.21",
+            "Volto version 18.0.0-alpha.21 is not supported by this template.",
+        ),
         ("17.0.0", "Volto version 17.0.0 is not supported by this template."),
         ("16.15.1", "Volto version 16.15.1 is not supported by this template."),
     ),

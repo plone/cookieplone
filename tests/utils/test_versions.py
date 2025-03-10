@@ -238,7 +238,7 @@ def test_python_versions_for_plone(
     result = func(plone_version)
     assert isinstance(result, PythonVersionSupport)
     assert result.supported == supported
-    assert result.oldest == earliest
+    assert result.earliest == earliest
     assert result.latest == latest
 
 
