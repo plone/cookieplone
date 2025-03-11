@@ -32,10 +32,15 @@ def add_dependency_to_zcml(package: str, raw_xml: str) -> str:
     return raw_xml
 
 
-PY_FORMATTERS = (
+OLD_PY_FORMATTERS = (
     ("zpretty", formatters.run_zpretty),
     ("isort", formatters.run_isort),
     ("black", formatters.run_black),
+)
+
+NEW_PY_FORMATTERS = (
+    ("zpretty", formatters.run_zpretty),
+    ("ruff", formatters.run_ruff),
 )
 
 
@@ -45,8 +50,10 @@ def format_python_codebase(path: Path):
     pyproject = path / "pyproject.toml"
     if not pyproject.exists():
         logger.info(f"Format codebase: No pyproject.toml found in {path}, stopping")
+    use_ruff = "[tool.ruff]" in pyproject.read_text()
+    formatters = NEW_PY_FORMATTERS if use_ruff else OLD_PY_FORMATTERS
     # Run formatters
-    for cmd, func in PY_FORMATTERS:
+    for cmd, func in formatters:
         logger.debug(f"Format codebase: Running {cmd}")
         func(path)
 
