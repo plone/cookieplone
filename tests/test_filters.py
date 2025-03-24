@@ -57,6 +57,9 @@ def generate_context_file(tmp_path):
         ["python_version_earliest", "{{'6.1' | python_version_earliest}}", "3.10"],
         ["python_version_latest", "{{'6.0' | python_version_latest}}", "3.12"],
         ["python_version_latest", "{{'6.1' | python_version_latest}}", "3.13"],
+        ["as_semver", "{{'6.1' | as_semver}}", "6.1.0"],
+        ["as_semver", "{{'1.0.0a0' | as_semver}}", "1.0.0-alpha.0"],
+        ["as_semver", "{{'1.0.0a0.dev0' | as_semver}}", "1.0.0-alpha.0+dev-0"],
     ],
 )
 def test_filters(generate_context_file, filter_: str, raw: str, expected: str):
