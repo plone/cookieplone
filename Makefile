@@ -91,4 +91,7 @@ changelog: ## Release the package to pypi.org
 .PHONY: release
 release: ## Release the package to pypi.org
 	@echo "🚀 Release package"
-	@uv run fullrelease
+	@uv run prerelease
+	@uv build
+	@uv publish
+	@uv run postrelease
