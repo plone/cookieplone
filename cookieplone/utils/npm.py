@@ -12,7 +12,7 @@ def parse_package_name(name: str) -> tuple[str, str]:
     return org, package_name
 
 
-def unscopped_package_name(name: str) -> str:
+def unscoped_package_name(name: str) -> str:
     """Return the unscoped package name for an npm package."""
     _, package_name = parse_package_name(name)
     return package_name

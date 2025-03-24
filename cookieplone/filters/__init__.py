@@ -137,5 +137,5 @@ def as_semver(v: str) -> str:
 
 @simple_filter
 def unscoped_package_name(v: str) -> str:
-    """Return the unscopped name for a given package."""
-    return npm.unscopped_package_name(v)
+    """Return the unscoped name for a given package."""
+    return npm.unscoped_package_name(v)

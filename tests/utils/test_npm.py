@@ -37,6 +37,6 @@ def test_parse_package_name(name: str, expected: tuple[str, str]):
         ("@plone/volto", "volto"),
     ],
 )
-def test_unscopped_package_name(name: str, expected: str):
-    func = npm.unscopped_package_name
+def test_unscoped_package_name(name: str, expected: str):
+    func = npm.unscoped_package_name
     assert func(name) == expected
