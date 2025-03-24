@@ -78,16 +78,22 @@ def cookieplone_info(repository: str | Path, passwd: str = "", tag: str = "") ->
     }
 
 
+def repo_sha(path: Path) -> str:
+    """Return the sha for the last commit on the repository."""
+    commit = git.get_last_commit(path)
+    return commit.hexsha if commit else ""
+
+
 def signature_md(path: Path) -> str:
     """Return a signature, in markdown."""
     date_info = f"{datetime.now()}"
     cookieplone = f"[Cookieplone ({__version__})]({settings.COOKIEPLONE_REPO})"
-    commit = git.get_last_commit(path)
+
     template_title = "cookieplone-templates"
-    if not commit:
+    sha = repo_sha(path)
+    if not sha:
         template_link = settings.TEMPLATES_REPO
     else:
-        sha = commit.hexsha
         template_title = f"{template_title} ({sha[:7]})"
         template_link = f"{settings.TEMPLATES_REPO}/commit/{sha}"
     template = f"[{template_title}]({template_link})"
