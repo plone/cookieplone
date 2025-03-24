@@ -6,7 +6,7 @@ import os
 from cookiecutter.utils import simple_filter
 
 from cookieplone.cli import parse_boolean
-from cookieplone.utils import containers, versions
+from cookieplone.utils import containers, npm, versions
 
 
 @simple_filter
@@ -133,3 +133,9 @@ def image_prefix(registry: str) -> str:
 def as_semver(v: str) -> str:
     """Convert a PEP 440 version to SemVer."""
     return versions.convert_pep440_semver(v)
+
+
+@simple_filter
+def unscopped_package_name(v: str) -> str:
+    """Return the unscopped name for a given package."""
+    return npm.unscopped_package_name(v)

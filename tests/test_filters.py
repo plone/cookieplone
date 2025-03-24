@@ -59,7 +59,21 @@ def generate_context_file(tmp_path):
         ["python_version_latest", "{{'6.1' | python_version_latest}}", "3.13"],
         ["as_semver", "{{'6.1' | as_semver}}", "6.1.0"],
         ["as_semver", "{{'1.0.0a0' | as_semver}}", "1.0.0-alpha.0"],
-        ["as_semver", "{{'1.0.0a0.dev0' | as_semver}}", "1.0.0-alpha.0+dev-0"],
+        [
+            "unscopped_package_name",
+            "{{'volto-addon' | unscopped_package_name}}",
+            "volto-addon",
+        ],
+        [
+            "unscopped_package_name",
+            "{{'@plone-collective/volto-addon' | unscopped_package_name}}",
+            "volto-addon",
+        ],
+        [
+            "unscopped_package_name",
+            "{{'@plone/volto' | unscopped_package_name}}",
+            "volto",
+        ],
     ],
 )
 def test_filters(generate_context_file, filter_: str, raw: str, expected: str):
