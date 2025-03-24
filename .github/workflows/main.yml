@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+env:
+  python-version: "3.12"
+
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -11,39 +14,70 @@ jobs:
       - name: Checkout codebase
         uses: actions/checkout@v4
 
-      - name: Install hatch
-        run: pipx install hatch
-
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.12
+          python-version: ${{ env.python-version }}
           cache: "pip"
 
-      - name: "Install Environment"
-        run: hatch env create
-
       - name: "Run checks"
-        run: hatch run check
+        uses: pre-commit/action@v3.0.1
 
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
+    env:
+      python-version: ${{ matrix.python-version }}
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v4
 
-      - name: Install hatch
-        run: pipx install hatch
-
-      - uses: actions/setup-python@v5
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: "pip"
+          python-version: ${{ env.python-version }}
+          enable-cache: false
 
-      - name: "Install Environment"
-        run: hatch env create
+      - name: Restore uv cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
+            uv-${{ runner.os }}-${{ env.python-version }}
 
-      - name: "Test Codebase"
-        run: hatch run test
+      - name: Run tests
+        run: |
+          make test
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v4
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ env.python-version }}
+          enable-cache: false
+
+      - name: Restore uv cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
+            uv-${{ runner.os }}-${{ env.python-version }}
+
+      - name: Run coverage
+        run: |
+          make test-coverage
+
+      - name: Report Coverage
+        run: |
+          echo "# Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "$(uv run coverage report --format markdown)" >> $GITHUB_STEP_SUMMARY

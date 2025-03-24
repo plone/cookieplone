@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  PYTHON_VERSION: 3.11
+  python-version: 3.12
 
 jobs:
   build:
@@ -22,16 +22,18 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ env.python-version }}
           cache: 'pip'
 
-      - name: "Install Environment"
-        run: hatch env create
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ env.python-version }}
 
       - name: Check for presence of a Change Log fragment (only pull requests)
-        run: |
-          git fetch --no-tags origin ${BASE_BRANCH}
-          hatch run towncrier check
+        if: github.event_name == 'pull_request'
         env:
           BASE_BRANCH: ${{ github.base_ref }}
-        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags origin ${BASE_BRANCH}
+          uvx towncrier check  --compare-with origin/${{ env.BASE_BRANCH }} --config pyproject.toml --dir .
