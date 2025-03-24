@@ -7,6 +7,7 @@ repos:
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
+        exclude: CHANGES.md
       - id: mixed-line-ending
         name: "Enforce LF newlines on most files"
         args:
