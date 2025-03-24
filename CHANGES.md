@@ -9,6 +9,23 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.0 (2025-03-24)
+
+
+### New features:
+
+- Implement new filters to manipulate Python versions. @ericof [#69](https://github.com/plone/cookieplone/issues/69)
+- Format Python codebase with ruff, if pyproject.toml has the configuration. @ericof [#71](https://github.com/plone/cookieplone/issues/71)
+- Add filter `as_semver` to convert Python versions (PEP 440) to SemVer. @ericof [#73](https://github.com/plone/cookieplone/issues/73)
+- Add filter `unscoped_package_name` to return the npm package name without its scope. @ericof [#74](https://github.com/plone/cookieplone/issues/74)
+- Add `__generator_sha` to the variables to report the last commit on the templates repo @ericof 
+- Create namespace packages using `pkgutil` instead of `pkg_resources` as new packages are not setuptools based @ericof 
+
+
+### Internal:
+
+- Use uv to manage the environment. @ericof [#76](https://github.com/plone/cookieplone/issues/76)
+
 ## 0.8.4 (2025-02-22)
 
 
