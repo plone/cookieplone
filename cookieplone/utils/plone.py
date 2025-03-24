@@ -64,7 +64,9 @@ def create_namespace_packages(path: Path, package_name: str):
     for namespace in package_name.split(".")[:-1]:
         current = current / namespace
         current.mkdir()
+        # Use pkgutils, as new packages are not setuputils based
         (current / "__init__.py").write_text(
-            '__import__("pkg_resources").declare_namespace(__name__)\n'
+            "from pkgutil import extend_path\n\n"
+            "__path__ = extend_path(__path__, __name__\n"
         )
     path.rename(current / package_name.split(".")[-1])
