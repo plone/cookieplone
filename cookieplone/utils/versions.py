@@ -17,10 +17,10 @@ VERSION_PATTERNS = (
 
 
 def convert_pep440_semver(version: str) -> str:
-    """Converts a pep 440 version into a semver version
+    """Converts a PEP 440 version into a SemVer version
 
     :param ver: the PyPI version
-    :return: a semver version
+    :return: a SemVer version
     """
     pypi_version = Version(version)
     pre = None if not pypi_version.pre else "".join([str(i) for i in pypi_version.pre])
@@ -44,7 +44,7 @@ def convert_pep440_semver(version: str) -> str:
 
 
 def get_npm_package_versions(package: str) -> list[str]:
-    """Get versions for a NPM package."""
+    """Get versions for a npm package."""
     url: str = f"https://registry.npmjs.org/{package}"
     resp = requests.get(  # noQA: S113
         url, headers={"Accept": "application/vnd.npm.install-v1+json"}

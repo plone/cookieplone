@@ -131,5 +131,5 @@ def image_prefix(registry: str) -> str:
 
 @simple_filter
 def as_semver(v: str) -> str:
-    """Convert a pep440 version to semver."""
+    """Convert a PEP 440 version to SemVer."""
     return versions.convert_pep440_semver(v)
