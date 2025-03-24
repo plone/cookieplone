@@ -127,3 +127,9 @@ def locales_language_code(code: str) -> str:
 def image_prefix(registry: str) -> str:
     """Return the a prefix to be used with all Docker images."""
     return containers.image_prefix(registry)
+
+
+@simple_filter
+def as_semver(v: str) -> str:
+    """Convert a PEP 440 version to SemVer."""
+    return versions.convert_pep440_semver(v)

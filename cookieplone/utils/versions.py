@@ -1,14 +1,50 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
+import re
+
 import requests
+import semver
 from packaging.version import Version
 
 from cookieplone import settings
 
+VERSION_PATTERNS = (
+    (r"^(a)(\d{1,2})", r"alpha.\2"),
+    (r"^(b)(\d{1,2})", r"beta.\2"),
+    (r"^(rc)(\d{1,2})", r"rc.\2"),
+)
+
+
+def convert_pep440_semver(version: str) -> str:
+    """Converts a PEP 440 version into a SemVer version
+
+    :param ver: the PyPI version
+    :return: a SemVer version
+    """
+    pypi_version = Version(version)
+    pre = None if not pypi_version.pre else "".join([str(i) for i in pypi_version.pre])
+    if pre:
+        for raw_pattern, replace in VERSION_PATTERNS:
+            pattern = re.compile(raw_pattern)
+            if re.search(pattern, pre):
+                pre = re.sub(pattern, replace, pre)
+
+    parts = list(pypi_version.release)
+    if len(parts) == 2:
+        parts.append(0)
+    major, minor, patch = parts
+    build = ""
+    if pypi_version.dev is not None:
+        build = f"dev-{pypi_version.dev}"
+    elif pypi_version.post is not None:
+        build = f"post-{pypi_version.post}"
+    version = str(semver.Version(major, minor, patch, prerelease=pre, build=build))
+    return version
+
 
 def get_npm_package_versions(package: str) -> list[str]:
-    """Get versions for a NPM package."""
+    """Get versions for a npm package."""
     url: str = f"https://registry.npmjs.org/{package}"
     resp = requests.get(  # noQA: S113
         url, headers={"Accept": "application/vnd.npm.install-v1+json"}

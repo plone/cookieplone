@@ -255,3 +255,23 @@ def test_python_version_for_plone(plone_version: str, expected: str):
     result = func(plone_version)
     assert isinstance(result, str)
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "pep440,expected",
+    [
+        ["1.0.0a0", "1.0.0-alpha.0"],
+        ["1.0.0b1", "1.0.0-beta.1"],
+        ["1.0.0rc1", "1.0.0-rc.1"],
+        ["1.0.0rc1.dev0", "1.0.0-rc.1+dev-0"],
+        ["1.0.0", "1.0.0"],
+        ["6.1.1.dev0", "6.1.1+dev-0"],
+        ["6.1.1.post0", "6.1.1+post-0"],
+        ["202503.1", "202503.1.0"],
+        ["202512.1", "202512.1.0"],
+    ],
+)
+def test_convert_pep440_semver(pep440: str, expected: str):
+    func = versions.convert_pep440_semver
+    result = func(pep440)
+    assert result == expected
