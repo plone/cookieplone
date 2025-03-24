@@ -67,6 +67,6 @@ def create_namespace_packages(path: Path, package_name: str):
         # Use pkgutils, as new packages are not setuputils based
         (current / "__init__.py").write_text(
             "from pkgutil import extend_path\n\n"
-            "__path__ = extend_path(__path__, __name__\n"
+            "__path__ = extend_path(__path__, __name__)\n"
         )
     path.rename(current / package_name.split(".")[-1])
