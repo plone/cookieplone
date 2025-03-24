@@ -36,4 +36,4 @@ jobs:
           BASE_BRANCH: ${{ github.base_ref }}
         run: |
           git fetch --no-tags origin ${BASE_BRANCH}
-          uvx run towncrier check  --compare-with origin/${{ env.BASE_BRANCH }} --config pyproject.toml --dir .
+          uvx towncrier check  --compare-with origin/${{ env.BASE_BRANCH }} --config pyproject.toml --dir .
