@@ -1,1 +1,1 @@
-Add filter `unscopped_package_name` to return the NPM package name without its scope. @ericof
+Add filter `unscoped_package_name` to return the npm package name without its scope. @ericof

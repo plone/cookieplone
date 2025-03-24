@@ -4,7 +4,7 @@ def _is_scoped_package(name: str) -> bool:
 
 
 def parse_package_name(name: str) -> tuple[str, str]:
-    """Parse a NPM name and returns organization and package_name."""
+    """Parses an npm name, and returns organization and package_name."""
     org = ""
     package_name = name
     if _is_scoped_package(name):
@@ -13,6 +13,6 @@ def parse_package_name(name: str) -> tuple[str, str]:
 
 
 def unscopped_package_name(name: str) -> str:
-    """Return the unscopped package name for an NPM package."""
+    """Return the unscoped package name for an npm package."""
     _, package_name = parse_package_name(name)
     return package_name
