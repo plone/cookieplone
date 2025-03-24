@@ -57,6 +57,12 @@ build-backend = "hatchling.build"
 [tool.hatch.version]
 path = "cookieplone/__init__.py"
 
+[tool.hatch.build.targets.wheel]
+sources = ["."]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["cookieplone", "tests", "CHANGES.md", "Makefile"]
+
 [dependency-groups]
 dev = [
   "coverage[toml]>=6.5",
