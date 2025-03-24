@@ -9,6 +9,18 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.1 (2025-03-24)
+
+
+### Bug fixes:
+
+- Fix namespace generation issue @ericof 
+
+
+### Internal:
+
+- Ignore CHANGES.md from the `trailing-whitespace` pre-commit check. @ericof 
+
 ## 0.9.0 (2025-03-24)
 
 
