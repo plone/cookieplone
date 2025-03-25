@@ -38,6 +38,14 @@ def parse_extra_context(value: list[str]) -> dict:
     return dict([s.split("=") for s in value])
 
 
+def annotate_context(context: dict, repo_path: Path, template: str) -> dict:
+    context["__generator_sha"] = internal.repo_sha(repo_path)
+    context["__generator_signature"] = internal.signature_md(repo_path)
+    context["__cookieplone_repository_path"] = f"{repo_path}"
+    context["__cookieplone_template"] = f"{template}"
+    return context
+
+
 def parse_boolean(value: str) -> bool:
     return value.lower() in ("1", "yes", "y")
 
@@ -151,19 +159,17 @@ def cli(
     if not output_dir:
         output_dir = Path().cwd()
 
-    # Annotate extra_context
-    ## We do this to always get the latest information about the repository
-    ## and template being used
-    extra_context = parse_extra_context(extra_context)
-    extra_context["__generator_sha"] = internal.repo_sha(repo_path)
-    extra_context["__generator_signature"] = internal.signature_md(repo_path)
-    extra_context["__cookieplone_repository_path"] = f"{repo_path}"
-    extra_context["__cookieplone_template"] = f"{template}"
-
     replay_file = files.resolve_path(replay_file) if replay_file else replay_file
     if replay_file and replay_file.exists():
         # Use replay_file
         replay = replay_file
+    else:
+        # Annotate extra_context
+        extra_context = annotate_context(
+            parse_extra_context(extra_context),
+            repo_path=repo_path,
+            template=template,
+        )
 
     # Run generator
     try:
