@@ -162,3 +162,14 @@ def variables_not_used(
     # Add variables_required
     project_variables.update(variables_required)
     return _as_sorted_list(configuration_variables.difference(project_variables))
+
+
+@pytest.fixture(scope="session")
+def annotate_context() -> types.ContextAnnotator:
+    """Prepare context by adding computed values."""
+    from cookieplone.cli import annotate_context
+
+    def func(context: dict, repo_path: Path, template: str) -> dict:
+        return annotate_context(context, repo_path, template)
+
+    return func
