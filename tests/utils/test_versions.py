@@ -275,3 +275,25 @@ def test_convert_pep440_semver(pep440: str, expected: str):
     func = versions.convert_pep440_semver
     result = func(pep440)
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "version,expected",
+    [
+        ["1.0.0a0", "1.0"],
+        ["1.0.0b1", "1.0"],
+        ["1.0.0rc1", "1.0"],
+        ["1.0.0rc1.dev0", "1.0"],
+        ["1.0.0", "1.0"],
+        ["6.1.1.dev0", "6.1"],
+        ["6.1.1.post0", "6.1"],
+        ["6.1-dev", "6.1"],
+        ["6.1-latest", "6.1"],
+        ["202503.1", "202503.1"],
+        ["202512.1", "202512.1"],
+    ],
+)
+def test_format_as_major_minor(version: str, expected: str):
+    func = versions.format_as_major_minor
+    result = func(version)
+    assert result == expected

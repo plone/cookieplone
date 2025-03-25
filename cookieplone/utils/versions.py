@@ -145,3 +145,12 @@ def python_version_for_plone(plone_version: str) -> str:
     """Return the latest supported Python version for a given Plone version."""
     version_support = python_versions_for_plone(plone_version)
     return version_support.latest
+
+
+def format_as_major_minor(version: str) -> str:
+    """Format a list of versions as major.minor."""
+    # Handle "versions" used in tests / constraints
+    if "-" in version:
+        version = version.split("-")[0]
+    v = Version(version)
+    return f"{v.major}.{v.minor}"

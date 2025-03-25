@@ -31,7 +31,7 @@ def validate_extra_context(value: list[str] | None = None) -> list[str]:
     return value
 
 
-def parse_extra_content(value: list[str]) -> dict:
+def parse_extra_context(value: list[str]) -> dict:
     """Parse extra content and return a dictionary with options."""
     if not value:
         return {}
@@ -151,17 +151,20 @@ def cli(
     if not output_dir:
         output_dir = Path().cwd()
 
+    # Annotate extra_context
+    ## We do this to always get the latest information about the repository
+    ## and template being used
+    extra_context = parse_extra_context(extra_context)
+    extra_context["__generator_sha"] = internal.repo_sha(repo_path)
+    extra_context["__generator_signature"] = internal.signature_md(repo_path)
+    extra_context["__cookieplone_repository_path"] = f"{repo_path}"
+    extra_context["__cookieplone_template"] = f"{template}"
+
     replay_file = files.resolve_path(replay_file) if replay_file else replay_file
     if replay_file and replay_file.exists():
         # Use replay_file
         replay = replay_file
-    elif not replay:
-        # Annotate extra_context
-        extra_context = parse_extra_content(extra_context)
-        extra_context["__generator_sha"] = internal.repo_sha(repo_path)
-        extra_context["__generator_signature"] = internal.signature_md(repo_path)
-        extra_context["__cookieplone_repository_path"] = f"{repo_path}"
-        extra_context["__cookieplone_template"] = f"{template}"
+
     # Run generator
     try:
         generate(
