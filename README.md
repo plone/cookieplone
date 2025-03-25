@@ -45,29 +45,25 @@ Cookieplone offers the following key features for each audience.
 
 ## Installation 💾
 
-First, ensure you have Python, pip, and pipx installed on your system.
+First, ensure you have [`UV`](https://docs.astral.sh/uv/getting-started/installation/) installed on your system.
 
 See [how to install these and check Plone's prerequisites](https://6.docs.plone.org/install/create-project-cookieplone.html#prerequisites-for-installation).
+
 Set up your system with [Plone's prerequisites](https://6.docs.plone.org/install/create-project-cookieplone.html#prerequisites-for-installation).
-Then install Cookieplone using `pipx`:
 
-```shell
-# pipx is strongly recommended.
-pipx install cookieplone
-```
-
-Or, if pipx is not an option, you can install Cookieplone in your Python user directory.
-
-```shell
-python -m pip install --user cookieplone
-```
 
 ## Usage 🛠️
 
-To see all available template options, run:
+Use `uvx` (command installed by `uv`) to run `cookieplone` and see all available template options:
 
 ```shell
-pipx run cookieplone
+uvx cookieplone
+```
+
+It is also possible to run a specific version of Cookieplone:
+
+```shell
+uvx cookieplone@0.9.3
 ```
 
 Cookieplone will walk you through the necessary steps, using sensible defaults and offering customization options where needed.
@@ -116,12 +112,11 @@ You can create an issue in the issue tracker, or contact a maintainer.
 
 ### Development requirements
 
-- Python 3.10 or later
-- [Hatch](https://hatch.pypa.io/)
+- [uv](https://docs.astral.sh/uv/)
 
 ### Setup
 
-Install all development dependencies, including Hatch, and create a local virtual environment with the following command.
+Install `UV`, and create a local virtual environment with the following command.
 
 ```shell
 make install
@@ -130,7 +125,7 @@ make install
 ### Run the checked out branch of Cookieplone
 
 ```shell
-hatch run cookieplone
+uv run cookieplone
 ```
 
 ### Check and format the codebase
@@ -152,19 +147,19 @@ make test
 Run all tests, but stop on the first error and open a `pdb` session with the following command.
 
 ```shell
-hatch run test -x --pdb
+uv run pytest -x --pdb
 ```
 
 Run only tests that match `test_run_sanity_checks_fail` with the following command.
 
 ```shell
-hatch run test -k test_run_sanity_checks_fail
+uv run pytest -k test_run_sanity_checks_fail
 ```
 
 Run only tests that match `test_run_sanity_checks_fail`, but stop on the first error and open a `pdb` session with the following command.
 
 ```shell
-hatch run test -k test_run_sanity_checks_fail -x --pdb
+uv run pytest -k test_run_sanity_checks_fail -x --pdb
 ```
 
 ## Support 📢
