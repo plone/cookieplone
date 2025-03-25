@@ -36,6 +36,13 @@ def package_namespaces(v) -> str:
 
 
 @simple_filter
+def package_namespace_path(v: str) -> str:
+    """Return path to the package namespace including the src directory."""
+    top_namespace = v.split(".")[0]
+    return f"src/{top_namespace}"
+
+
+@simple_filter
 def package_path(v) -> str:
     """Return path to the package code within the src directory."""
     return "/".join(v.split("."))
@@ -139,3 +146,9 @@ def as_semver(v: str) -> str:
 def unscoped_package_name(v: str) -> str:
     """Return the unscoped name for a given package."""
     return npm.unscoped_package_name(v)
+
+
+@simple_filter
+def as_major_minor(v: str) -> str:
+    """Return a version in the major.minor format."""
+    return versions.format_as_major_minor(v)

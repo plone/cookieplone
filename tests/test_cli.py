@@ -12,8 +12,8 @@ from cookieplone import cli
         (["foo=1", "bar=2"], {"foo": "1", "bar": "2"}),
     ],
 )
-def test_parse_extra_content(value: list[str], expected: dict):
-    func = cli.parse_extra_content
+def test_parse_extra_context(value: list[str], expected: dict):
+    func = cli.parse_extra_context
     assert func(value) == expected
 
 

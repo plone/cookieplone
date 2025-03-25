@@ -74,6 +74,26 @@ def generate_context_file(tmp_path):
             "{{'@plone/volto' | unscoped_package_name}}",
             "volto",
         ],
+        ["as_major_minor", "{{'1.0.0a0' | as_major_minor}}", "1.0"],
+        ["as_major_minor", "{{'6.1.1rc1' | as_major_minor}}", "6.1"],
+        ["as_major_minor", "{{'1' | as_major_minor}}", "1.0"],
+        ["package_namespace_path", "{{'foo' | package_namespace_path}}", "src/foo"],
+        ["package_namespace_path", "{{'foo.bar' | package_namespace_path}}", "src/foo"],
+        [
+            "package_namespace_path",
+            "{{'foo.bar.foobar' | package_namespace_path}}",
+            "src/foo",
+        ],
+        [
+            "package_namespace_path",
+            "{{'collective.addon' | package_namespace_path}}",
+            "src/collective",
+        ],
+        [
+            "package_namespace_path",
+            "{{'collective_addon' | package_namespace_path}}",
+            "src/collective_addon",
+        ],
     ],
 )
 def test_filters(generate_context_file, filter_: str, raw: str, expected: str):
