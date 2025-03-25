@@ -9,6 +9,25 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.3 (2025-03-25)
+
+
+### New features:
+
+- Add `as_major_minor` filter. @ericof 
+- Add `package_namespace_path` filter. @ericof 
+- Refactor extra-context parsing. @ericof 
+
+
+### Documentation:
+
+- Update README to recommend using `cookieplone` via `uvx` @ericof 
+
+
+### Tests
+
+- Add session fixture `annotate_context`. @ericof 
+
 ## 0.9.2 (2025-03-25)
 
 
