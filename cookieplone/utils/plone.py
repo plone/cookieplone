@@ -58,15 +58,24 @@ def format_python_codebase(path: Path):
         func(path)
 
 
-def create_namespace_packages(path: Path, package_name: str):
+def create_namespace_packages(
+    path: Path, package_name: str, style: str = "pkg_resources"
+):
     """Create namespace packages to hold an existing package."""
     current = path.parent
     for namespace in package_name.split(".")[:-1]:
         current = current / namespace
         current.mkdir()
-        # Use pkgutils, as new packages are not setuputils based
-        (current / "__init__.py").write_text(
-            "from pkgutil import extend_path\n\n"
-            "__path__ = extend_path(__path__, __name__)\n"
-        )
+        if style == "pkg_resources":
+            (current / "__init__.py").write_text(
+                '__import__("pkg_resources").declare_namespace(__name__)\n'
+            )
+        elif style == "pkgutil":
+            (current / "__init__.py").write_text(
+                "from pkgutil import extend_path\n\n"
+                "__path__ = extend_path(__path__, __name__)\n"
+            )
+        else:
+            # PEP 420 implicit namespace; no file needed.
+            pass
     path.rename(current / package_name.split(".")[-1])
