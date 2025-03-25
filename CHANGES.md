@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.2 (2025-03-25)
+
+
+### Bug fixes:
+
+- Fix regression in generating namespace packages. @davisagli [#80](https://github.com/plone/cookieplone/issues/80)
+
 ## 0.9.1 (2025-03-24)
 
 
