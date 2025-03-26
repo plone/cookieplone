@@ -1,0 +1,1 @@
+Fix `make release` to also create the tag during the release process @ericof

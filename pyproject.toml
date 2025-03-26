@@ -189,4 +189,5 @@ name = "Tests"
 showcontent = true
 
 [tool.zest-releaser]
+upload-pypi = false # Build and upload with uv
 python-file-with-version = "cookieplone/__init__.py"
