@@ -48,7 +48,7 @@ def generate(
     config_file,
     default_config,
     passwd,
-    template,
+    template_path,
     skip_if_file_exists,
     keep_project_on_failure,
 ) -> Path:
@@ -64,7 +64,7 @@ def generate(
             config_file=config_file,
             default_config=default_config,
             password=passwd,
-            directory=template,
+            directory=template_path,
             skip_if_file_exists=skip_if_file_exists,
             accept_hooks=True,
             keep_project_on_failure=keep_project_on_failure,
@@ -94,14 +94,14 @@ def generate(
 
 
 def generate_subtemplate(
-    template: str,
+    template_path: str,
     output_dir: Path,
     folder_name: str,
     context: OrderedDict,
     remove_files: list[str] | None = None,
 ) -> Path:
     # Extract path to repository
-    repository = _get_repository_root(context, template)
+    repository = _get_repository_root(context, template_path)
     # Cleanup context
     extra_context = _remove_internal_keys(context)
     ## Add folder name again
@@ -124,7 +124,7 @@ def generate_subtemplate(
             None,  # config_file
             None,  # default_config,
             None,  # password
-            template,
+            template_path,
             False,  # skip_if_file_exists,
             False,  # keep_project_on_failure
         )

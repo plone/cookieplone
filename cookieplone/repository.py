@@ -7,6 +7,7 @@ from pathlib import Path
 from cookiecutter.config import get_user_config
 from cookiecutter.repository import determine_repo_dir
 
+from cookieplone import _types as t
 from cookieplone import data
 
 
@@ -34,15 +35,19 @@ def get_base_repository(
     return base_repo_dir
 
 
-def get_template_options(base_path: Path) -> list[list[str]]:
+def get_template_options(base_path: Path) -> dict[str, t.CookieploneTemplate]:
     """Parse cookiecutter.json and return a list of template options."""
+    base_path = base_path.resolve()
     config = json.loads((base_path / "cookiecutter.json").read_text())
     available_templates = config.get("templates", {})
-    templates = []
-    for idx, name in enumerate(available_templates, start=1):
-        idx = str(idx)
+    templates = {}
+    for name in available_templates:
         value = available_templates[name]
         title = value["title"]
         description = value["description"]
-        templates.append((idx, name, title, description))
+        path: Path = (base_path / value["path"]).resolve()
+        template = t.CookieploneTemplate(
+            path.relative_to(base_path), name, title, description
+        )
+        templates[template.name] = template
     return templates

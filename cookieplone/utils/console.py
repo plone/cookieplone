@@ -12,6 +12,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
+from cookieplone import _types as t
 from cookieplone.settings import QUIET_MODE_VAR
 
 from .internal import cookieplone_info, version_info
@@ -124,18 +125,23 @@ def create_table(
     return table
 
 
-def table_available_templates(title: str, rows: list[list[str]]) -> Table:
+def table_available_templates(
+    title: str, rows: dict[str, t.CookieploneTemplate]
+) -> Table:
     """Display a table of options."""
     columns = [
         {"title": "#", "justify": "center", "style": "cyan", "no_wrap": True},
         {"title": "Title", "style": "blue"},
         {"title": "Description", "justify": "left", "style": "blue"},
     ]
-    rows = [(idx, title, description) for idx, _, title, description in rows]
+    rows = [
+        (f"{idx}", template.title, template.description)
+        for idx, template in enumerate(rows.values(), start=1)
+    ]
     return create_table(columns, rows, title=title, expand=True)
 
 
-def welcome_screen(templates: list[list[str]] | None = None):
+def welcome_screen(templates: list[t.CookieploneTemplate] | None = None):
     items = [
         Align.center(f"[bold blue]{BANNER}[/bold blue]"),
     ]

@@ -10,11 +10,15 @@ from typing import Annotated
 import typer
 from rich.prompt import Prompt
 
+from cookieplone import _types as t
 from cookieplone import data, settings
 from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate
 from cookieplone.logger import configure_logger
-from cookieplone.repository import get_base_repository, get_template_options
+from cookieplone.repository import (
+    get_base_repository,
+    get_template_options,
+)
 from cookieplone.utils import console, files, internal
 
 
@@ -50,13 +54,13 @@ def parse_boolean(value: str) -> bool:
     return value.lower() in ("1", "yes", "y")
 
 
-def prompt_for_template(base_path: Path) -> str:
+def prompt_for_template(base_path: Path) -> t.CookieploneTemplate:
     """Parse cookiecutter.json in base_path and prompt user to choose."""
     templates = get_template_options(base_path)
-    choices = {i[0]: i[1] for i in templates}
+    choices = {f"{idx}": name for idx, name in enumerate(templates, 1)}
     console.welcome_screen(templates)
     answer = Prompt.ask("Select a template", choices=list(choices.keys()), default="1")
-    return choices[answer]
+    return templates[choices[answer]]
 
 
 def cli(
@@ -152,8 +156,10 @@ def cli(
     repo_path = get_base_repository(repository)
     if not template:
         # Display template options
-        template = prompt_for_template(repo_path)
+        cookieplone_template = prompt_for_template(repo_path)
     else:
+        templates = get_template_options(repo_path)
+        cookieplone_template = templates[template]
         console.welcome_screen()
 
     if not output_dir:
@@ -168,7 +174,7 @@ def cli(
         extra_context = annotate_context(
             parse_extra_context(extra_context),
             repo_path=repo_path,
-            template=template,
+            template=cookieplone_template.name,
         )
 
     # Run generator
@@ -184,7 +190,7 @@ def cli(
             config_file,
             default_config,
             passwd,
-            template,
+            str(cookieplone_template.path),
             skip_if_file_exists,
             keep_project_on_failure,
         )

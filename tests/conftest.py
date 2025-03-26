@@ -8,6 +8,13 @@ from git import Repo
 pytest_plugins = "pytester"
 
 
+@pytest.fixture(scope="session")
+def resources_folder():
+    path = (Path(__file__).parent / "_resources").resolve()
+
+    return path
+
+
 @pytest.fixture()
 def tmp_repo(tmp_path):
     repo = Repo.init(tmp_path)
@@ -27,11 +34,10 @@ def no_repo(tmp_path):
 
 
 @pytest.fixture()
-def read_data_file():
+def read_data_file(resources_folder):
     def func(filepath: str) -> str:
         data = ""
-        cwd = Path.cwd()
-        path = (cwd / "tests" / "_resources" / filepath).resolve()
+        path = (resources_folder / filepath).resolve()
         if path.exists():
             data = path.read_text()
         return data
@@ -40,6 +46,6 @@ def read_data_file():
 
 
 @pytest.fixture(scope="session")
-def project_source() -> Path:
-    path = (Path(__file__).parent / "_resources" / "templates").resolve()
+def project_source(resources_folder) -> Path:
+    path = (resources_folder / "templates").resolve()
     return path
