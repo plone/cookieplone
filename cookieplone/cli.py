@@ -159,7 +159,10 @@ def cli(
         cookieplone_template = prompt_for_template(repo_path)
     else:
         templates = get_template_options(repo_path)
-        cookieplone_template = templates[template]
+        cookieplone_template = templates.get(template)
+        if not cookieplone_template:
+            console.error(f"We do not have a template named {template}. Exiting now.")
+            raise typer.Exit(1)
         console.welcome_screen()
 
     if not output_dir:
