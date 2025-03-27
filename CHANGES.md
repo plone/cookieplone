@@ -9,6 +9,14 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.5 (2025-03-27)
+
+
+### Bug fixes:
+
+- Honor COOKIEPLONE_REPOSITORY_TAG environment variable on cookieplone initialization. @ericof [#89](https://github.com/plone/cookieplone/issues/89)
+- Display a friendly message if a template is not registered with cookiecutter.json @ericof [#90](https://github.com/plone/cookieplone/issues/90)
+
 ## 0.9.4 (2025-03-27)
 
 
