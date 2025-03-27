@@ -36,7 +36,7 @@ def get_base_repository(
 
 
 def get_template_options(base_path: Path) -> dict[str, t.CookieploneTemplate]:
-    """Parse cookiecutter.json and return a list of template options."""
+    """Parse cookiecutter.json and return a dict of template options."""
     base_path = base_path.resolve()
     config = json.loads((base_path / "cookiecutter.json").read_text())
     available_templates = config.get("templates", {})
