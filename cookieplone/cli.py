@@ -153,7 +153,7 @@ def cli(
         console.info_screen(repository=repository, passwd=passwd, tag=tag)
         raise typer.Exit()
 
-    repo_path = get_base_repository(repository)
+    repo_path = get_base_repository(repository, tag)
     if not template:
         # Display template options
         cookieplone_template = prompt_for_template(repo_path)
