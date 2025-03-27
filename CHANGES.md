@@ -9,6 +9,18 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.4 (2025-03-27)
+
+
+### New features:
+
+- Refactor template list handling to use the template path information available at cookiecutter.json @ericof [#87](https://github.com/plone/cookieplone/issues/87)
+
+
+### Internal:
+
+- Fix `make release` to also create the tag during the release process @ericof 
+
 ## 0.9.3 (2025-03-25)
 
 
