@@ -54,9 +54,9 @@ def parse_boolean(value: str) -> bool:
     return value.lower() in ("1", "yes", "y")
 
 
-def prompt_for_template(base_path: Path) -> t.CookieploneTemplate:
+def prompt_for_template(base_path: Path, all_: bool = False) -> t.CookieploneTemplate:
     """Parse cookiecutter.json in base_path and prompt user to choose."""
-    templates = get_template_options(base_path)
+    templates = get_template_options(base_path, all_)
     choices = {f"{idx}": name for idx, name in enumerate(templates, 1)}
     console.welcome_screen(templates)
     answer = Prompt.ask("Select a template", choices=list(choices.keys()), default="1")
@@ -132,6 +132,12 @@ def cli(
             "--debug-file", help="File to be used as a stream for DEBUG logging"
         ),
     ] = None,
+    all_: Annotated[
+        bool,
+        typer.Option(
+            "--all", "-a", help="Display all templates, including hidden ones"
+        ),
+    ] = False,
     verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False,
 ):
     """Generate a new Plone codebase."""
@@ -158,10 +164,16 @@ def cli(
         # Display template options
         cookieplone_template = prompt_for_template(repo_path)
     else:
-        templates = get_template_options(repo_path)
+        # Template name was passed from command line
+        # so we get all template options, including the hidden ones
+        templates = get_template_options(repo_path, True)
         cookieplone_template = templates.get(template)
         if not cookieplone_template:
-            console.error(f"We do not have a template named {template}. Exiting now.")
+            console.error(
+                f"We do not have a template named {template}.\n"
+                f"Available templates are: {', '.join(templates.keys())}"
+                "Exiting now."
+            )
             raise typer.Exit(1)
         console.welcome_screen()
 
