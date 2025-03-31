@@ -23,7 +23,14 @@
     "distribution": {
       "path": "./templates/distributions/monorepo",
       "title": "A Plone and Volto distribution",
-      "description": "Create a new Distribution with Plone and Volto"
+      "description": "Create a new Distribution with Plone and Volto",
+      "hidden": false
+    },
+    "sub/cache": {
+      "path": "./templates/sub/cache",
+      "title": "A sub template to handle cache settings",
+      "description": "Update cache settings for a project",
+      "hidden": true
     }
   }
 }

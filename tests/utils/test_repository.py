@@ -59,3 +59,19 @@ def test_get_template_options(
     assert template.description == description
     assert isinstance(template.path, Path)
     assert f"{template.path}" == path
+
+
+@pytest.mark.parametrize(
+    "all_,total_templates",
+    [
+        (False, 5),
+        (True, 6),
+    ],
+)
+def test_get_template_options_filter_hidden(
+    project_source, all_: bool, total_templates: int
+):
+    func = repository.get_template_options
+    results = func(project_source, all_)
+    assert isinstance(results, dict)
+    assert len(results) == total_templates

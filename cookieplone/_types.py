@@ -8,3 +8,4 @@ class CookieploneTemplate:
     name: str
     title: str
     description: str
+    hidden: bool = False

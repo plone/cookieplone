@@ -3,12 +3,15 @@
 # SPDX-License-Identifier: MIT
 import json
 from pathlib import Path
+from typing import Any
 
 from cookiecutter.config import get_user_config
 from cookiecutter.repository import determine_repo_dir
 
 from cookieplone import _types as t
 from cookieplone import data
+
+CONFIG_FILENAME = "cookiecutter.json"
 
 
 def get_base_repository(
@@ -35,19 +38,39 @@ def get_base_repository(
     return base_repo_dir
 
 
-def get_template_options(base_path: Path) -> dict[str, t.CookieploneTemplate]:
-    """Parse cookiecutter.json and return a dict of template options."""
-    base_path = base_path.resolve()
-    config = json.loads((base_path / "cookiecutter.json").read_text())
+def get_repository_config(base_path: Path) -> dict[str, Any]:
+    """Open and parse the repository configuration file."""
+    path = base_path / CONFIG_FILENAME
+    if not path.exists():
+        raise RuntimeError(f"{CONFIG_FILENAME} not found in {base_path}")
+    return json.loads(path.read_text())
+
+
+def _parse_template_options(
+    base_path: Path, config: dict[str, Any], all_: bool
+) -> dict[str, t.CookieploneTemplate]:
     available_templates = config.get("templates", {})
     templates = {}
     for name in available_templates:
         value = available_templates[name]
+        hidden = value.get("hidden", False)
+        if hidden and not all_:
+            # Do not list a hidden template
+            continue
         title = value["title"]
         description = value["description"]
         path: Path = (base_path / value["path"]).resolve()
         template = t.CookieploneTemplate(
-            path.relative_to(base_path), name, title, description
+            path.relative_to(base_path), name, title, description, hidden
         )
         templates[template.name] = template
     return templates
+
+
+def get_template_options(
+    base_path: Path, all_: bool = False
+) -> dict[str, t.CookieploneTemplate]:
+    """Parse cookiecutter.json and return a dict of template options."""
+    base_path = base_path.resolve()
+    config = get_repository_config(base_path)
+    return _parse_template_options(base_path, config, all_)
