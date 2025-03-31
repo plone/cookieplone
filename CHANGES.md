@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.6 (2025-03-31)
+
+
+### New features:
+
+- Support `hidden` option for templates listed in `cookiecutter.json`. @ericof [#93](https://github.com/plone/cookieplone/issues/93)
+
 ## 0.9.5 (2025-03-27)
 
 
