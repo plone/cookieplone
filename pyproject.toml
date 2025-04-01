@@ -1,6 +1,6 @@
 [project]
 name = "cookieplone"
-description = "Create Plone projects, addons, documentation with ease!"
+description = "Create Plone projects, add-ons, documentation with ease!"
 dynamic = ["version"]
 authors = [
   { name = "Plone Community", email = "dev@plone.org" },
