@@ -40,7 +40,7 @@ Cookieplone offers the following key features for each audience.
 
 - **Built-in validators**: Includes built-in validators to ensure user inputs are correct.
 - **Jinja2 filters**: Includes Jinja2 filters for advanced template control.
-- **Sub-templates**: Mechanism to easily instantiate "sub templates" within cookiecutter hooks -- i.e. post_gen_hook -- , facilitating greater code reuse.
+- **Subtemplates**: Mechanism to easily instantiate subtemplates within cookiecutter hooks -- i.e. post_gen_hook -- , facilitating greater code reuse.
 
 
 ## Installation 💾

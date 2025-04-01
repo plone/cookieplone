@@ -28,7 +28,7 @@
     },
     "sub/cache": {
       "path": "./templates/sub/cache",
-      "title": "A sub template to handle cache settings",
+      "title": "A subtemplate to handle cache settings",
       "description": "Update cache settings for a project",
       "hidden": true
     }
