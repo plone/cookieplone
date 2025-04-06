@@ -108,11 +108,12 @@ You can create an issue in the issue tracker, or contact a maintainer.
 
 ### Development requirements
 
-- [uv](https://docs.astral.sh/uv/)
+See [Installation](#installation-).
+
 
 ### Setup
 
-Install uv, and create a local virtual environment with the following command.
+Create a local Python virtual environment with the following command.
 
 ```shell
 make install
