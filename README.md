@@ -45,16 +45,12 @@ Cookieplone offers the following key features for each audience.
 
 ## Installation 💾
 
-First, ensure you have [`UV`](https://docs.astral.sh/uv/getting-started/installation/) installed on your system.
-
-See [how to install these and check Plone's prerequisites](https://6.docs.plone.org/install/create-project-cookieplone.html#prerequisites-for-installation).
-
-Set up your system with [Plone's prerequisites](https://6.docs.plone.org/install/create-project-cookieplone.html#prerequisites-for-installation).
+Set up your system with Plone's [Prerequisites for installation](https://6.docs.plone.org/install/create-project-cookieplone.html#prerequisites-for-installation).
 
 
 ## Usage 🛠️
 
-Use `uvx` (command installed by `uv`) to run `cookieplone` and see all available template options:
+Use `uvx` (command installed by uv) to run `cookieplone` and see all available template options:
 
 ```shell
 uvx cookieplone
@@ -112,11 +108,12 @@ You can create an issue in the issue tracker, or contact a maintainer.
 
 ### Development requirements
 
-- [uv](https://docs.astral.sh/uv/)
+See [Installation](#installation-).
+
 
 ### Setup
 
-Install `UV`, and create a local virtual environment with the following command.
+Create a local Python virtual environment with the following command.
 
 ```shell
 make install
