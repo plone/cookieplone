@@ -45,11 +45,7 @@ Cookieplone offers the following key features for each audience.
 
 ## Installation 💾
 
-First, ensure you have [uv](https://docs.astral.sh/uv/getting-started/installation/) installed on your system.
-
-See [how to install these and check Plone's prerequisites](https://6.docs.plone.org/install/create-project-cookieplone.html#prerequisites-for-installation).
-
-Set up your system with [Plone's prerequisites](https://6.docs.plone.org/install/create-project-cookieplone.html#prerequisites-for-installation).
+Set up your system with Plone's [Prerequisites for installation](https://6.docs.plone.org/install/create-project-cookieplone.html#prerequisites-for-installation).
 
 
 ## Usage 🛠️
