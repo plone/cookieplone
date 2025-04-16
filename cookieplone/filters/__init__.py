@@ -63,15 +63,19 @@ def extract_host(hostname: str) -> str:
 
 
 @simple_filter
-def use_prerelease_versions(_: str) -> str:
+def use_prerelease_versions(use_prerelease: str) -> str:
     """Should we use prerelease versions of packages."""
-    use_prerelease_versions = "USE_PRERELEASE" in os.environ
-    return "Yes" if use_prerelease_versions else "No"
+    use_prerelease_versions_check = "USE_PRERELEASE" in os.environ or parse_boolean(
+        use_prerelease
+    )
+    return "Yes" if use_prerelease_versions_check else "No"
 
 
 @simple_filter
 def latest_volto(use_prerelease_versions: str) -> str:
     """Return the latest released version of Volto."""
+    import pdb; pdb.set_trace(); a=1
+
     allow_prerelease = parse_boolean(use_prerelease_versions)
     return versions.latest_volto(allow_prerelease=allow_prerelease)
 

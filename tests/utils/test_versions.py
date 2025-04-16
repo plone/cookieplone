@@ -129,6 +129,8 @@ def mock_pypi_packages(monkeypatch, plone_versions):
         ["18.0.0-alpha.27", "17", None, True, True],
         ["18.0.0-alpha.27", "17", "18", True, True],
         ["18.0.0-alpha.27", "17", "17.99", True, False],
+        ["19.0.0-alpha.0", "17", None, False, False],
+        ["19.0.0-alpha.0", "17", None, True, True],
     ],
 )
 def test_is_valid_version(
