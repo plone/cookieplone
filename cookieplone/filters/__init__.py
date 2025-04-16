@@ -74,8 +74,6 @@ def use_prerelease_versions(use_prerelease: str) -> str:
 @simple_filter
 def latest_volto(use_prerelease_versions: str) -> str:
     """Return the latest released version of Volto."""
-    import pdb; pdb.set_trace(); a=1
-
     allow_prerelease = parse_boolean(use_prerelease_versions)
     return versions.latest_volto(allow_prerelease=allow_prerelease)
 
