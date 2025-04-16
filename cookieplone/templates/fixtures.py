@@ -7,25 +7,35 @@ from binaryornot.check import is_binary
 
 from . import types
 
+IGNORED_KEYS = (
+    "_extensions",
+    "_copy_without_render",
+    "__prompts__",
+    "__cookieplone_subtemplates",
+    "json",  # Probably `cookiecutter.json`
+)
+
+PATTERNS: tuple[re.Pattern, ...] = (
+    re.compile(r" ?(cookiecutter)[.](?P<key>[a-zA-Z0-9-_]*) "),
+    re.compile(r"(context\.get\(\")(?P<key>[a-zA-Z0-9-_]*)\""),
+)
+
 
 @pytest.fixture(scope="session")
-def variable_pattern() -> re.Pattern:
-    return re.compile(
-        "({{ ?(cookiecutter)[.]([a-zA-Z0-9-_]*)|{%.+(cookiecutter)[.]([a-zA-Z0-9-_]*).+%})"  # noQA: E501
-    )
+def variable_pattern() -> tuple[re.Pattern, ...]:
+    return PATTERNS
 
 
 @pytest.fixture(scope="session")
-def find_variables(variable_pattern) -> types.VariableFinder:
+def find_variables(variable_pattern, valid_key) -> types.VariableFinder:
     """Find variables in a string."""
 
     def func(data: str) -> set:
         keys = set()
-        matches = variable_pattern.findall(data) or []
-        for match in matches:
-            # Remove empty matches
-            match = [item for item in match if item.strip()]
-            keys.add(match[-1])
+        for pattern in variable_pattern:
+            matches = {match.groupdict()["key"] for match in pattern.finditer(data)}
+            matches = {key for key in matches if valid_key(key)}
+            keys = keys.union(matches)
         return keys
 
     return func
@@ -51,10 +61,10 @@ def template_folder_name() -> str:
 
 @pytest.fixture(scope="session")
 def valid_key() -> types.VariableValidator:
-    """Check if we will check for this key."""
+    """Should we will check for this key."""
 
     def func(key: str, ignore: list[str] | None = None) -> bool:
-        ignore = ignore if ignore else ["__prompts__"]
+        ignore = ignore if ignore else IGNORED_KEYS
         return all([
             key not in ignore,
             key.startswith("__") or not key.startswith("_"),
