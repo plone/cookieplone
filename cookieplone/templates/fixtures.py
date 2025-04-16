@@ -16,7 +16,7 @@ IGNORED_KEYS = (
 )
 
 PATTERNS: tuple[re.Pattern, ...] = (
-    re.compile(r" ?(cookiecutter)[.](?P<key>[a-zA-Z0-9-_]*) "),
+    re.compile(r" ?(cookiecutter)[.](?P<key>[a-zA-Z0-9-_]*) ?"),
     re.compile(r"(context\.get\(\")(?P<key>[a-zA-Z0-9-_]*)\""),
 )
 

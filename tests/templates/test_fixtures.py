@@ -8,7 +8,8 @@ def test_fixture_variable_pattern(testdir):
         import re
 
         def test_fixture(variable_pattern):
-            assert isinstance(variable_pattern, re.Pattern)
+            assert isinstance(variable_pattern, tuple)
+            assert isinstance(variable_pattern[0], re.Pattern)
         """
     )
     result = testdir.runpytest()
@@ -159,7 +160,7 @@ def test_fixture_variables_not_used(testdir, key: str):
         f"""
         def test_fixture(variables_not_used):
             assert isinstance(variables_not_used, list)
-            assert "{key}" in variables_not_used
+            assert "{key}" not in variables_not_used
         """
     )
     result = testdir.runpytest()
