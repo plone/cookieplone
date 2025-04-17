@@ -9,6 +9,23 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.7 (2025-04-17)
+
+
+### New features:
+
+- Update variable_pattern fixture to support also usage in hook files. @stevepiercy [#100](https://github.com/plone/cookieplone/issues/100)
+
+
+### Internal:
+
+- Correct spelling of "subtemplate" and "add-on" in text, not code. @stevepiercy [#95](https://github.com/plone/cookieplone/issues/95)
+
+
+### Documentation:
+
+- Fix uv brand name. @stevepiercy [#96](https://github.com/plone/cookieplone/issues/96)
+
 ## 0.9.6 (2025-03-31)
 
 
