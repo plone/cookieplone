@@ -61,7 +61,7 @@ def template_folder_name() -> str:
 
 @pytest.fixture(scope="session")
 def valid_key() -> types.VariableValidator:
-    """Should we will check for this key."""
+    """Should we check for this key."""
 
     def func(key: str, ignore: list[str] | None = None) -> bool:
         ignore = ignore if ignore else IGNORED_KEYS
