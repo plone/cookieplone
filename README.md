@@ -33,7 +33,7 @@ Cookieplone offers the following key features for each audience.
 
 - **One stop for all Plone templates**: Cookieplone helps you find the correct template to start your new Plone project.
 - **Simplified usage**: Cookieplone provides an enhanced experience over standard Cookiecutter usage by offering predefined sane defaults and a unified approach to generating various Plone projects.
-- **Batteries included**: No need to install lots of dependencies. Run `pipx run cookieplone`, and you will quickly generate your codebase.
+- **Batteries included**: No need to install lots of dependencies. Run `uvx cookieplone`, and you will quickly generate your codebase.
 
 
 ### For template creators
@@ -84,8 +84,8 @@ You can also specify other templates.
 
 | Template | Description | Command |
 | --- | --- | --- |
-| **backend_addon** | Create a Plone add-on to be used with the backend. | `pipx run cookieplone backend_addon ` |
-| **frontend_addon** | Create a Plone add-on to be used with the frontend. | `pipx run cookieplone frontend_addon ` |
+| **backend_addon** | Create a Plone add-on to be used with the backend. | `uvx cookieplone backend_addon ` |
+| **frontend_addon** | Create a Plone add-on to be used with the frontend. | `uvx cookieplone frontend_addon ` |
 
 The updated list of templates can be found at the [cookieplone-templates](https://github.com/plone/cookieplone-templates) repository.
 
@@ -93,9 +93,9 @@ The updated list of templates can be found at the [cookieplone-templates](https:
 
 | Environment Variable | Description | Example |
 | --- | --- | --- |
-| **COOKIEPLONE_REPOSITORY** | Where to look for templates to be used. | `COOKIEPLONE_REPOSITORY=/home/plone/cookieplone-templates/ pipx run cookieplone` |
-| **COOKIEPLONE_REPOSITORY_TAG** | Which tag/branch to use from a remote repository. | `COOKIEPLONE_REPOSITORY_TAG=experimental pipx run cookieplone` |
-| **COOKIEPLONE_REPO_PASSWORD** | Password to use when using a remote repository that is password protected. | `COOKIEPLONE_REPO_PASSWORD=very-secure pipx run cookieplone` |
+| **COOKIEPLONE_REPOSITORY** | Where to look for templates to be used. | `COOKIEPLONE_REPOSITORY=/home/plone/cookieplone-templates/ uvx cookieplone` |
+| **COOKIEPLONE_REPOSITORY_TAG** | Which tag/branch to use from a remote repository. | `COOKIEPLONE_REPOSITORY_TAG=experimental uvx cookieplone` |
+| **COOKIEPLONE_REPO_PASSWORD** | Password to use when using a remote repository that is password protected. | `COOKIEPLONE_REPO_PASSWORD=very-secure uvx cookieplone` |
 
 ## Contribute 🤝
 
