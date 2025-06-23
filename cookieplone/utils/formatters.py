@@ -55,5 +55,6 @@ def run_ruff(base_path: Path):
         ["ruff", "check", "--select", "I", "--fix", "--config", f"{pyproject}"],
         ["ruff", "format", "--config", f"{pyproject}"],
     ]
+
     for cmd in cmds:
-        subprocess.run(cmd, shell=True, capture_output=True)  # noQA: S602
+        subprocess.run(cmd, capture_output=True, check=True)  # noqa: S603
