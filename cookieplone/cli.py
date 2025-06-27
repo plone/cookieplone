@@ -171,7 +171,7 @@ def cli(
         if not cookieplone_template:
             console.error(
                 f"We do not have a template named {template}.\n"
-                f"Available templates are: {', '.join(templates.keys())}"
+                f"Available templates are: {', '.join(templates.keys())}\n"
                 "Exiting now."
             )
             raise typer.Exit(1)
