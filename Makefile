@@ -73,7 +73,7 @@ format: $(VENV_FOLDER) ## Fix code base according to our standards
 .PHONY: test
 test: ## Test the code with pytest
 	@echo "🚀 Testing code: Running pytest"
-	@uv run pytest
+	@uv run pytest $(filter-out $@ --,$(MAKECMDGOALS))
 
 .PHONY: test-coverage
 test-coverage: ## Test the code with pytest
