@@ -1,0 +1,1 @@
+Fixed boolean cli options converted to strings. Upgrade `typer` dependency. @sneridagh
