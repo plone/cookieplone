@@ -9,6 +9,20 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.8 (2025-09-19)
+
+
+### Bug fixes:
+
+- Fix ruff format call. @gil-cano [#104](https://github.com/plone/cookieplone/issues/104)
+- Fixed boolean cli options converted to strings. Upgrade `typer` dependency. @sneridagh [#109](https://github.com/plone/cookieplone/issues/109)
+- Fix missing newline in output. @davisagli 
+
+
+### Documentation:
+
+- Replace pipx with uvx in README. @gil-cano [#102](https://github.com/plone/cookieplone/issues/102)
+
 ## 0.9.7 (2025-04-17)
 
 
