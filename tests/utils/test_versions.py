@@ -113,6 +113,17 @@ def mock_pypi_packages(monkeypatch, plone_versions):
     )
 
 
+@pytest.fixture
+def mock_packages_with_raise(monkeypatch, volto_versions):
+    import requests
+
+    def get_package_versions(*args, **kwargs):
+        raise requests.ConnectionError("Unable to connect")
+
+    monkeypatch.setattr(versions, "get_npm_package_versions", get_package_versions)
+    monkeypatch.setattr(versions, "get_pypi_package_versions", get_package_versions)
+
+
 @pytest.mark.parametrize(
     "version,min_version,max_version,allow_prerelease,expected",
     [
@@ -205,6 +216,28 @@ def test_latest_volto(
 @pytest.mark.parametrize(
     "min_version,max_version,allow_prerelease,expected",
     [
+        [None, None, True, None],
+        [None, None, False, None],
+        ["17", None, False, None],
+        ["17", "18", False, None],
+        ["17", "18", True, None],
+        ["17", "17.99", True, None],
+    ],
+)
+def test_latest_volto_no_connection(
+    mock_packages_with_raise,
+    min_version: str,
+    max_version: str,
+    allow_prerelease: bool,
+    expected: str,
+):
+    func = versions.latest_volto
+    assert func(min_version, max_version, allow_prerelease) == expected
+
+
+@pytest.mark.parametrize(
+    "min_version,max_version,allow_prerelease,expected",
+    [
         [None, None, False, "6.0.10"],
         [None, None, True, "6.1.0a2"],
         [None, "5.99", False, "5.2.14"],
@@ -214,6 +247,27 @@ def test_latest_volto(
 )
 def test_latest_plone(
     mock_pypi_packages,
+    min_version: str,
+    max_version: str,
+    allow_prerelease: bool,
+    expected: str,
+):
+    func = versions.latest_plone
+    assert func(min_version, max_version, allow_prerelease) == expected
+
+
+@pytest.mark.parametrize(
+    "min_version,max_version,allow_prerelease,expected",
+    [
+        [None, None, False, None],
+        [None, None, True, None],
+        [None, "5.99", False, None],
+        ["5", "5.2", False, None],
+        ["5", "6", False, None],
+    ],
+)
+def test_latest_plone_no_connection(
+    mock_packages_with_raise,
     min_version: str,
     max_version: str,
     allow_prerelease: bool,
