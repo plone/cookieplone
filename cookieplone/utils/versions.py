@@ -46,8 +46,10 @@ def convert_pep440_semver(version: str) -> str:
 def get_npm_package_versions(package: str) -> list[str]:
     """Get versions for a npm package."""
     url: str = f"https://registry.npmjs.org/{package}"
-    resp = requests.get(  # noQA: S113
-        url, headers={"Accept": "application/vnd.npm.install-v1+json"}
+    resp = requests.get(
+        url,
+        headers={"Accept": "application/vnd.npm.install-v1+json"},
+        timeout=settings.REQUESTS_TIMEOUT,
     )
     data = resp.json()
     return list(data["dist-tags"].values())
@@ -56,7 +58,7 @@ def get_npm_package_versions(package: str) -> list[str]:
 def get_pypi_package_versions(package: str) -> list[str]:
     """Get versions for a PyPi package."""
     url: str = f"https://pypi.org/pypi/{package}/json"
-    resp = requests.get(url)  # noQA: S113
+    resp = requests.get(url, timeout=settings.REQUESTS_TIMEOUT)
     data = resp.json()
     return list(data.get("releases").keys())
 
@@ -84,15 +86,15 @@ def version_latest(
     max_version: str | None = None,
     allow_prerelease: bool = False,
 ) -> str | None:
-    min_version = Version(min_version) if min_version else None
-    max_version = Version(max_version) if max_version else None
+    min_version_ = Version(min_version) if min_version else None
+    max_version_ = Version(max_version) if max_version else None
     versions_ = sorted(
         [(Version(v.replace("v", "")), v) for v in versions], reverse=True
     )
     valid = [
         (version, raw_version)
         for version, raw_version in versions_
-        if is_valid_version(version, min_version, max_version, allow_prerelease)
+        if is_valid_version(version, min_version_, max_version_, allow_prerelease)
     ]
     return valid[0][1] if valid else None
 
@@ -103,7 +105,10 @@ def latest_volto(
     allow_prerelease: bool = False,
 ) -> str | None:
     """Return the latest volto version."""
-    versions = get_npm_package_versions("@plone/volto")
+    try:
+        versions = get_npm_package_versions("@plone/volto")
+    except requests.RequestException:
+        versions = []
     return version_latest(
         versions,
         min_version=min_version,
@@ -118,7 +123,11 @@ def latest_plone(
     allow_prerelease: bool = False,
 ) -> str | None:
     """Return the latest Plone version."""
-    versions = get_pypi_package_versions("Plone")
+
+    try:
+        versions = get_pypi_package_versions("Plone")
+    except requests.RequestException:
+        versions = []
     return version_latest(
         versions,
         min_version=min_version,
@@ -138,7 +147,7 @@ def python_versions_for_plone(plone_version: str) -> settings.PythonVersionSuppo
     major = Version(plone_version).major
     minor = Version(plone_version).minor
     version = f"{major}.{minor}"
-    return settings.PLONE_PYTHON.get(version)
+    return settings.PLONE_PYTHON[version]
 
 
 def python_version_for_plone(plone_version: str) -> str:
