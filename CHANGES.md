@@ -9,6 +9,18 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.9 (2025-10-04)
+
+
+### New features:
+
+- Use a compacter logo. @ericof, @acsr [#112](https://github.com/plone/cookieplone/issues/112)
+
+
+### Bug fixes:
+
+- Add error handling for connectivity issues in filters `latest_volto` and `latest_plone`. @ericof [#110](https://github.com/plone/cookieplone/issues/110)
+
 ## 0.9.8 (2025-09-19)
 
 
