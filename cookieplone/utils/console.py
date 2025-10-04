@@ -18,34 +18,50 @@ from cookieplone.settings import QUIET_MODE_VAR
 from .internal import cookieplone_info, version_info
 
 BANNER = """
-                 .xxxxxxxxxxxxxx.
-             ;xxxxxxxxxxxxxxxxxxxxxx;
-          ;xxxxxxxxxxxxxxxxxxxxxxxxxxxx;
-        xxxxxxxxxx              xxxxxxxxxx
-      xxxxxxxx.                    .xxxxxxxx
-     xxxxxxx      xxxxxxx:            xxxxxxx
-   :xxxxxx       xxxxxxxxxx             xxxxxx:
-  :xxxxx+       xxxxxxxxxxx              +xxxxx:
- .xxxxx.        :xxxxxxxxxx               .xxxxx.
- xxxxx+          ;xxxxxxxx                 +xxxxx
- xxxxx              +xx.                    xxxxx.
-xxxxx:                      .xxxxxxxx       :xxxxx
-xxxxx                      .xxxxxxxxxx       xxxxx
-xxxxx                      xxxxxxxxxxx       xxxxx
-xxxxx                      .xxxxxxxxxx       xxxxx
-xxxxx:                      .xxxxxxxx       :xxxxx
-.xxxxx              ;xx.       ...          xxxxx.
- xxxxx+          :xxxxxxxx                 +xxxxx
- .xxxxx.        :xxxxxxxxxx               .xxxxx.
-  :xxxxx+       xxxxxxxxxxx              ;xxxxx:
-   :xxxxxx       xxxxxxxxxx             xxxxxx:
-     xxxxxxx      xxxxxxx;            xxxxxxx
-      xxxxxxxx.                    .xxxxxxxx
-        xxxxxxxxxx              xxxxxxxxxx
-          ;xxxxxxxxxxxxxxxxxxxxxxxxxxxx+
-             ;xxxxxxxxxxxxxxxxxxxxxx;
-                 .xxxxxxxxxxxxxx.
+          *******
+      ***************
+    ***             ***
+  ***    ***          ***
+ ***    *****          ***
+***      ***            ***
+***               ***   ***
+***              *****  ***
+***      ***      ***   ***
+ ***    *****          ***
+  ***    ***          ***
+    ***             ***
+      ***************
+          *******
 """
+
+PLONE_LOGOTYPE_BANNER = """
+          *******
+      ***************
+    ***             ***        *********     ***                                    ***
+  ***    ***          ***      ***********   ***                                   * R *
+ ***    *****          ***     ***      ***  ***                                    ***
+***      ***            ***    ***       *** ***       ****     ***  ***       ****
+***               ***   ***    ***      ***  ***     ********   *********    ********
+***              *****  ***    ***********   ***    ***    ***  ****   ***  ***    ***
+***      ***      ***   ***    *********     ***    ***    ***  ***    ***  **********
+ ***    *****          ***     ***           ***    ***    ***  ***    ***  *********
+  ***    ***          ***      ***           ****   ***    ***  ***    ***  ***    ...
+    ***             ***        ***            *****  ********   ***    ***   ********
+      ***************          ***              ***    ****     ***    ***     ****
+          *******
+"""
+
+
+def choose_banner() -> str:
+    """Based on the terminal width, decide which banner to use."""
+    banner = BANNER
+    try:
+        terminal_size = os.get_terminal_size()
+    except OSError:
+        return banner
+    if terminal_size and terminal_size.columns >= 90:
+        banner = PLONE_LOGOTYPE_BANNER
+    return banner
 
 
 def _print(msg: str):
@@ -72,7 +88,8 @@ def print_plone_banner():
     """Print Plone banner."""
     style: str = "bold"
     color: str = "blue"
-    print(BANNER, style, color)
+    banner = choose_banner()
+    print(banner, style, color)
 
 
 def info(msg: str):
@@ -142,8 +159,9 @@ def table_available_templates(
 
 
 def welcome_screen(templates: list[t.CookieploneTemplate] | None = None):
+    banner = choose_banner()
     items = [
-        Align.center(f"[bold blue]{BANNER}[/bold blue]"),
+        Align.center(f"[bold blue]{banner}[/bold blue]"),
     ]
     if templates:
         items.append(
