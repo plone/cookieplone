@@ -50,16 +50,18 @@ PLONE_PYTHON = {
     ),
 }
 
-DEFAULT_NODE = 22
+DEFAULT_NODE = 24
 SUPPORTED_NODE_VERSIONS = [
     "20",
     "22",
+    "24",
 ]
 
 
 VOLTO_MIN_VERSION = "18.0.0-alpha.43"
 VOLTO_NODE = {
     18: 22,
+    19: 24,
 }
 MIN_DOCKER_VERSION = "20.10"
 
