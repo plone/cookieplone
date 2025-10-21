@@ -38,6 +38,8 @@ def generate_context_file(tmp_path):
         ["pascal_case", "{{'foo_bar' | pascal_case}}", "FooBar"],
         ["use_prerelease_versions", "{{ '' | use_prerelease_versions }}", "No"],
         ["node_version_for_volto", "{{'18' | node_version_for_volto}}", "22"],
+        ["node_version_for_volto", "{{'19' | node_version_for_volto}}", "24"],
+        ["extract_host", "{{'example.com' | extract_host}}", "example"],
         ["gs_language_code", "{{'ES' | gs_language_code}}", "es"],
         ["gs_language_code", "{{'es-MX' | gs_language_code}}", "es-mx"],
         ["locales_language_code", "{{'es-mx' | locales_language_code}}", "es_MX"],
