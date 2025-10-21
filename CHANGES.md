@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.10 (2025-10-21)
+
+
+### Bug fixes:
+
+- Add support for NodeJS 24. @davisagli 
+
 ## 0.9.9 (2025-10-04)
 
 
