@@ -58,9 +58,7 @@ def format_python_codebase(path: Path):
         func(path)
 
 
-def create_namespace_packages(
-    path: Path, package_name: str, style: str = "pkg_resources"
-):
+def create_namespace_packages(path: Path, package_name: str, style: str = "native"):
     """Create namespace packages to hold an existing package."""
     current = path.parent
     for namespace in package_name.split(".")[:-1]:
