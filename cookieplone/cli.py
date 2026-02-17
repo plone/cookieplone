@@ -35,14 +35,16 @@ def validate_extra_context(value: list[str] | None = None) -> list[str]:
     return value
 
 
-def parse_extra_context(value: list[str]) -> dict:
+def parse_extra_context(value: list[str]) -> dict[str, str]:
     """Parse extra content and return a dictionary with options."""
     if not value:
         return {}
     return dict([s.split("=") for s in value])
 
 
-def annotate_context(context: dict, repo_path: Path, template: str) -> dict:
+def annotate_context(
+    context: dict[str, str], repo_path: Path, template: str
+) -> dict[str, str]:
     context["__generator_sha"] = internal.repo_sha(repo_path)
     context["__generator_signature"] = internal.signature_md(repo_path)
     context["__cookieplone_repository_path"] = f"{repo_path}"
@@ -65,7 +67,7 @@ def prompt_for_template(base_path: Path, all_: bool = False) -> t.CookieploneTem
 
 def cli(
     template: Annotated[str, typer.Argument(help="Template to be used.")] = "",
-    extra_context: Annotated[
+    extra_context_: Annotated[
         data.OptionalListStr,
         typer.Argument(callback=validate_extra_context, help="Extra context."),
     ] = None,
@@ -94,7 +96,7 @@ def cli(
             ),
         ),
     ] = False,
-    replay: Annotated[bool, typer.Option("--replay", "-r")] = False,
+    replay_: Annotated[bool, typer.Option("--replay", "-r")] = False,
     replay_file: Annotated[data.OptionalPath, typer.Option("--replay-file")] = None,
     skip_if_file_exists: Annotated[
         bool,
@@ -102,8 +104,7 @@ def cli(
             "--skip-if-file-exists",
             "-s",
             help=(
-                "Skip the files in the corresponding directories "
-                "if they already exist"
+                "Skip the files in the corresponding directories if they already exist"
             ),
         ),
     ] = False,
@@ -184,10 +185,12 @@ def cli(
     if replay_file and replay_file.exists():
         # Use replay_file
         replay = replay_file
+        extra_context = {}
     else:
+        replay = replay_
         # Annotate extra_context
         extra_context = annotate_context(
-            parse_extra_context(extra_context),
+            parse_extra_context(extra_context_ or []),
             repo_path=repo_path,
             template=cookieplone_template.name,
         )
@@ -214,7 +217,7 @@ def cli(
         # TODO: Handle error
         raise typer.Exit(1)  # noQA:B904
     except Exception as exc:
-        console.error(exc)
+        console.error(f"{exc}")
         # TODO: Handle error
         raise typer.Exit(1)  # noQA:B904
 
