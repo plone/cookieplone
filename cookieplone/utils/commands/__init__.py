@@ -12,7 +12,8 @@ def _get_command_version(cmd: str) -> str:
     """Get the reported version of a command line utility."""
     try:
         raw_version = (
-            subprocess.run([cmd, "--version"], capture_output=True)  # noQA: S603
+            subprocess
+            .run([cmd, "--version"], capture_output=True)
             .stdout.decode()
             .strip()
         )

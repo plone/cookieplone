@@ -103,7 +103,7 @@ exclude_lines = [
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 line-length = 88
 fix = true
 lint.select = [
@@ -145,6 +145,7 @@ lint.ignore = [
 preview = true
 
 [tool.ruff.lint.per-file-ignores]
+"cookieplone/utils/commands/__init__.py" = ["YTT", "S603"]
 "tests/*" = ["S101"]
 
 [tool.towncrier]
