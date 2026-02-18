@@ -1,26 +1,20 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
+
 import json
 from collections import OrderedDict
 from pathlib import Path
+from typing import Any
 
 from cookiecutter import exceptions as exc
-from cookiecutter.main import cookiecutter
 
 from cookieplone.exceptions import GeneratorException
-from cookieplone.utils import console, files
+from cookieplone.generator.main import cookieplone
+from cookieplone.utils import answers, console, files
 
 
-def _remove_internal_keys(context: OrderedDict) -> dict:
-    """Remove internal and computed keys."""
-    new_context = {
-        key: value for key, value in context.items() if not key.startswith("_")
-    }
-    return new_context
-
-
-def _get_repository_root(context: OrderedDict, template: str) -> Path:
+def _get_repository_root(context: OrderedDict[str, Any], template: str) -> Path:
     """Return the templates root."""
     possible_keys = [
         "__cookieplone_repository_path",
@@ -42,7 +36,7 @@ def generate(
     tag,
     no_input,
     extra_context,
-    replay,
+    replay: Path | bool,
     overwrite_if_exists,
     output_dir,
     config_file,
@@ -51,9 +45,17 @@ def generate(
     template_path,
     skip_if_file_exists,
     keep_project_on_failure,
+    template_name: str,
+    dump_answers: bool = True,
 ) -> Path:
+    if replay and ((no_input is not False) or (extra_context is not None)):
+        err_msg = (
+            "You can not use both replay and no_input or extra_context "
+            "at the same time."
+        )
+        raise exc.InvalidModeException(err_msg)
     try:
-        result = cookiecutter(
+        result = cookieplone(
             f"{repository}",  # cookiecutter expects this to be a string
             tag,
             no_input,
@@ -68,6 +70,8 @@ def generate(
             skip_if_file_exists=skip_if_file_exists,
             accept_hooks=True,
             keep_project_on_failure=keep_project_on_failure,
+            template_name=template_name,
+            dump_answers=dump_answers,
         )
     except (
         exc.ContextDecodingException,
@@ -103,7 +107,7 @@ def generate_subtemplate(
     # Extract path to repository
     repository = _get_repository_root(context, template_path)
     # Cleanup context
-    extra_context = _remove_internal_keys(context)
+    extra_context = answers.remove_internal_keys(context)
     ## Add folder name again
     extra_context["__folder_name"] = folder_name
     # Enable quiet mode
@@ -127,6 +131,8 @@ def generate_subtemplate(
             template_path,
             False,  # skip_if_file_exists,
             False,  # keep_project_on_failure
+            "",  # template_name is not relevant for subtemplates
+            dump_answers=False,  # Do not dump answers for subtemplates
         )
     except GeneratorException as exc:
         console.disable_quiet_mode()

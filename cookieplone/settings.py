@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: MIT
 from dataclasses import dataclass
 
+# Cookieplone specific settings
+COOKIEPLONE_ANSWERS_FILE = ".cookieplone.json"
+
 
 @dataclass
 class PythonVersionSupport:
@@ -78,3 +81,10 @@ REPO_PASSWORD = "COOKIEPLONE_REPO_PASSWORD"  # noQA:S105
 
 # Connectivity
 REQUESTS_TIMEOUT = 10
+
+# Allowed computed keys in config file
+CONFIG_COMPUTED_KEYS = [
+    "__generator_sha",
+    "__generator_signature",
+    "__cookieplone_template",
+]

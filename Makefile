@@ -78,7 +78,7 @@ test: ## Test the code with pytest
 .PHONY: test-coverage
 test-coverage: ## Test the code with pytest
 	@echo "🚀 Testing code: Running pytest"
-	@uv run pytest
+	@uv run pytest --cov=cookieplone --cov-report=xml --cov-report=term $(filter-out $@ --,$(MAKECMDGOALS))
 
 ############################################
 # Release

@@ -73,6 +73,15 @@ You can use some of its options to avoid repeatedly entering the same values.
 
 You can use the [`--no-input`](https://cookiecutter.readthedocs.io/en/latest/cli_options.html#cmdoption-cookiecutter-no-input) option to make Cookieplone not prompt for parameters and only use `cookiecutter.json` file content.
 
+
+#### `--config-file` or `-c`
+
+You can use the `--config-file` option to make Cookieplone use an external file with answers:
+
+```shell
+uvx cookieplone -c .cookieplone.json --no-input
+```
+
 #### `--replay` and `--replay-file`
 
 You can use the options [`--replay`](https://cookiecutter.readthedocs.io/en/latest/cli_options.html#cmdoption-cookiecutter-replay) and [`--replay-file`](https://cookiecutter.readthedocs.io/en/latest/cli_options.html#cmdoption-cookiecutter-replay-file) to not prompt for parameters and only use information entered previously or from a specified file.

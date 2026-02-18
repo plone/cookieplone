@@ -5,7 +5,7 @@
 
 import os
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from rich.prompt import Prompt
@@ -14,7 +14,7 @@ from cookieplone import _types as t
 from cookieplone import data, settings
 from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate
-from cookieplone.logger import configure_logger
+from cookieplone.logger import configure_logger, logger
 from cookieplone.repository import (
     get_base_repository,
     get_template_options,
@@ -35,11 +35,15 @@ def validate_extra_context(value: list[str] | None = None) -> list[str]:
     return value
 
 
-def parse_extra_context(value: list[str]) -> dict[str, str]:
+def parse_extra_context(
+    value: list[str], config_data: dict[str, Any]
+) -> dict[str, str]:
     """Parse extra content and return a dictionary with options."""
     if not value:
-        return {}
-    return dict([s.split("=") for s in value])
+        value = []
+    extra_context = dict([s.split("=") for s in value])
+    config_data.update(extra_context)
+    return config_data
 
 
 def annotate_context(
@@ -47,7 +51,6 @@ def annotate_context(
 ) -> dict[str, str]:
     context["__generator_sha"] = internal.repo_sha(repo_path)
     context["__generator_signature"] = internal.signature_md(repo_path)
-    context["__cookieplone_repository_path"] = f"{repo_path}"
     context["__cookieplone_template"] = f"{template}"
     return context
 
@@ -63,6 +66,20 @@ def prompt_for_template(base_path: Path, all_: bool = False) -> t.CookieploneTem
     console.welcome_screen(templates)
     answer = Prompt.ask("Select a template", choices=list(choices.keys()), default="1")
     return templates[choices[answer]]
+
+
+def parse_config_file(config_file: Path | None) -> dict[str, Any]:
+    """Parse a config file and return the content as a dictionary."""
+    if not config_file:
+        return {}
+    try:
+        config_data = files.load_config_file(config_file)
+    except FileNotFoundError as exc:
+        console.error(f"Config file {config_file} does not exist.")
+        raise typer.Exit(1) from exc
+    else:
+        logger.debug(f"Loaded config data from {config_file}: {config_data}")
+        return config_data
 
 
 def cli(
@@ -112,7 +129,8 @@ def cli(
         bool, typer.Option("--overwrite-if-exists", "-f")
     ] = False,
     config_file: Annotated[
-        data.OptionalPath, typer.Option("--config-file", help="User configuration file")
+        data.OptionalPath,
+        typer.Option("--config-file", "-c", help="User configuration file"),
     ] = None,
     default_config: Annotated[
         bool,
@@ -151,8 +169,11 @@ def cli(
     if not repository:
         repository = settings.REPO_DEFAULT
 
-    passwd = os.environ.get(
-        settings.REPO_PASSWORD, os.environ.get("COOKIECUTTER_REPO_PASSWORD")
+    passwd: str = (
+        os.environ.get(
+            settings.REPO_PASSWORD, os.environ.get("COOKIECUTTER_REPO_PASSWORD")
+        )
+        or ""
     )
     tag = os.environ.get(settings.REPO_TAG) or tag
 
@@ -160,16 +181,23 @@ def cli(
         console.info_screen(repository=repository, passwd=passwd, tag=tag)
         raise typer.Exit()
 
+    # Process config file if provided and update template
+    # if __template__ is set in the config_file and not passed as an argument
+
+    if config_data := parse_config_file(config_file):
+        logger.debug(f"Loaded config data from {config_file}: {config_data}")
+        template = template if template else config_data.pop("__template__", template)
+
     repo_path = get_base_repository(repository, tag)
     if not template:
         # Display template options
-        cookieplone_template = prompt_for_template(repo_path)
+        cookieplone_template = prompt_for_template(repo_path, all_=all_)
     else:
         # Template name was passed from command line
         # so we get all template options, including the hidden ones
         templates = get_template_options(repo_path, True)
-        cookieplone_template = templates.get(template)
-        if not cookieplone_template:
+
+        if not (cookieplone_template := templates.get(template)):
             console.error(
                 f"We do not have a template named {template}.\n"
                 f"Available templates are: {', '.join(templates.keys())}\n"
@@ -178,8 +206,7 @@ def cli(
             raise typer.Exit(1)
         console.welcome_screen()
 
-    if not output_dir:
-        output_dir = Path().cwd()
+    output_dir = output_dir if output_dir else Path().cwd()
 
     replay_file = files.resolve_path(replay_file) if replay_file else replay_file
     if replay_file and replay_file.exists():
@@ -190,7 +217,7 @@ def cli(
         replay = replay_
         # Annotate extra_context
         extra_context = annotate_context(
-            parse_extra_context(extra_context_ or []),
+            parse_extra_context(extra_context_ or [], config_data),
             repo_path=repo_path,
             template=cookieplone_template.name,
         )
@@ -205,12 +232,14 @@ def cli(
             replay,
             overwrite_if_exists,
             output_dir,
-            config_file,
+            None,  # Already loaded in config_data and added to extra_context
             default_config,
             passwd,
             str(cookieplone_template.path),
             skip_if_file_exists,
             keep_project_on_failure,
+            template_name=cookieplone_template.name,
+            dump_answers=True,
         )
     except GeneratorException as exc:
         console.error(exc.message)

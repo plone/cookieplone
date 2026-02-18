@@ -41,6 +41,42 @@ def validate_component_version(component: str, version: str, min_version: str) -
     return "" if check else f"{version} is not a valid {component} version."
 
 
+def run_context_validations(
+    context: dict, validations: list[data.ItemValidator], allow_empty: bool = False
+) -> data.ContextValidatorResult:
+    """Run validations for context."""
+    global_status = True
+    results = []
+    if not allow_empty:
+        func = validate_not_empty
+        for key in context:
+            if key.startswith("_"):
+                # Ignore computed values
+                continue
+            validations.append(data.ItemValidator(key, func, "error"))
+    for validation in validations:
+        status = False
+        key = validation.key
+        func = validation.func
+        value = context.get(key, "")
+        level = validation.level
+        message = func(value, key) if func == validate_not_empty else func(value)
+        if not message:
+            status = True
+            message = "✓"
+        elif level == "warning":
+            status = True
+        global_status = global_status and status
+        results.append(data.ItemValidatorResult(key, status, message))
+    global_message = (
+        f"Ran {len(results)} validations and "
+        f"they {'passed' if global_status else 'failed'}."
+    )
+    return data.ContextValidatorResult(
+        status=global_status, message=global_message, validations=results
+    )
+
+
 def validate_language_code(value: str) -> str:
     """Language code should be valid."""
     pattern = r"^([a-z]{2}|[a-z]{2}-[a-z]{2})$"
@@ -82,52 +118,14 @@ def validate_npm_package_name(value: str) -> str:
 def validate_plone_version(value: str) -> str:
     """Validate Plone Version."""
     version = _version_from_str(value)
-    status = bool(version) and (
-        version >= _version_from_str(settings.PLONE_MIN_VERSION)
-    )
+    min_version = _version_from_str(settings.PLONE_MIN_VERSION)
+    status = bool(version) and bool(min_version) and (version >= min_version)
     return "" if status else f"{value} is not a valid Plone version."
 
 
 def validate_volto_version(value: str) -> str:
     """Validate Volto Version."""
     version = _version_from_str(value)
-    status = bool(version) and (
-        version >= _version_from_str(settings.VOLTO_MIN_VERSION)
-    )
+    min_version = _version_from_str(settings.VOLTO_MIN_VERSION)
+    status = bool(version) and bool(min_version) and (version >= min_version)
     return "" if status else f"Volto version {value} is not supported by this template."
-
-
-def run_context_validations(
-    context: dict, validations: list[data.ItemValidator], allow_empty: bool = False
-) -> data.ContextValidatorResult:
-    """Run validations for context."""
-    global_status = True
-    results = []
-    if not allow_empty:
-        func = validate_not_empty
-        for key in context:
-            if key.startswith("_"):
-                # Ignore computed values
-                continue
-            validations.append(data.ItemValidator(key, func, "error"))
-    for validation in validations:
-        status = False
-        key = validation.key
-        func = validation.func
-        value = context.get(key, "")
-        level = validation.level
-        message = func(value, key) if func == validate_not_empty else func(value)
-        if not message:
-            status = True
-            message = "✓"
-        elif level == "warning":
-            status = True
-        global_status = global_status and status
-        results.append(data.ItemValidatorResult(key, status, message))
-    global_message = (
-        f"Ran {len(results)} validations and "
-        f"they {'passed' if global_status else 'failed'}."
-    )
-    return data.ContextValidatorResult(
-        status=global_status, message=global_message, validations=results
-    )

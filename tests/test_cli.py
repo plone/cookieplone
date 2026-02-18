@@ -5,16 +5,19 @@ from cookieplone import cli
 
 
 @pytest.mark.parametrize(
-    "value,expected",
+    "value,config_data,expected",
     [
-        ([], {}),
-        (["foo=bar", "bar=bar"], {"foo": "bar", "bar": "bar"}),
-        (["foo=1", "bar=2"], {"foo": "1", "bar": "2"}),
+        ([], {}, {}),
+        (["foo=bar", "bar=bar"], {}, {"foo": "bar", "bar": "bar"}),
+        (["foo=1", "bar=2"], {}, {"foo": "1", "bar": "2"}),
+        (["foo=1", "bar=2"], {"foobar": "1"}, {"foo": "1", "bar": "2", "foobar": "1"}),
     ],
 )
-def test_parse_extra_context(value: list[str], expected: dict):
+def test_parse_extra_context(
+    value: list[str], config_data: dict[str, str], expected: dict
+):
     func = cli.parse_extra_context
-    assert func(value) == expected
+    assert func(value, config_data) == expected
 
 
 @pytest.mark.parametrize(

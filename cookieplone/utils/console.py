@@ -7,7 +7,7 @@ from textwrap import dedent
 
 from rich import print as base_print
 from rich.align import Align
-from rich.console import Group
+from rich.console import Group, RenderableType
 from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
@@ -64,7 +64,7 @@ def choose_banner() -> str:
     return banner
 
 
-def _print(msg: str):
+def _print(msg: str | RenderableType):
     """Wrapper around rich.print."""
     if not os.environ.get(QUIET_MODE_VAR):
         base_print(msg)
@@ -116,7 +116,7 @@ def warning(msg: str):
     print(msg, style, color)
 
 
-def panel(title: str, msg: str = "", subtitle: str = "", url: str = ""):
+def panel(title: str, msg: str = "", subtitle: str = "", url: str = "") -> None:
     msg = dedent(msg)
     if url:
         msg = f"{msg}\n[link]{url}[/link]"
@@ -130,9 +130,13 @@ def panel(title: str, msg: str = "", subtitle: str = "", url: str = ""):
 
 
 def create_table(
-    columns: list[dict] | None = None, rows: list[list[str]] | None = None, **kwargs
+    columns: list[dict[str, str | bool]] | None = None,
+    rows: list[tuple[str, ...]] | None = None,
+    **kwargs,
 ) -> Table:
     """Create table."""
+    columns = columns or []
+    rows = rows or []
     table = Table(**kwargs)
     for column in columns:
         col_title = column.pop("title", "")
@@ -146,27 +150,27 @@ def table_available_templates(
     title: str, rows: dict[str, t.CookieploneTemplate]
 ) -> Table:
     """Display a table of options."""
-    columns = [
+    table_columns = [
         {"title": "#", "justify": "center", "style": "cyan", "no_wrap": True},
         {"title": "Title", "style": "blue"},
         {"title": "Description", "justify": "left", "style": "blue"},
     ]
-    rows = [
+    table_rows = [
         (f"{idx}", template.title, template.description)
         for idx, template in enumerate(rows.values(), start=1)
     ]
-    return create_table(columns, rows, title=title, expand=True)
+    return create_table(table_columns, table_rows, title=title, expand=True)
 
 
-def welcome_screen(templates: list[t.CookieploneTemplate] | None = None):
+def welcome_screen(templates: dict[str, t.CookieploneTemplate] | None = None):
+    """Display a welcome screen with banner and available templates."""
     banner = choose_banner()
-    items = [
+    items: list[RenderableType] = [
         Align.center(f"[bold blue]{banner}[/bold blue]"),
     ]
     if templates:
-        items.append(
-            Panel(table_available_templates(title="Templates", rows=templates))
-        )
+        panel = Panel(table_available_templates(title="Templates", rows=templates))
+        items.append(panel)
     panel = Panel(
         Group(*items),
         title="cookieplone",
