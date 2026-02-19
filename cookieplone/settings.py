@@ -19,10 +19,10 @@ class PythonVersionSupport:
 PLONE_MIN_VERSION = "6"
 
 SUPPORTED_PYTHON_VERSIONS = [
-    "3.10",
     "3.11",
     "3.12",
     "3.13",
+    "3.14",
 ]
 
 # A matrix of Plone and Python version support.
@@ -34,21 +34,19 @@ SUPPORTED_PYTHON_VERSIONS = [
 PLONE_PYTHON = {
     "6.0": PythonVersionSupport(
         [
-            "3.10",
             "3.11",
             "3.12",
         ],
-        "3.10",
+        "3.11",
         "3.12",
     ),
     "6.1": PythonVersionSupport(
         [
-            "3.10",
             "3.11",
             "3.12",
             "3.13",
         ],
-        "3.10",
+        "3.11",
         "3.13",
     ),
 }

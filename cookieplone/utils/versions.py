@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 import re
+import sys
 
 import requests
 import semver
@@ -163,3 +164,8 @@ def format_as_major_minor(version: str) -> str:
         version = version.split("-")[0]
     v = Version(version)
     return f"{v.major}.{v.minor}"
+
+
+def current_python_version() -> tuple[int, int]:
+    """Return the current Python version as tuple (major, minor)."""
+    return sys.version_info.major, sys.version_info.minor

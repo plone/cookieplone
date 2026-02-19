@@ -7,13 +7,20 @@ from pathlib import Path
 
 from cookiecutter.utils import force_delete
 
+from cookieplone.utils.versions import current_python_version
+
 
 def rmtree(path: Path | str):
     """Remove a directory and all its contents. Like rm -rf on Unix.
 
     :param path: A directory path.
     """
-    shutil.rmtree(path, onexc=force_delete)
+    if current_python_version() >= (3, 12):
+        shutil.rmtree(path, onexc=force_delete)
+    else:
+        # Python 3.11 and earlier do not have the onexc parameter,
+        # so we use onerror instead.
+        shutil.rmtree(path, onerror=force_delete)
 
 
 def resolve_path(path: Path | str) -> Path:
