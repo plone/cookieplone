@@ -55,10 +55,17 @@ def generate_context_file(tmp_path):
             "{{'6.1' | python_versions}}",
             "['3.10', '3.11', '3.12', '3.13']",
         ],
+        [
+            "python_versions",
+            "{{'6.2' | python_versions}}",
+            "['3.10', '3.11', '3.12', '3.13']",
+        ],
         ["python_version_earliest", "{{'6.0' | python_version_earliest}}", "3.10"],
         ["python_version_earliest", "{{'6.1' | python_version_earliest}}", "3.10"],
+        ["python_version_earliest", "{{'6.2' | python_version_earliest}}", "3.10"],
         ["python_version_latest", "{{'6.0' | python_version_latest}}", "3.12"],
         ["python_version_latest", "{{'6.1' | python_version_latest}}", "3.13"],
+        ["python_version_latest", "{{'6.2' | python_version_latest}}", "3.13"],
         ["as_semver", "{{'6.1' | as_semver}}", "6.1.0"],
         ["as_semver", "{{'1.0.0a0' | as_semver}}", "1.0.0-alpha.0"],
         [

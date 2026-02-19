@@ -1,0 +1,1 @@
+Simplify usage of `cookieplone.settings.PythonVersionSupport` by computing earliest and latest versions. @ericof

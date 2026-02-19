@@ -12,8 +12,20 @@ class PythonVersionSupport:
     """Python version support for Plone."""
 
     supported: list[str]
-    earliest: str
-    latest: str
+
+    def _ordered_supported(self) -> list[str]:
+        """Return the supported Python versions in order."""
+        return sorted(self.supported, key=lambda v: tuple(map(int, v.split("."))))
+
+    @property
+    def earliest(self) -> str:
+        """Return the earliest supported Python version."""
+        return self._ordered_supported()[0]
+
+    @property
+    def latest(self) -> str:
+        """Return the latest supported Python version."""
+        return self._ordered_supported()[-1]
 
 
 PLONE_MIN_VERSION = "6"
@@ -32,25 +44,9 @@ SUPPORTED_PYTHON_VERSIONS = [
 # its earliest supported Python version, and
 # its latest supported Python version.
 PLONE_PYTHON = {
-    "6.0": PythonVersionSupport(
-        [
-            "3.10",
-            "3.11",
-            "3.12",
-        ],
-        "3.10",
-        "3.12",
-    ),
-    "6.1": PythonVersionSupport(
-        [
-            "3.10",
-            "3.11",
-            "3.12",
-            "3.13",
-        ],
-        "3.10",
-        "3.13",
-    ),
+    "6.0": PythonVersionSupport(["3.10", "3.11", "3.12"]),
+    "6.1": PythonVersionSupport(["3.10", "3.11", "3.12", "3.13"]),
+    "6.2": PythonVersionSupport(["3.10", "3.11", "3.12", "3.13"]),
 }
 
 DEFAULT_NODE = 24
