@@ -34,19 +34,21 @@ SUPPORTED_PYTHON_VERSIONS = [
 PLONE_PYTHON = {
     "6.0": PythonVersionSupport(
         [
+            "3.10",
             "3.11",
             "3.12",
         ],
-        "3.11",
+        "3.10",
         "3.12",
     ),
     "6.1": PythonVersionSupport(
         [
+            "3.10",
             "3.11",
             "3.12",
             "3.13",
         ],
-        "3.11",
+        "3.10",
         "3.13",
     ),
 }
