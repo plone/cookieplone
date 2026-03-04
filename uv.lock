@@ -342,6 +342,7 @@ name = "cookieplone"
 source = { editable = "." }
 dependencies = [
     { name = "black" },
+    { name = "chardet" },
     { name = "cookiecutter" },
     { name = "gitpython" },
     { name = "isort" },
@@ -368,6 +369,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "black", specifier = "==24.4.2" },
+    { name = "chardet", specifier = "<7" },
     { name = "cookiecutter", specifier = "==2.6.0" },
     { name = "gitpython", specifier = "==3.1.43" },
     { name = "isort" },
