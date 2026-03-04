@@ -9,6 +9,18 @@
 
 <!-- towncrier release notes start -->
 
+## 0.9.11 (2026-03-04)
+
+
+### New features:
+
+- Default to create Python native namespaces @gforcada [#115](https://github.com/plone/cookieplone/issues/115)
+
+
+### Bug fixes:
+
+- Fix dependency pinning: Require chardet<7 to work around an incompatibility with binaryornot. @davisagli 
+
 ## 0.9.10 (2025-10-21)
 
 
