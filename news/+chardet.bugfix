@@ -1,0 +1,1 @@
+Fix dependency pinning: Require chardet<7 to work around an incompatibility with binaryornot. @davisagli
