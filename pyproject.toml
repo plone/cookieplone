@@ -27,6 +27,7 @@ classifiers = [
   "Topic :: Software Development :: Code Generators"
 ]
 dependencies = [
+  "chardet<7",
   "cookiecutter==2.6.0",
   "semver==3.0.2",
   "typer==0.17.4",
