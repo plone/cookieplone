@@ -9,6 +9,31 @@
 
 <!-- towncrier release notes start -->
 
+## 1.0.0 (2026-03-13)
+
+
+### New features:
+
+- Add support to Python 3.14. @ericof 
+
+
+### Bug fixes:
+
+- Remove dependency on `chardet`. Now we have a version of `binaryornot` that does not depend on `chardet`. @wesleybl [#125](https://github.com/plone/cookieplone/issues/125)
+
+
+### Internal:
+
+- Update dependencies semver==3.0.4, typer==0.24.1, packaging==26.0, gitpython==3.1.46, xmltodict==1.0.4, black==26.3.1 @ericof [#130](https://github.com/plone/cookieplone/issues/130)
+- Add dependabot support for GitHub Actions. @ericof 
+- Fix pyproject.toml metadata. @ericof 
+- Update pre-commit hooks (uv run pre-commit autoupdate). @ericof 
+
+
+### Tests
+
+- Update GitHub actions' versions. @ericof 
+
 ## 0.9.11 (2026-03-04)
 
 

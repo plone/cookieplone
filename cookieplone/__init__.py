@@ -1,4 +1,4 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
-__version__ = "0.9.12.dev0"
+__version__ = "1.0.0"
