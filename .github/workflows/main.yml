@@ -37,16 +37,11 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ env.python-version }}
-          enable-cache: false
-
-      - name: Restore uv cache
-        uses: actions/cache@v5
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
-            uv-${{ runner.os }}-${{ env.python-version }}
+          cache-python: true
+          enable-cache: true
+          cache-suffix: "optional-suffix"
+          cache-dependency-glob: |
+            **/uv.lock
 
       - name: Run tests
         run: |
@@ -62,16 +57,11 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ env.python-version }}
-          enable-cache: false
-
-      - name: Restore uv cache
-        uses: actions/cache@v5
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
-            uv-${{ runner.os }}-${{ env.python-version }}
+          cache-python: true
+          enable-cache: true
+          cache-suffix: "optional-suffix"
+          cache-dependency-glob: |
+            **/uv.lock
 
       - name: Run coverage
         run: |
