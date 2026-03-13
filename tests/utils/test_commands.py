@@ -68,20 +68,9 @@ def test_check_command_is_available(cli: str, expected: str):
     "versions,expected",
     [
         [[], ""],
+        [["3.10", "3.11", "3.12", "3.13", "3.14"], ""],
         [
-            [
-                "3.10",
-                "3.11",
-                "3.12",
-                "3.13",
-            ],
-            "",
-        ],
-        [
-            [
-                "1.5",
-                "2.4",
-            ],
+            ["1.5", "2.4"],
             f"Python version is not supported: Got {sys.version}",
         ],
     ],
