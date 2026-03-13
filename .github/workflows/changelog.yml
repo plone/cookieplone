@@ -12,7 +12,7 @@ jobs:
   changelog:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # Fetch all history
           fetch-depth: '0'
@@ -20,13 +20,13 @@ jobs:
       - name: Install hatch
         run: pipx install hatch
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.python-version }}
           cache: 'pip'
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ env.python-version }}
 
