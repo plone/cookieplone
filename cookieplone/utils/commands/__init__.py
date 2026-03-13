@@ -10,12 +10,9 @@ from cookieplone import settings
 
 def _get_command_version(cmd: str) -> str:
     """Get the reported version of a command line utility."""
+    args: list[str] = [cmd, "--version"]
     try:
-        raw_version = (
-            subprocess.run([cmd, "--version"], capture_output=True)  # noQA: S603
-            .stdout.decode()
-            .strip()
-        )
+        raw_version = subprocess.run(args, capture_output=True).stdout.decode().strip()
     except (FileNotFoundError, PermissionError):
         raw_version = ""
     return raw_version
