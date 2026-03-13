@@ -106,6 +106,16 @@ You can create an issue in the issue tracker, or contact a maintainer.
 - [Issue Tracker](https://github.com/plone/cookieplone/issues)
 - [Source Code](https://github.com/plone/cookieplone/)
 
+### Branches
+
+| Branch | Target version | Status |
+| --- | --- | --- |
+| **main** | 2.0.0 (next major) | Active development |
+| **1.x** | 1.x (patch and minor) | Maintenance only |
+
+All new feature development targets the `main` branch and will be released as version 2.0.0.
+The `1.x` branch is in maintenance mode and only receives bug fixes and minor improvements released as 1.x versions.
+
 ### Development requirements
 
 See [Installation](#installation-).
