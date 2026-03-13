@@ -102,8 +102,7 @@ def cli(
             "--skip-if-file-exists",
             "-s",
             help=(
-                "Skip the files in the corresponding directories "
-                "if they already exist"
+                "Skip the files in the corresponding directories if they already exist"
             ),
         ),
     ] = False,

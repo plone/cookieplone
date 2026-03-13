@@ -9,12 +9,13 @@ env:
 
 jobs:
   quality:
+    name: "Code quality checks"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.python-version }}
           cache: "pip"
@@ -23,55 +24,48 @@ jobs:
         uses: pre-commit/action@v3.0.1
 
   test:
+    name: "Test on Python ${{ matrix.python-version }}"
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     env:
       python-version: ${{ matrix.python-version }}
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ env.python-version }}
-          enable-cache: false
-
-      - name: Restore uv cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
-            uv-${{ runner.os }}-${{ env.python-version }}
+          cache-python: true
+          enable-cache: true
+          cache-suffix: "optional-suffix"
+          cache-dependency-glob: |
+            **/uv.lock
 
       - name: Run tests
         run: |
           make test
 
   coverage:
+    name: "Coverage tests"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ env.python-version }}
-          enable-cache: false
-
-      - name: Restore uv cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-${{ env.python-version }}-${{ hashFiles('uv.lock') }}
-            uv-${{ runner.os }}-${{ env.python-version }}
+          cache-python: true
+          enable-cache: true
+          cache-suffix: "optional-suffix"
+          cache-dependency-glob: |
+            **/uv.lock
 
       - name: Run coverage
         run: |

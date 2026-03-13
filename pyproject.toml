@@ -1,8 +1,11 @@
 [project]
 name = "cookieplone"
-description = "Create Plone projects, add-ons, documentation with ease!"
+description = "Create Plone codebases (projects, add-ons, documentation) with ease!"
 dynamic = ["version"]
 authors = [
+  { name = "Plone Community", email = "dev@plone.org" },
+]
+maintainers = [
   { name = "Plone Community", email = "dev@plone.org" },
 ]
 readme = "README.md"
@@ -14,13 +17,13 @@ classifiers = [
   "Environment :: Console",
   "Intended Audience :: Developers",
   "Natural Language :: English",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python",
   "Topic :: Software Development",
@@ -28,12 +31,12 @@ classifiers = [
 ]
 dependencies = [
   "cookiecutter==2.6.0",
-  "semver==3.0.2",
-  "typer==0.17.4",
-  "packaging==24.0",
-  "gitpython==3.1.43",
-  "xmltodict==0.13.0",
-  "black==24.4.2",
+  "semver==3.0.4",
+  "typer==0.24.1",
+  "packaging==26.0",
+  "gitpython==3.1.46",
+  "xmltodict==1.0.4",
+  "black==26.3.1",
   "ruff",
   "isort",
   "zpretty"
@@ -146,6 +149,7 @@ lint.ignore = [
 preview = true
 
 [tool.ruff.lint.per-file-ignores]
+"cookieplone/utils/commands/__init__.py" = ["S603"]
 "tests/*" = ["S101"]
 
 [tool.towncrier]
