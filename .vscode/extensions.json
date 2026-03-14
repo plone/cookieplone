@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "charliermarsh.ruff",
+    "ms-python.python",
+    "tamasfe.even-better-toml",
+    "github.vscode-github-actions",
+    "ms-python.mypy-type-checker",
+    "executablebookproject.myst-highlight",
+    "streetsidesoftware.code-spell-checker"
+  ]
+}
