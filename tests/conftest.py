@@ -1,3 +1,4 @@
+import json
 import random
 import string
 from pathlib import Path
@@ -33,7 +34,7 @@ def no_repo(tmp_path):
     return path
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def read_data_file(resources_folder):
     def func(filepath: str) -> str:
         data = ""
@@ -46,6 +47,52 @@ def read_data_file(resources_folder):
 
 
 @pytest.fixture(scope="session")
+def read_config_file(read_data_file):
+    def func(filepath: str) -> dict:
+        raw = read_data_file(filepath)
+        data = json.loads(raw)
+        return data
+
+    return func
+
+
+@pytest.fixture(scope="session")
+def validate_config(read_config_file):
+    def func(config_file: Path):
+        from cookieplone.utils.config import validate_config
+
+        schema = read_config_file(config_file)
+        return validate_config(schema)
+
+    return func
+
+
+@pytest.fixture(scope="session")
 def project_source(resources_folder) -> Path:
     path = (resources_folder / "templates").resolve()
     return path
+
+
+@pytest.fixture(scope="module")
+def base_template_path(tmpdir_factory):
+    """Fixture to prepare a temporary folder."""
+
+    def func() -> Path:
+        tmp_path = Path(tmpdir_factory.mktemp("template"))
+        return tmp_path
+
+    return func
+
+
+@pytest.fixture(scope="module")
+def template_path(base_template_path, read_data_file):
+    """Fixture to prepare a temporary folder with a config file."""
+
+    def func(config_file: str) -> Path:
+        path = base_template_path()
+        dst_name = "cookiecutter.json" if "v1-" in config_file else "cookieplone.json"
+        dst = path / dst_name
+        dst.write_text(read_data_file(config_file))
+        return path
+
+    return func

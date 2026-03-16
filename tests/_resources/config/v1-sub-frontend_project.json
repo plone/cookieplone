@@ -1,0 +1,18 @@
+{
+  "title": "Frontend Project",
+  "volto_version": "{{ 'Yes' | latest_volto }}",
+  "author": "Plone Community",
+  "__folder_name": "app",
+  "__version_plone_volto": "{{ cookiecutter.volto_version }}",
+  "__version_pnpm": "{{ '10.20.0' if cookiecutter.volto_version >= '19' else '9.1.1' }}",
+  "__prompts__": {
+    "title": "Project name",
+    "volto_version": "Volto version"
+  },
+  "_copy_without_render": [],
+  "_extensions": [
+    "cookieplone.filters.latest_volto"
+  ],
+  "__cookieplone_repository_path": "",
+  "__cookieplone_template": ""
+}

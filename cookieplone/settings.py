@@ -79,3 +79,6 @@ REPO_PASSWORD = "COOKIEPLONE_REPO_PASSWORD"  # noQA:S105
 
 # Connectivity
 REQUESTS_TIMEOUT = 10
+
+# Root key used for templates
+DEFAULT_DATA_KEY = "cookiecutter"

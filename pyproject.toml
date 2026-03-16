@@ -2,12 +2,8 @@
 name = "cookieplone"
 description = "Create Plone codebases (projects, add-ons, documentation) with ease!"
 dynamic = ["version"]
-authors = [
-  { name = "Plone Community", email = "dev@plone.org" },
-]
-maintainers = [
-  { name = "Plone Community", email = "dev@plone.org" },
-]
+authors = [{ name = "Plone Community", email = "dev@plone.org" }]
+maintainers = [{ name = "Plone Community", email = "dev@plone.org" }]
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -27,7 +23,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python",
   "Topic :: Software Development",
-  "Topic :: Software Development :: Code Generators"
+  "Topic :: Software Development :: Code Generators",
 ]
 dependencies = [
   "cookiecutter==2.6.0",
@@ -48,6 +44,7 @@ cookieplone = "cookieplone.templates.fixtures"
 
 [project.scripts]
 cookieplone = 'cookieplone.__main__:main'
+cutter2plone = 'cookieplone.cli.converter:main'
 
 [project.urls]
 Documentation = "https://github.com/plone/cookieplone#readme"
@@ -87,9 +84,7 @@ default-groups = ["dev"]
 source_pkgs = ["cookieplone"]
 branch = true
 parallel = true
-omit = [
-  "cookieplone/__init__.py",
-]
+omit = ["cookieplone/__init__.py"]
 
 [tool.coverage.paths]
 cookieplone = ["cookieplone", "*/cookieplone/cookieplone"]
@@ -98,11 +93,7 @@ tests = ["tests", "*/cookieplone/tests"]
 [tool.coverage.report]
 skip_empty = true
 show_missing = true
-exclude_lines = [
-  "no cov",
-  "if __name__ == .__main__.:",
-  "if TYPE_CHECKING:",
-]
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -112,38 +103,39 @@ target-version = "py310"
 line-length = 88
 fix = true
 lint.select = [
-    # flake8-2020
-    "YTT",
-    # flake8-bandit
-    "S",
-    # flake8-bugbear
-    "B",
-    # flake8-builtins
-    "A",
-    # flake8-comprehensions
-    "C4",
-    # flake8-debugger
-    "T10",
-    # flake8-simplify
-    "SIM",
-    # isort
-    "I",
-    # mccabe
-    "C90",
-    # pycodestyle
-    "E", "W",
-    # pyflakes
-    "F",
-    # pygrep-hooks
-    "PGH",
-    # pyupgrade
-    "UP",
-    # ruff
-    "RUF",
+  # flake8-2020
+  "YTT",
+  # flake8-bandit
+  "S",
+  # flake8-bugbear
+  "B",
+  # flake8-builtins
+  "A",
+  # flake8-comprehensions
+  "C4",
+  # flake8-debugger
+  "T10",
+  # flake8-simplify
+  "SIM",
+  # isort
+  "I",
+  # mccabe
+  "C90",
+  # pycodestyle
+  "E",
+  "W",
+  # pyflakes
+  "F",
+  # pygrep-hooks
+  "PGH",
+  # pyupgrade
+  "UP",
+  # ruff
+  "RUF",
 ]
 lint.ignore = [
-    # DoNotAssignLambda
-    "E731",
+  # DoNotAssignLambda
+  "E731",
 ]
 
 [tool.ruff.format]
@@ -194,5 +186,5 @@ name = "Tests"
 showcontent = true
 
 [tool.zest-releaser]
-upload-pypi = false # Build and upload with uv
+upload-pypi = false                                  # Build and upload with uv
 python-file-with-version = "cookieplone/__init__.py"
