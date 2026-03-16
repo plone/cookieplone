@@ -84,7 +84,7 @@ default-groups = ["dev"]
 
 
 [tool.coverage.run]
-source_pkgs = ["cookieplone", "tests"]
+source_pkgs = ["cookieplone"]
 branch = true
 parallel = true
 omit = [
