@@ -4,7 +4,10 @@ from contextlib import contextmanager
 from copy import copy
 from pathlib import Path
 
-from cookiecutter.replay import load
+from cookiecutter.replay import dump, load
+
+from cookieplone.config import Answers
+from cookieplone.settings import DEFAULT_DATA_KEY
 
 
 @contextmanager
@@ -49,3 +52,9 @@ def load_replay(
                 path, template_name = os.path.split(os.path.splitext(replay)[0])
                 context = load(path, template_name)
     return context
+
+
+def dump_replay(answers: Answers, replay_dir: Path, template_name: str) -> None:
+    """Dump data to replay this session."""
+    context = {DEFAULT_DATA_KEY: answers.answers}
+    dump(replay_dir, template_name, context)
