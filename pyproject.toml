@@ -102,6 +102,7 @@ testpaths = ["tests"]
 target-version = "py310"
 line-length = 88
 fix = true
+extend-exclude = ["tests/_resources/templates/"]
 lint.select = [
   # flake8-2020
   "YTT",

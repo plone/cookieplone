@@ -1,0 +1,22 @@
+{
+  "recommendations": [
+    {%- if cookiecutter.frontend_path != '' %}
+    "dbaeumer.vscode-eslint",
+    "stylelint.vscode-stylelint",
+    "esbenp.prettier-vscode",
+    {%- endif %}
+    {%- if cookiecutter.backend_path != '' %}
+    "charliermarsh.ruff",
+    "ms-python.python",
+    {%- endif %}
+    {%- if cookiecutter.ansible_path != '' %}
+    "redhat.ansible",
+    {%- endif %}
+    "ExecutableBookProject.myst-highlight",
+    "ms-vscode-remote.remote-containers",
+    "redhat.vscode-yaml",
+    "editorconfig.editorconfig",
+    "github.vscode-github-actions",
+    "plone.plone-vs-utilities"
+  ]
+}

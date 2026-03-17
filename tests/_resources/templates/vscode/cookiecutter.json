@@ -1,0 +1,21 @@
+{
+  "backend_path": "/",
+  "frontend_path": "/",
+  "ansible_path": "",
+  "__folder_name": ".vscode",
+  "_copy_without_render": [],
+  "__prompts__": {
+    "backend_path": {
+      "__prompt__": "Root path of the Python codebase (/ for the root, empty for no Python codebase)"
+    },
+    "frontend_path": {
+      "__prompt__": "Root path of the Volto codebase (/ for the root, empty for no Volto codebase)"
+    },
+    "ansible_path": {
+      "__prompt__": "Root path of the Ansible codebase (/ for the root, empty for no Ansible codebase)"
+    }
+  },
+  "_extensions": [],
+  "__cookieplone_repository_path": "",
+  "__cookieplone_template": ""
+}

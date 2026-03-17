@@ -1,0 +1,1 @@
+Reimplement the fixtures from pytest-cookies to use the new cookieplone and schemas. @ericof

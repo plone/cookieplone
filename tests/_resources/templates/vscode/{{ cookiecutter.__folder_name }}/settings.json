@@ -1,0 +1,34 @@
+{
+  {%- if cookiecutter.frontend_path != '' %}
+  "eslint.workingDirectories": ["./frontend"],
+  "stylelint.enable": true,
+  "css.validate": false,
+  "less.validate": false,
+  "scss.validate": false,
+  "[css][less][scss]": {
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.stylelint": "explicit"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  {%- endif %}
+  {%- if cookiecutter.backend_path != '' %}
+  "ruff.organizeImports": true,
+  "python.terminal.activateEnvironment": true,
+  "python.testing.pytestArgs": [
+    "{{ cookiecutter.backend_path }}tests"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  {%- endif %}
+  {%- if cookiecutter.ansible_path != '' %}
+  "ansible.python.interpreterPath": "${workspaceFolder}{{ cookiecutter.ansible_path }}/.venv/bin/python",
+  "ansible.validation.lint.path": "{{ cookiecutter.ansible_path }}.venv/bin/ansible-lint",
+  "ansible.validation.lint.arguments": "-c .ansible-lint",
+  {%- endif %}
+  "[markdown]": {
+    "editor.formatOnSave": false
+  }
+}

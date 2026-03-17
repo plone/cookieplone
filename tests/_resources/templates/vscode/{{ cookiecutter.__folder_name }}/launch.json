@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {%- if cookiecutter.backend_path != '' %}
+    {
+      "name": "Debug Plone Backend",
+      "type": "debugpy",
+      "request": "launch",
+      "python":"${command:python.interpreterPath}",
+      "program": "${workspaceFolder}{{ cookiecutter.backend_path }}/.venv/bin/runwsgi",
+      "args": [
+        "instance/etc/zope.ini"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}{{cookiecutter.backend_path}}",
+      "justMyCode": false,
+      "subProcess": true
+    }
+    {%- endif %}
+  ]
+}
