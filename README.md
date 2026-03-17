@@ -69,9 +69,13 @@ Cookieplone will walk you through the necessary steps, using sensible defaults a
 Cookieplone will ask a lot of questions.
 You can use some of its options to avoid repeatedly entering the same values.
 
+#### `--answers`
+
+You can use the `--answers` to point to a file containing the answers you want to use to pre-populate default values.
+
 #### `--no-input`
 
-You can use the [`--no-input`](https://cookiecutter.readthedocs.io/en/latest/cli_options.html#cmdoption-cookiecutter-no-input) option to make Cookieplone not prompt for parameters and only use `cookiecutter.json` file content.
+You can use the [`--no-input`](https://cookiecutter.readthedocs.io/en/latest/cli_options.html#cmdoption-cookiecutter-no-input) option to make Cookieplone not prompt for parameters and only use default values.
 
 #### `--replay` and `--replay-file`
 

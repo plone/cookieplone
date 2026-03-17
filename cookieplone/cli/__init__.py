@@ -4,8 +4,9 @@
 """Main `cookieplone` CLI."""
 
 import os
+from copy import deepcopy
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from rich.prompt import Prompt
@@ -14,7 +15,7 @@ from cookieplone import _types as t
 from cookieplone import data, settings
 from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate
-from cookieplone.logger import configure_logger
+from cookieplone.logger import configure_logger, logger
 from cookieplone.repository import (
     get_base_repository,
     get_template_options,
@@ -35,11 +36,27 @@ def validate_extra_context(value: list[str] | None = None) -> list[str]:
     return value
 
 
-def parse_extra_context(value: list[str] | None) -> dict:
-    """Parse extra content and return a dictionary with options."""
-    if not value:
+def parse_answers_file(answers_file: Path | None) -> dict[str, Any]:
+    """Parse the provided file and return the content as a dictionary."""
+    if not answers_file:
         return {}
-    return dict([s.split("=") for s in value])
+    try:
+        data = files.load_config_file(answers_file)
+    except FileNotFoundError as exc:
+        console.error(f"Config file {answers_file} does not exist.")
+        raise typer.Exit(1) from exc
+    else:
+        logger.debug(f"Loaded config data from {answers_file}: {data}")
+        return data
+
+
+def parse_extra_context(value: list[str] | None, answers_data: dict[str, Any]) -> dict:
+    """Parse extra content and return a dictionary with options."""
+    data = deepcopy(answers_data)
+    if value:
+        # Explicitly overriding provided answers
+        data.update(dict([s.split("=") for s in value]))
+    return data
 
 
 def get_password_from_env() -> str:
@@ -71,6 +88,26 @@ def prompt_for_template(base_path: Path, all_: bool = False) -> t.CookieploneTem
     console.welcome_screen(templates)
     answer = Prompt.ask("Select a template", choices=list(choices.keys()), default="1")
     return templates[choices[answer]]
+
+
+def get_template(template: str, repo_path: Path, all_: bool) -> t.CookieploneTemplate:
+    if not template:
+        # Display template options
+        cookieplone_template = prompt_for_template(repo_path, all_)
+    else:
+        # Template name was passed from command line
+        # so we get all template options, including the hidden ones
+        templates = get_template_options(repo_path, True)
+        cookieplone_template = templates.get(template)
+        if not cookieplone_template:
+            console.error(
+                f"We do not have a template named {template}.\n"
+                f"Available templates are: {', '.join(templates.keys())}\n"
+                "Exiting now."
+            )
+            raise typer.Exit(1)
+        console.welcome_screen()
+    return cookieplone_template
 
 
 def cli(
@@ -119,6 +156,12 @@ def cli(
     overwrite_if_exists: Annotated[
         bool, typer.Option("--overwrite-if-exists", "-f")
     ] = False,
+    answers_file: Annotated[
+        data.OptionalPath,
+        typer.Option(
+            "--answers-file", "--answers", help="Answers file to load default values."
+        ),
+    ] = None,
     config_file: Annotated[
         data.OptionalPath, typer.Option("--config-file", help="User configuration file")
     ] = None,
@@ -166,23 +209,14 @@ def cli(
         console.info_screen(repository=repository, passwd=passwd, tag=tag)
         raise typer.Exit()
 
+    # Process answers file if provided and update template
+    if answers_data := parse_answers_file(answers_file):
+        template = answers_data.pop("__template__", template)
+
     repo_path = get_base_repository(repository, tag)
-    if not template:
-        # Display template options
-        cookieplone_template = prompt_for_template(repo_path, all_)
-    else:
-        # Template name was passed from command line
-        # so we get all template options, including the hidden ones
-        templates = get_template_options(repo_path, True)
-        cookieplone_template = templates.get(template)
-        if not cookieplone_template:
-            console.error(
-                f"We do not have a template named {template}.\n"
-                f"Available templates are: {', '.join(templates.keys())}\n"
-                "Exiting now."
-            )
-            raise typer.Exit(1)
-        console.welcome_screen()
+
+    # Template info
+    cookieplone_template = get_template(template, repo_path, all_)
 
     if not output_dir:
         output_dir = Path().cwd()
@@ -195,7 +229,7 @@ def cli(
     else:
         # Annotate extra_context
         extra_context_ = annotate_context(
-            parse_extra_context(extra_context),
+            parse_extra_context(extra_context, answers_data),
             repo_path=repo_path,
             template=cookieplone_template.name,
         )

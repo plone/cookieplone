@@ -5,16 +5,31 @@ from cookieplone import cli
 
 
 @pytest.mark.parametrize(
-    "value,expected",
+    "value,answers_data,expected",
     [
-        ([], {}),
-        (["foo=bar", "bar=bar"], {"foo": "bar", "bar": "bar"}),
-        (["foo=1", "bar=2"], {"foo": "1", "bar": "2"}),
+        ([], {}, {}),
+        (
+            ["foo=bar", "bar=bar"],
+            {},
+            {"foo": "bar", "bar": "bar"},
+        ),  # Only extra context
+        (["foo=1", "bar=2"], {}, {"foo": "1", "bar": "2"}),
+        (
+            ["foo=1", "bar=2"],
+            {"bar": "3"},
+            {"foo": "1", "bar": "2"},
+        ),  # Extra context has priority over answers_data
+        (
+            [],
+            {"bar": "3"},
+            {"bar": "3"},
+        ),  # Only answers_data
+        (["foo=1", "bar=2"], {"foobar": "3"}, {"foo": "1", "bar": "2", "foobar": "3"}),
     ],
 )
-def test_parse_extra_context(value: list[str], expected: dict):
+def test_parse_extra_context(value: list[str], answers_data: dict, expected: dict):
     func = cli.parse_extra_context
-    assert func(value) == expected
+    assert func(value, answers_data) == expected
 
 
 @pytest.mark.parametrize(

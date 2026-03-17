@@ -23,9 +23,9 @@ from cookieplone.utils import answers, console, cookiecutter, files
 from cookieplone.utils.cookiecutter import load_replay
 
 
-def _dump_answers(path: Path, answers: Answers):
+def _dump_answers(answers_: Answers, template_name: str):
     """Dump answers."""
-    files.save_json(path, answers.answers)
+    return answers.write_answers(answers_, template_name)
 
 
 def generate(
@@ -129,17 +129,14 @@ def generate(
         skip_if_file_exists=skip_if_file_exists,
         keep_project_on_failure=keep_project_on_failure,
     )
-    if dump_answers:
-        dump_path = Path().cwd() / COOKIEPLONE_ANSWERS_FILE.replace(
-            ".json", f"{template_name}.json"
-        )
+    dump_location = None
     try:
         result = cookieplone(
             state=state,
             repository_info=repository_info,
             run_config=run_config,
         )
-        dump_path = result / COOKIEPLONE_ANSWERS_FILE
+        dump_location = result
     except (
         exc.ContextDecodingException,
         exc.OutputDirExistsException,
@@ -161,7 +158,10 @@ def generate(
         return Path(result)
     finally:
         if dump_answers:
-            _dump_answers(dump_path, state.answers)
+            path = _dump_answers(state.answers, template_name)
+            if dump_location:
+                # Move file
+                path.rename(dump_location / COOKIEPLONE_ANSWERS_FILE)
             cookiecutter.dump_replay(
                 state.answers, repository_info.replay_dir, template_name
             )
