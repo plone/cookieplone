@@ -250,7 +250,7 @@ def cli(
             str(cookieplone_template.path),
             skip_if_file_exists,
             keep_project_on_failure,
-            template_name=template,
+            template_name=cookieplone_template.name,
         )
     except GeneratorException as exc:
         console.error(exc.message)
