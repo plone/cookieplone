@@ -4,8 +4,11 @@
 import json
 from collections import OrderedDict
 from pathlib import Path
+from typing import Any
 
 from cookiecutter.utils import rmtree
+
+from cookieplone import exceptions as exc
 
 
 def resolve_path(path: Path | str) -> Path:
@@ -48,8 +51,38 @@ def load_config_file(path: Path | str, as_ordered: bool = False) -> dict:
     return load_json(path, as_ordered)
 
 
-def save_json(path: Path, data: dict, encoding: str = "utf-8") -> dict | OrderedDict:
+def save_json(path: Path, data: dict, encoding: str = "utf-8") -> Path:
     """Save a dictionary as a JSON file."""
     with path.open("w", encoding=encoding) as f:
         json.dump(data, f, indent=4)
-    return data
+    return path
+
+
+def get_template_from_path(
+    path: Path | str, template: str, max_levels: int = 3
+) -> Path | None:
+    """Find the repository root from a given path."""
+    path = Path(path).resolve()
+    parents = path.parents
+    possible_paths = [path, *parents[:max_levels]]
+    for parent in possible_paths:
+        if (parent / template).exists():
+            return parent
+    return None
+
+
+def get_repository_root(
+    context: dict[str, Any] | OrderedDict[str, Any], template: str
+) -> Path:
+    """Return the templates root."""
+    possible_keys = [
+        "__cookieplone_repository_path",
+        "_repo_dir",
+        "_template",
+    ]
+    for key in possible_keys:
+        if not (repository_path := context.get(key)):
+            continue
+        if repository := get_template_from_path(repository_path, template):
+            return repository
+    raise exc.RepositoryNotFound()

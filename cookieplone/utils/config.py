@@ -151,8 +151,7 @@ def cookiecutter_to_cookieplone(src: Path, dst: Path) -> Path:
     """Convert a cookiecutter.json file to a cookieplone.json file."""
     config = files.load_json(src)
     converted = convert_v1_to_v2(config)
-    files.save_json(dst, converted)
-    return dst
+    return files.save_json(dst, converted)
 
 
 def validate_config(config: dict[str, Any]) -> bool:

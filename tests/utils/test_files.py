@@ -1,5 +1,6 @@
 import pytest
 
+from cookieplone.exceptions import RepositoryNotFound
 from cookieplone.utils import files
 
 
@@ -42,3 +43,142 @@ def test_remove_gha(tmp_files):
     assert gha.exists()
     func(base_path)
     assert not gha.exists()
+
+
+@pytest.mark.parametrize(
+    "repository_path,template,max_levels,exists",
+    [
+        ("templates/add-ons/backend", "docs/starter", 1, False),
+        ("templates/add-ons/backend", "docs/starter", 2, True),
+        ("templates/add-ons/backend", "docs/starter", 3, True),
+        ("templates/add-ons/frontend", "docs/starter", 1, False),
+        ("templates/add-ons/frontend", "docs/starter", 2, True),
+        ("templates/add-ons/frontend", "docs/starter", 3, True),
+        ("templates/project/monorepo", "ci/gh_project", 1, False),
+        ("templates/project/monorepo", "ci/gh_project", 2, True),
+        ("templates/project/monorepo", "ci/gh_project", 3, True),
+    ],
+)
+def test_get_template_from_path(
+    monkeypatch,
+    repository_structure,
+    get_path,
+    repository_path: str,
+    template: str,
+    max_levels: int,
+    exists: bool,
+):
+    monkeypatch.chdir(repository_structure)
+    # Without resolving the path
+    result = files.get_template_from_path(repository_path, template, max_levels)
+    assert (result is not None) == exists
+
+    path = get_path(repository_path)
+    result = files.get_template_from_path(path, template, max_levels)
+    assert (result is not None) == exists
+
+
+@pytest.mark.parametrize(
+    "repository_path,key,template,exists",
+    [
+        (
+            "templates/add-ons/backend",
+            "__cookieplone_repository_path",
+            "docs/starter",
+            True,
+        ),
+        (
+            "templates/add-ons/frontend",
+            "__cookieplone_repository_path",
+            "docs/starter",
+            True,
+        ),
+        (
+            "templates/project/monorepo",
+            "__cookieplone_repository_path",
+            "ci/gh_project",
+            True,
+        ),
+        (
+            "templates/add-ons/backend",
+            "_repo_dir",
+            "docs/starter",
+            True,
+        ),
+        (
+            "templates/add-ons/frontend",
+            "_repo_dir",
+            "docs/starter",
+            True,
+        ),
+        (
+            "templates/project/monorepo",
+            "_repo_dir",
+            "ci/gh_project",
+            True,
+        ),
+        (
+            "templates/add-ons/backend",
+            "_template",
+            "docs/starter",
+            True,
+        ),
+        (
+            "templates/add-ons/frontend",
+            "_template",
+            "docs/starter",
+            True,
+        ),
+        (
+            "templates/project/monorepo",
+            "_template",
+            "ci/gh_project",
+            True,
+        ),
+    ],
+)
+def test_get_repository_root(
+    monkeypatch,
+    repository_structure,
+    repository_path: str,
+    key: str,
+    template: str,
+    exists: bool,
+):
+    monkeypatch.chdir(repository_structure)
+    # Without resolving the path
+    result = files.get_repository_root({key: repository_path}, template)
+    assert (result is not None) == exists
+
+
+@pytest.mark.parametrize(
+    "repository_path,key,template",
+    [
+        (
+            "templates/add-ons/backend",
+            "_foo",
+            "docs/starter",
+        ),
+        (
+            "templates/add-ons/frontend",
+            "_foo",
+            "docs/starter",
+        ),
+        (
+            "templates/project/monorepo",
+            "_foo",
+            "ci/gh_project",
+        ),
+    ],
+)
+def test_get_repository_root_failure(
+    monkeypatch,
+    repository_structure,
+    repository_path: str,
+    key: str,
+    template: str,
+):
+    monkeypatch.chdir(repository_structure)
+    with pytest.raises(RepositoryNotFound) as exc:
+        files.get_repository_root({key: repository_path}, template)
+    assert "RepositoryNotFound" in str(exc)

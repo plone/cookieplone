@@ -15,6 +15,16 @@ _NO_VALUE = object()
 
 @dataclass
 class Context:
+    """The three sources of context that can influence template defaults.
+
+    :param default: Values from the user-level cookiecutter config file
+        (``~/.cookiecutterrc`` or equivalent).
+    :param extra: Values passed explicitly via ``--extra-context`` or the
+        ``extra_context`` API argument.
+    :param replay: Values loaded from a replay file when re-running a
+        previously completed generation.
+    """
+
     default: dict[str, Any] = field(default_factory=dict)
     extra: dict[str, Any] = field(default_factory=dict)
     replay: dict[str, Any] = field(default_factory=dict)
@@ -22,16 +32,39 @@ class Context:
 
 @dataclass
 class Answers:
+    """Wizard output split into full answers and user-supplied answers.
+
+    :param answers: Complete set of answers after Jinja rendering, including
+        computed and internal keys.  Used as the cookiecutter context.
+    :param user_answers: Only the values explicitly entered (or defaulted) by
+        the user, without computed keys.  Suitable for persisting to a replay
+        file.
+    """
+
     answers: dict[str, Any] = field(default_factory=dict)
     user_answers: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class CookieploneState:
-    """State for a Cookieplone run."""
+    """All state needed to drive a single Cookieplone template generation run.
+
+    :param schema: Parsed schema dict (v1 or v2) describing the template's variables.
+    :param data: Runtime context keyed by ``root_key`` (usually ``"cookiecutter"``).
+        This dict is mutated during generation as wizard answers are collected.
+    :param root_key: The top-level key under which template variables are stored.
+        Defaults to :data:`~cookieplone.settings.DEFAULT_DATA_KEY`.
+    :param context: The three override sources (user config, extra, replay) captured
+        at initialisation time for later introspection.
+    :param answers: Wizard output — both the full rendered answers and the subset
+        supplied by the user.  Populated after the wizard completes.
+    :param extensions: Jinja2 extension class paths extracted from the schema's
+        ``_extensions`` property.
+    """
 
     schema: dict[str, Any]
     data: dict[str, dict[str, Any]]
+    root_key: str = DEFAULT_DATA_KEY
     context: Context = field(default_factory=Context)
     answers: Answers = field(default_factory=Answers)
     extensions: list[str] = field(default_factory=list)
@@ -52,7 +85,26 @@ def _apply_overwrites_to_schema(
     *,
     in_dictionary_variable: bool = False,
 ):
-    """Modify default values on the schema based on the overwrite context."""
+    """Modify default values on the schema based on the overwrite context.
+
+    Iterates over *overwrite_context* and, for each key that exists in the schema's
+    ``properties``, replaces the property's ``default`` value.  Handles three
+    special cases: list/choice variables (the override must be a valid choice or
+    subset of choices), nested dict variables (recursed with
+    ``in_dictionary_variable=True``), and plain scalar values (replaced directly).
+
+    Unknown top-level keys are silently ignored.  Unknown keys inside a nested dict
+    variable are added as new properties so they can be passed through to
+    sub-templates.
+
+    :param schema: The schema dict whose ``properties`` will be mutated in-place.
+    :param overwrite_context: Key/value pairs to apply as default overrides.
+    :param in_dictionary_variable: Internal flag set to ``True`` when recursing
+        into a nested dict property.  Enables different behaviour for unknown keys
+        and choice variables.
+    :raises ValueError: If a choice override is not among the valid choices for
+        that variable.
+    """
     properties = schema.get("properties", {})
     for variable, overwrite in overwrite_context.items():
         if variable not in properties:
@@ -115,7 +167,21 @@ def _generate_state(
     extra_context: dict[str, Any] | None = None,
     replay_context: dict[str, Any] | None = None,
 ) -> CookieploneState:
-    """Generate the state for a Cookieplone run."""
+    """Build a :class:`CookieploneState` from a parsed schema and optional
+      context overrides.
+
+    When *replay_context* is provided the schema defaults are ignored and the
+    replay values are used directly as the initial data.  Otherwise,
+    *default_context* and *extra_context* are applied in order to overwrite
+    schema defaults before the wizard runs.
+
+    :param schema: Parsed v2 schema dict (``{"version": "2.0", "properties": ...}``).
+    :param default_context: Values from the user-level config file.
+    :param extra_context: Explicit overrides supplied by the caller.
+    :param replay_context: Full replay file dict (the top-level structure with a
+        ``"cookiecutter"`` key).  The inner dict is extracted automatically.
+    :returns: A fully initialised :class:`CookieploneState`.
+    """
     extensions = _get_extensions_from_schema(schema)
     context = Context(
         default=default_context if default_context else {},
@@ -125,6 +191,7 @@ def _generate_state(
     data: dict[str, Any] = {}
     if replay_context:
         # Update data with information from replay context, if provided.
+        # replay_context is the full replay file; extract the inner dict.
         data.update(replay_context.get("cookiecutter", {}) or {})
     else:
         # Overwrite schema default values with the values from the context, if provided.
@@ -160,12 +227,18 @@ def generate_state(
 ) -> CookieploneState:
     """Generate the state for a Cookieplone run.
 
-    Loads the JSON file as a Python object, with key being the JSON filename.
+    Locates and parses the template's schema file (``cookieplone.json`` for v2,
+    ``cookiecutter.json`` for v1) then delegates to :func:`_generate_state`.
 
-    :param template_path: Path to the template directory containing the JSON file.
-    :param default_context: Dictionary containing config to take into account.
-    :param extra_context: Dictionary containing configuration overrides
-    :param replay_context: Dictionary containing context from a replay file
+    :param template_path: Path to the template directory containing the schema file.
+    :param default_context: Values from the user-level cookiecutter config file.
+    :param extra_context: Explicit key/value overrides supplied by the caller.
+    :param replay_context: Full replay file dict.  When provided, schema defaults
+        are replaced by previously recorded answers.
+    :returns: A fully initialised :class:`CookieploneState`.
+    :raises exc.ConfigDoesNotExistException: If no schema file is found under
+        *template_path*.
+    :raises exc.ContextDecodingException: If the schema file contains invalid JSON.
     """
     if (schema := load_schema_from_path(template_path)) is None:
         raise exc.ConfigDoesNotExistException(
@@ -176,7 +249,16 @@ def generate_state(
 
 
 def load_schema_from_path(template_path: Path) -> dict | None:
-    """Load the schema from the filesystem."""
+    """Load and parse the schema from the filesystem.
+
+    Tries ``cookieplone.json`` (v2) then ``cookiecutter.json`` (v1) under
+    *template_path*.  Returns ``None`` if neither file exists.
+
+    :param template_path: Directory to search for a schema file.
+    :returns: Parsed schema dict, or ``None`` if no schema file was found.
+    :raises exc.ContextDecodingException: If the file exists but contains
+        invalid JSON.
+    """
     for filename, version in [
         ("cookieplone.json", "2.0"),
         ("cookiecutter.json", "1.0"),

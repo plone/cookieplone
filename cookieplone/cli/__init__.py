@@ -35,7 +35,7 @@ def validate_extra_context(value: list[str] | None = None) -> list[str]:
     return value
 
 
-def parse_extra_context(value: list[str]) -> dict:
+def parse_extra_context(value: list[str] | None) -> dict:
     """Parse extra content and return a dictionary with options."""
     if not value:
         return {}
@@ -183,9 +183,10 @@ def cli(
     if replay_file and replay_file.exists():
         # Use replay_file
         replay = replay_file
+        extra_context_ = {}
     else:
         # Annotate extra_context
-        extra_context = annotate_context(
+        extra_context_ = annotate_context(
             parse_extra_context(extra_context),
             repo_path=repo_path,
             template=cookieplone_template.name,
@@ -197,7 +198,7 @@ def cli(
             repository,
             tag,
             no_input,
-            extra_context,
+            extra_context_,
             replay,
             overwrite_if_exists,
             output_dir,
@@ -207,6 +208,7 @@ def cli(
             str(cookieplone_template.path),
             skip_if_file_exists,
             keep_project_on_failure,
+            template_name=template,
         )
     except GeneratorException as exc:
         console.error(exc.message)

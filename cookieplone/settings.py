@@ -80,5 +80,25 @@ REPO_PASSWORD = "COOKIEPLONE_REPO_PASSWORD"  # noQA:S105
 # Connectivity
 REQUESTS_TIMEOUT = 10
 
+# Allowed computed keys in config file
+CONFIG_COMPUTED_KEYS = [
+    "__generator_sha",
+    "__generator_signature",
+    "__cookieplone_template",
+    "__cookieplone_repository_path",
+]
+
 # Root key used for templates
 DEFAULT_DATA_KEY = "cookiecutter"
+
+# Cookieplone answers
+COOKIEPLONE_ANSWERS_FILE = ".cookieplone.json"
+
+# Jinja2 default extensions
+DEFAULT_EXTENSIONS = [
+    "cookiecutter.extensions.JsonifyExtension",
+    "cookiecutter.extensions.RandomStringExtension",
+    "cookiecutter.extensions.SlugifyExtension",
+    "cookiecutter.extensions.TimeExtension",
+    "cookiecutter.extensions.UUIDExtension",
+]

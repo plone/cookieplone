@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
-from cookieplone.config.state import CookieploneState, generate_state
+from cookieplone.config.state import Answers, CookieploneState, generate_state
 
 __all__ = [
+    "Answers",
     "CookieploneState",
     "generate_state",
 ]
