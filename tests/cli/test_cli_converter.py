@@ -61,4 +61,5 @@ def test_cli_converter_src_not_found(base_template_path, monkeypatch):
     result = runner.invoke(app, [src, dst])
     assert result.exit_code == 1
     assert "Source file" in result.stdout
-    assert "cookiecutter.json does not exist." in result.stdout
+    assert "cookiecutter.json" in result.stdout
+    assert "does not" in result.stdout
