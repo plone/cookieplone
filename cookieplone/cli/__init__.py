@@ -161,7 +161,7 @@ def cli(
     repo_path = get_base_repository(repository, tag)
     if not template:
         # Display template options
-        cookieplone_template = prompt_for_template(repo_path)
+        cookieplone_template = prompt_for_template(repo_path, all_)
     else:
         # Template name was passed from command line
         # so we get all template options, including the hidden ones
