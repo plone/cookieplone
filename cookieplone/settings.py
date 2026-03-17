@@ -94,6 +94,17 @@ DEFAULT_DATA_KEY = "cookiecutter"
 # Cookieplone answers
 COOKIEPLONE_ANSWERS_FILE = ".cookieplone.json"
 
+# Questions validators
+## The keys are the variable names in cookiecutter.json/cookieplone.json,
+## and the values are the import paths to the validator functions.
+DEFAULT_VALIDATORS = {
+    "plone_version": "cookieplone.validators.plone_version",
+    "volto_version": "cookieplone.validators.volto_version",
+    "python_package_name": "cookieplone.validators.python_package_name",
+    "hostname": "cookieplone.validators.hostname",
+    "language_code": "cookieplone.validators.language_code",
+}
+
 # Jinja2 default extensions
 DEFAULT_EXTENSIONS = [
     "cookiecutter.extensions.JsonifyExtension",

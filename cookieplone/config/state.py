@@ -7,7 +7,8 @@ from cookiecutter import exceptions as exc
 
 from cookieplone.config.v1 import parse_v1
 from cookieplone.config.v2 import parse_v2
-from cookieplone.settings import DEFAULT_DATA_KEY
+from cookieplone.logger import logger
+from cookieplone.settings import DEFAULT_DATA_KEY, DEFAULT_VALIDATORS
 from cookieplone.utils import files as f
 
 _NO_VALUE = object()
@@ -76,6 +77,15 @@ def _parse_schema(context: dict[str, Any], version: str = "1.0") -> dict[str, An
         context = parse_v1(context)
     elif version == "2.0":
         context = parse_v2(context)
+
+    # All questions will be under `properties`
+    for key, val_func in DEFAULT_VALIDATORS.items():
+        if not (question := context["properties"].get(key)) or question.get(
+            "validator"
+        ):
+            continue
+        logger.debug(f"Setting {val_func} for question {key}")
+        question["validator"] = val_func
     return context
 
 
