@@ -42,6 +42,16 @@ def parse_extra_context(value: list[str] | None) -> dict:
     return dict([s.split("=") for s in value])
 
 
+def get_password_from_env() -> str:
+    """Obtain repository password from environment."""
+    variables = [settings.REPO_PASSWORD, "COOKIECUTTER_REPO_PASSWORD"]
+    for variable in variables:
+        passwd = os.environ.get(variable)
+        if passwd:
+            return passwd
+    return ""
+
+
 def annotate_context(context: dict, repo_path: Path, template: str) -> dict:
     context["__generator_sha"] = internal.repo_sha(repo_path)
     context["__generator_signature"] = internal.signature_md(repo_path)
@@ -73,7 +83,7 @@ def cli(
         data.OptionalPath,
         typer.Option("--output-dir", "-o", help="Where to generate the code."),
     ] = None,
-    tag: Annotated[str, typer.Option(help="Tag.")] = "main",
+    tag: Annotated[str, typer.Option("--tag", "--branch", help="Tag.")] = "main",
     info: Annotated[
         bool,
         typer.Option(
@@ -149,9 +159,7 @@ def cli(
     if not repository:
         repository = settings.REPO_DEFAULT
 
-    passwd = os.environ.get(
-        settings.REPO_PASSWORD, os.environ.get("COOKIECUTTER_REPO_PASSWORD")
-    )
+    passwd = get_password_from_env()
     tag = os.environ.get(settings.REPO_TAG) or tag
 
     if info:
