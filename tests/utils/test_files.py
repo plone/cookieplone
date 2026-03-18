@@ -1,7 +1,20 @@
+from pathlib import Path
+
 import pytest
 
 from cookieplone.exceptions import RepositoryNotFound
 from cookieplone.utils import files
+
+
+@pytest.fixture
+def tmp_paths(tmp_path):
+    """Add two folders and return their paths."""
+    folders = []
+    for idx in range(1, 3):
+        folder = tmp_path / f"{idx:02d}"
+        folder.mkdir(parents=True)
+        folders.append(folder)
+    return folders
 
 
 @pytest.fixture
@@ -13,6 +26,12 @@ def tmp_files(tmp_path):
     file1.touch()
 
     return file1
+
+
+def test_remove_paths(tmp_paths: list[Path]):
+    assert {p.exists() for p in tmp_paths} == {True}
+    files.remove_paths(tmp_paths)
+    assert {p.exists() for p in tmp_paths} == {False}
 
 
 def test_remove_files(tmp_path, tmp_files):

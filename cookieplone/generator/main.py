@@ -10,6 +10,7 @@ from cookiecutter.generate import generate_files
 from cookieplone._types import RepositoryInfo, RunConfig
 from cookieplone.config import CookieploneState
 from cookieplone.exceptions import GeneratorException
+from cookieplone.utils import files as f
 from cookieplone.utils.answers import remove_internal_keys
 from cookieplone.utils.cookiecutter import import_patch
 from cookieplone.wizard import wizard
@@ -124,10 +125,8 @@ def cookieplone(
         raise GeneratorException(
             message=str(exc_info), state=state, original=exc_info
         ) from exc_info
-    else:
-        # Dump file here
-        pass
 
-    # Implement cleanup
-
+    # Cleanup tmp repository info
+    if cleanup := repository_info.cleanup_paths:
+        f.remove_paths(cleanup)
     return Path(result)

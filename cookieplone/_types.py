@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -25,15 +25,14 @@ class RepositoryInfo:
 
     repository: str
     base_repo_dir: Path
-    cleanup_base: bool
     repo_dir: Path
     root_repo_dir: Path
     replay_dir: Path
     template_name: str
     checkout: str
-    cleanup_repo: bool
     accept_hooks: bool
     config_dict: dict[str, Any]
+    cleanup_paths: list[Path] = field(default_factory=list)
 
 
 @dataclass

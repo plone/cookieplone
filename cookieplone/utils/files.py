@@ -18,15 +18,20 @@ def resolve_path(path: Path | str) -> Path:
     return path.resolve()
 
 
-def remove_files(base_path: Path, paths: list[str]):
-    """Remove files."""
-    for filepath in paths:
-        path = base_path / filepath
+def remove_paths(paths: list[Path]):
+    """Remove paths."""
+    for path in paths:
         exists = path.exists()
         if exists and path.is_dir():
             rmtree(path)
         elif exists and path.is_file():
             path.unlink()
+
+
+def remove_files(base_path: Path, paths: list[str]):
+    """Remove files."""
+    all_paths = [base_path / filepath for filepath in paths]
+    remove_paths(all_paths)
 
 
 def remove_gha(base_path: Path):

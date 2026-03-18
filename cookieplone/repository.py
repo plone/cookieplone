@@ -219,18 +219,21 @@ def get_repository(
     except exc.FailedHookException as e:
         raise e
 
-    # Always remove temporary dir if it was created
-    cleanup_repo = cleanup_repo or (repo_dir != base_repo_dir)
+    # Prepare cleanup_paths
+    cleanup_paths = []
+    if cleanup_base_repo_dir:
+        cleanup_paths.append(base_repo_dir)
+    if cleanup_repo or (repo_dir != base_repo_dir):
+        cleanup_paths.append(repo_dir)
     return t.RepositoryInfo(
         repository=str(repository),
         base_repo_dir=base_repo_dir,
-        cleanup_base=cleanup_base_repo_dir,
         repo_dir=repo_dir,
         root_repo_dir=root_repo_dir,
         replay_dir=replay_dir,
         checkout=checkout,
         template_name=template_name,
-        cleanup_repo=cleanup_repo,
         accept_hooks=accept_hooks,
         config_dict=config_dict,
+        cleanup_paths=cleanup_paths,
     )
