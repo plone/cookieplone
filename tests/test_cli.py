@@ -74,3 +74,33 @@ def test_get_password_from_env(monkeypatch, env_var: str, value: str, expected: 
     func = cli.get_password_from_env
     result = func()
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "template,extra_context,expected",
+    [
+        ("", [], ("", [])),
+        ("project", [], ("project", [])),
+        (
+            "project",
+            ["project_slug=foo", "title=FooBar"],
+            ("project", ["project_slug=foo", "title=FooBar"]),
+        ),
+        (
+            "",
+            ["project_slug=foo", "title=FooBar"],
+            ("", ["project_slug=foo", "title=FooBar"]),
+        ),
+        (
+            "project_slug=foo",
+            ["title=FooBar"],
+            ("", ["project_slug=foo", "title=FooBar"]),
+        ),
+    ],
+)
+def test_parse_arguments(
+    template: str, extra_context: list[str] | None, expected: tuple[str, list[str]]
+):
+    func = cli.parse_arguments
+    results = func(template, extra_context)
+    assert results == expected

@@ -36,6 +36,28 @@ def validate_extra_context(value: list[str] | None = None) -> list[str]:
     return value
 
 
+def parse_arguments(
+    template: str = "", extra_context: list[str] | None = None
+) -> tuple[str, list[str]]:
+    """Parse cli arguments (`template`, `extra_context`).
+
+    As both arguments have default values, we need to detected when an extra_context is
+    parsed by Typer as the template argument.
+
+    :param template: Cli argurment template.
+    :param extra_context: Cli argument extra_context (List of string).
+    :returns: Tuple with template and extra_context
+    """
+    extra_context = extra_context if extra_context else []
+    if "=" in template:
+        # As a template name should not have a `=`, this is
+        # actually extra_context being passed in the wrong
+        # argument
+        extra_context.insert(0, template)
+        template = ""
+    return template, extra_context
+
+
 def parse_answers_file(answers_file: Path | None) -> dict[str, Any]:
     """Parse the provided file and return the content as a dictionary."""
     if not answers_file:
@@ -208,6 +230,9 @@ def cli(
     if info:
         console.info_screen(repository=repository, passwd=passwd, tag=tag)
         raise typer.Exit()
+
+    # Process template and extra_context
+    template, extra_context = parse_arguments(template, extra_context)
 
     # Process answers file if provided and update template
     if answers_data := parse_answers_file(answers_file):
