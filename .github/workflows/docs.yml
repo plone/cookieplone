@@ -1,0 +1,98 @@
+name: Documentation
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: true
+        type: string
+        default: "3.12"
+      docs-directory:
+        type: string
+        required: false
+        default: "docs"
+      working-directory:
+        type: string
+        required: false
+        default: "."
+      check-links:
+        default: true
+        type: boolean
+      check-vale:
+        default: true
+        type: boolean
+    outputs:
+      url:
+        description: "URL of the deployed documentation"
+        value: ${{ jobs.deploy.outputs.url }}
+jobs:
+  build:
+    name: Documentation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache-python: true
+          enable-cache: true
+          cache-suffix: "optional-suffix"
+          cache-dependency-glob: |
+            **/uv.lock
+
+      - name: Install Dependencies
+        shell: bash
+        run: make install
+
+      - name: Build HTML documentation
+        shell: bash
+        run: |
+          make docs-html
+
+      - name: Check for broken links
+        if: ${{ inputs.check-links }}
+        shell: bash
+        run: |
+          make docs-linkcheckbroken
+
+      - name: Run vale checks
+        if: ${{ inputs.check-vale }}
+        shell: bash
+        run: |
+          make docs-vale VALEOPTS="--minAlertLevel='warning'"
+
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ inputs.docs-directory }}/_build/html/
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    outputs:
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    needs:
+      - build
+
+    permissions:
+      pages: write
+      id-token: write
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

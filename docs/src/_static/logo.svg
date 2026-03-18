@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&amp;display=swap');
+    </style>
+
+    <!-- Deep Plone-navy background -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#030D1A"/>
+      <stop offset="100%" style="stop-color:#061525"/>
+    </linearGradient>
+
+    <!-- Plone-blue accent gradient (horizontal) -->
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#007EB6"/>
+      <stop offset="100%" style="stop-color:#005A8E"/>
+    </linearGradient>
+
+    <!-- Glow filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Scanline texture -->
+    <pattern id="scanlines" x="0" y="0" width="1600" height="4" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="1600" height="2" fill="rgba(255,255,255,0.018)"/>
+      <rect x="0" y="2" width="1600" height="2" fill="transparent"/>
+    </pattern>
+
+    <!-- Pixel grid texture -->
+    <pattern id="pixelGrid" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="8" height="8" fill="none" stroke="rgba(0,90,142,0.10)" stroke-width="0.5"/>
+    </pattern>
+
+    <!-- Cookie body gradient -->
+    <radialGradient id="cookieBodyLogo" cx="42%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#2BBAE4"/>
+      <stop offset="100%" stop-color="#005A8E"/>
+    </radialGradient>
+    <radialGradient id="chipLogo" cx="30%" cy="25%" r="70%">
+      <stop offset="0%" stop-color="#004070"/>
+      <stop offset="100%" stop-color="#001E3C"/>
+    </radialGradient>
+
+    <!-- CRT vignette -->
+    <radialGradient id="vignette" cx="50%" cy="50%" r="70%" fx="50%" fy="50%">
+      <stop offset="60%" style="stop-color:transparent"/>
+      <stop offset="100%" style="stop-color:rgba(0,0,0,0.55)"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background layers -->
+  <rect width="1600" height="900" fill="url(#bgGrad)"/>
+  <rect width="1600" height="900" fill="url(#pixelGrid)"/>
+  <rect width="1600" height="900" fill="url(#scanlines)"/>
+
+  <!-- Decorative pixel accents — left edge -->
+  <rect x="40" y="100" width="8" height="8" fill="#005A8E" opacity="0.4"/>
+  <rect x="40" y="116" width="8" height="8" fill="#005A8E" opacity="0.25"/>
+  <rect x="40" y="132" width="8" height="8" fill="#005A8E" opacity="0.15"/>
+  <rect x="56" y="100" width="8" height="8" fill="#007EB6" opacity="0.3"/>
+  <rect x="56" y="116" width="8" height="8" fill="#007EB6" opacity="0.2"/>
+  <rect x="40" y="760" width="8" height="8" fill="#005A8E" opacity="0.4"/>
+  <rect x="40" y="744" width="8" height="8" fill="#005A8E" opacity="0.25"/>
+  <rect x="56" y="760" width="8" height="8" fill="#007EB6" opacity="0.3"/>
+
+  <!-- Decorative pixel accents — right edge -->
+  <rect x="1552" y="100" width="8" height="8" fill="#005A8E" opacity="0.4"/>
+  <rect x="1552" y="116" width="8" height="8" fill="#005A8E" opacity="0.25"/>
+  <rect x="1552" y="132" width="8" height="8" fill="#005A8E" opacity="0.15"/>
+  <rect x="1536" y="100" width="8" height="8" fill="#007EB6" opacity="0.3"/>
+  <rect x="1536" y="116" width="8" height="8" fill="#007EB6" opacity="0.2"/>
+  <rect x="1552" y="760" width="8" height="8" fill="#005A8E" opacity="0.4"/>
+  <rect x="1552" y="744" width="8" height="8" fill="#005A8E" opacity="0.25"/>
+  <rect x="1536" y="760" width="8" height="8" fill="#007EB6" opacity="0.3"/>
+
+  <!-- ====== LARGE COOKIE ICON (left column) ====== -->
+  <!-- Original favicon 64×64 scaled ×4.375 ≈ 280px, centered at ~(310, 447) -->
+  <g transform="translate(170, 307) scale(4.375)">
+    <!-- Cookie body -->
+    <path d="
+      M32 3
+      C37 2, 44 4, 50 8
+      C56 12, 61 19, 62 26
+      C63 33, 61 41, 57 47
+      C53 53, 46 58, 39 61
+      C32 64, 24 63, 17 59
+      C10 55, 5 48, 3 41
+      C1 34, 2 26, 6 19
+      C10 12, 17 6, 24 4
+      C27 3, 30 4, 32 3 Z" fill="url(#cookieBodyLogo)"/>
+    <!-- Rim -->
+    <path d="
+      M32 3
+      C37 2, 44 4, 50 8
+      C56 12, 61 19, 62 26
+      C63 33, 61 41, 57 47
+      C53 53, 46 58, 39 61
+      C32 64, 24 63, 17 59
+      C10 55, 5 48, 3 41
+      C1 34, 2 26, 6 19
+      C10 12, 17 6, 24 4
+      C27 3, 30 4, 32 3 Z" fill="none" stroke="#004D7A" stroke-width="1.5"/>
+    <!-- Chips -->
+    <ellipse cx="22" cy="22" rx="4.5" ry="3.5" transform="rotate(-20 22 22)" fill="url(#chipLogo)"/>
+    <ellipse cx="38" cy="19" rx="4" ry="3" transform="rotate(10 38 19)" fill="url(#chipLogo)"/>
+    <ellipse cx="16" cy="37" rx="3.5" ry="3" transform="rotate(-15 16 37)" fill="url(#chipLogo)"/>
+    <ellipse cx="33" cy="33" rx="4" ry="3" transform="rotate(5 33 33)" fill="url(#chipLogo)"/>
+    <ellipse cx="47" cy="35" rx="4" ry="3" transform="rotate(20 47 35)" fill="url(#chipLogo)"/>
+    <ellipse cx="27" cy="48" rx="4" ry="3" transform="rotate(-10 27 48)" fill="url(#chipLogo)"/>
+    <!-- Specular highlight -->
+    <ellipse cx="23" cy="15" rx="9" ry="5" transform="rotate(-30 23 15)" fill="white" opacity="0.13"/>
+  </g>
+
+  <!-- ====== MAIN TITLE ====== -->
+  <text x="560" y="478" font-family="'Share Tech Mono', 'Courier New', monospace" font-size="128" fill="#007EB6" filter="url(#glow)" letter-spacing="-1">
+    cookieplone
+  </text>
+
+  <!-- Accent underlines -->
+  <rect x="560" y="496" width="860" height="3" fill="url(#accentGrad)" opacity="0.8"/>
+  <rect x="560" y="499" width="640" height="2" fill="#007EB6" opacity="0.25"/>
+
+  <!-- Tagline -->
+  <text x="560" y="560" font-family="'Share Tech Mono', 'Courier New', monospace" font-size="30" fill="#2BBAE4" opacity="0.85" letter-spacing="2">
+    Your starting point for every Plone project.
+  </text>
+
+  <!-- Install command hint -->
+  <rect x="560" y="592" width="8" height="8" fill="#005A8E"/>
+  <text x="576" y="600" font-family="'Share Tech Mono', 'Courier New', monospace" font-size="20" fill="#40B0D8" opacity="0.6" letter-spacing="1">
+    uvx cookieplone
+  </text>
+
+  <!-- Decorative pixel scatter — bottom right -->
+  <rect x="1400" y="680" width="8" height="8" fill="#005A8E" opacity="0.5"/>
+  <rect x="1416" y="672" width="8" height="8" fill="#005A8E" opacity="0.35"/>
+  <rect x="1424" y="688" width="8" height="8" fill="#007EB6" opacity="0.4"/>
+  <rect x="1408" y="696" width="8" height="8" fill="#007EB6" opacity="0.25"/>
+  <rect x="1432" y="680" width="8" height="8" fill="#0068A0" opacity="0.3"/>
+  <rect x="1440" y="664" width="8" height="8" fill="#005A8E" opacity="0.2"/>
+  <rect x="1448" y="688" width="8" height="8" fill="#2BBAE4" opacity="0.2"/>
+  <rect x="1456" y="672" width="8" height="8" fill="#005A8E" opacity="0.3"/>
+  <rect x="1464" y="680" width="8" height="8" fill="#007EB6" opacity="0.35"/>
+  <rect x="1472" y="664" width="8" height="8" fill="#0068A0" opacity="0.2"/>
+  <rect x="1480" y="688" width="8" height="8" fill="#005A8E" opacity="0.25"/>
+  <rect x="1488" y="672" width="8" height="8" fill="#2BBAE4" opacity="0.15"/>
+  <rect x="1400" y="712" width="8" height="8" fill="#007EB6" opacity="0.2"/>
+  <rect x="1416" y="720" width="8" height="8" fill="#005A8E" opacity="0.15"/>
+  <rect x="1432" y="712" width="8" height="8" fill="#2BBAE4" opacity="0.1"/>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="880" width="1600" height="20" fill="#062035" opacity="0.8"/>
+  <rect x="0" y="880" width="200" height="4" fill="#005A8E" opacity="0.6"/>
+  <rect x="200" y="880" width="400" height="4" fill="#007EB6" opacity="0.5"/>
+  <rect x="600" y="880" width="200" height="4" fill="#0068A0" opacity="0.4"/>
+  <rect x="800" y="880" width="800" height="4" fill="#003D6B" opacity="0.3"/>
+
+  <!-- CRT vignette overlay -->
+  <rect width="1600" height="900" fill="url(#vignette)"/>
+</svg>
