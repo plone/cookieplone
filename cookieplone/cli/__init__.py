@@ -13,7 +13,7 @@ from rich.prompt import Prompt
 
 from cookieplone import _types as t
 from cookieplone import data, settings
-from cookieplone.exceptions import GeneratorException
+from cookieplone.exceptions import GeneratorException, PreFlightException
 from cookieplone.generator import generate
 from cookieplone.logger import configure_logger, logger
 from cookieplone.repository import (
@@ -281,8 +281,11 @@ def cli(
         console.error(exc.message)
         # TODO: Handle error
         raise typer.Exit(1)  # noQA:B904
+    except PreFlightException as exc:
+        console.error(exc.message)
+        raise typer.Exit(1)  # noQA:B904
     except Exception as exc:
-        console.error(exc)
+        console.error(str(exc))
         # TODO: Handle error
         raise typer.Exit(1)  # noQA:B904
 

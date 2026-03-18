@@ -14,6 +14,7 @@ from cookieplone.config import Answers, CookieploneState, generate_state
 from cookieplone.exceptions import (
     FailedHookException,
     GeneratorException,
+    PreFlightException,
     RepositoryException,
 )
 from cookieplone.generator.main import cookieplone
@@ -105,6 +106,9 @@ def generate(
         )
     except (RepositoryException, FailedHookException) as e:
         raise RepositoryException() from e
+    except PreFlightException as e:
+        # Validation check
+        raise e
 
     repo_dir = repository_info.repo_dir
 

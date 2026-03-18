@@ -8,11 +8,14 @@ from typing import Any
 from cookiecutter import exceptions as exc
 from cookiecutter import repository as base
 from cookiecutter.config import get_user_config
-from cookiecutter.hooks import run_pre_prompt_hook
 
 from cookieplone import _types as t
 from cookieplone import data
-from cookieplone.exceptions import RepositoryException, RepositoryNotFound
+from cookieplone.exceptions import (
+    PreFlightException,
+    RepositoryException,
+    RepositoryNotFound,
+)
 
 CONFIG_FILENAME = "cookiecutter.json"
 
@@ -172,6 +175,42 @@ def determine_repo_dir(
     )
 
 
+def _run_pre_hook(
+    base_repo_dir: Path,
+    repo_dir: Path,
+    accept_hooks: bool,
+) -> Path:
+    """Run the Cookiecutter pre-prompt hook for a template repository.
+
+    Executes the ``pre_prompt`` hook script found in ``base_repo_dir`` when
+    ``accept_hooks`` is ``True``.  The hook may return a different working
+    directory (for example when it sets up a sub-template), in which case the
+    returned path replaces ``repo_dir``.
+
+    If the hook exits with a non-zero status, the underlying
+    ``FailedHookException`` is caught and re-raised as a
+    :exc:`PreFlightException` with a human-readable message.
+
+    :param base_repo_dir: Root directory of the checked-out template repository.
+    :param repo_dir: Current working directory passed to the hook.
+    :param accept_hooks: When ``False`` the hook is skipped and ``repo_dir``
+        is returned unchanged.
+    :returns: The (possibly updated) repository working directory.
+    :raises PreFlightException: If the hook exits with a non-zero status.
+    """
+    from cookiecutter import hooks
+
+    try:
+        # Run pre_prompt hook
+        repo_dir = Path(
+            hooks.run_pre_prompt_hook(base_repo_dir) if accept_hooks else repo_dir
+        )
+    except exc.FailedHookException as e:
+        msg = "Sanity checks failed.\nPlease review the errors above and try again."
+        raise PreFlightException(msg) from e
+    return repo_dir
+
+
 def get_repository(
     repository: str | Path,
     template_name: str,
@@ -198,7 +237,6 @@ def get_repository(
         password=password,
         directory=template_path,
     )
-    base_repo_dir = str(base_repo_dir)
     cleanup_base_repo_dir = bool(cleanup_base_repo_dir)
     repo_dir, cleanup_repo = base_repo_dir, cleanup_base_repo_dir
 
@@ -211,13 +249,7 @@ def get_repository(
 
     base_repo_dir = Path(base_repo_dir)
 
-    try:
-        # Run pre_prompt hook
-        repo_dir = Path(
-            run_pre_prompt_hook(base_repo_dir) if accept_hooks else repo_dir
-        )
-    except exc.FailedHookException as e:
-        raise e
+    repo_dir = _run_pre_hook(base_repo_dir, repo_dir, accept_hooks)
 
     # Prepare cleanup_paths
     cleanup_paths = []

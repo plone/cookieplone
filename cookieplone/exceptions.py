@@ -20,6 +20,15 @@ class CookieploneException(Exception):
         self.message = message
 
 
+class PreFlightException(CookieploneException):
+    """Exception raised when a pre-prompt-hook fails."""
+
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
+
+
 class GeneratorException(CookieploneException):
     """Cookieplone generator exception."""
 
