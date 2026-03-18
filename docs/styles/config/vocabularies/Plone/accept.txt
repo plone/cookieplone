@@ -29,7 +29,7 @@ Plone
 pluggab(le|ility)
 [Pp]ortlet
 prerendered
-programatically
+programmatically
 [Qq]uerystring
 Razzle
 [Rr]enderer
