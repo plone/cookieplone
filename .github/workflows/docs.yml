@@ -47,7 +47,7 @@ jobs:
 
       - name: Install Dependencies
         shell: bash
-        run: make install
+        run: uv sync
 
       - name: Build HTML documentation
         shell: bash
