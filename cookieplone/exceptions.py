@@ -67,3 +67,7 @@ class RepositoryNotFound(RepositoryException):
 
 class FailedHookException(exc.FailedHookException):
     """Raised when a cookiecutter hook script exits with a non-zero status."""
+
+
+class InvalidConfiguration(exc.InvalidConfiguration):
+    """Raised when a configuration is invalid."""

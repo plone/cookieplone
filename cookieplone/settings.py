@@ -91,6 +91,20 @@ CONFIG_COMPUTED_KEYS = [
 # Root key used for templates
 DEFAULT_DATA_KEY = "cookiecutter"
 
+# Configurations
+BUILTIN_ABBREVIATIONS = {
+    "gh": "https://github.com/{0}.git",
+    "gl": "https://gitlab.com/{0}.git",
+    "bb": "https://bitbucket.org/{0}",
+}
+
+DEFAULT_CONFIG = {
+    "cookiecutters_dir": "~/.cookiecutters/",
+    "replay_dir": "~/.cookiecutter_replay/",
+    "default_context": {},
+    "abbreviations": BUILTIN_ABBREVIATIONS,
+}
+
 # Cookieplone answers
 COOKIEPLONE_ANSWERS_FILE = ".cookieplone.json"
 

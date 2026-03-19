@@ -7,10 +7,10 @@ from typing import Any
 
 from cookiecutter import exceptions as exc
 from cookiecutter import repository as base
-from cookiecutter.config import get_user_config
 
 from cookieplone import _types as t
 from cookieplone import data
+from cookieplone.config import get_user_config
 from cookieplone.exceptions import (
     PreFlightException,
     RepositoryException,
@@ -32,6 +32,24 @@ def get_base_repository(
     config_file: data.OptionalPath = None,
     default_config: bool = False,
 ) -> Path:
+    """Resolve and return the local path of a cookieplone template repository.
+
+    Downloads or locates the repository identified by *repository* and returns
+    its resolved local :class:`~pathlib.Path`.  The user configuration (from
+    *config_file* or the default config chain) supplies the abbreviation map
+    and the local clone directory.
+
+    :param repository: Repository identifier — a URL, a filesystem path, or a
+        registered abbreviation (e.g. ``"gh:org/repo"``).
+    :param tag: Git tag or branch to check out.  An empty string uses the
+        default branch.
+    :param password: Password used to decrypt a password-protected zip archive.
+    :param config_file: Path to a custom cookieplone/cookiecutter config file.
+        When ``None`` the default config-resolution chain is used.
+    :param default_config: When ``True`` skip all config files and use
+        built-in defaults.
+    :returns: Resolved absolute path to the local repository directory.
+    """
     config_dict = get_user_config(
         config_file=config_file,
         default_config=default_config,
@@ -60,6 +78,20 @@ def get_repository_config(base_path: Path) -> dict[str, Any]:
 def _parse_template_options(
     base_path: Path, config: dict[str, Any], all_: bool
 ) -> dict[str, t.CookieploneTemplate]:
+    """Parse the ``"templates"`` section of a repository config and return a
+    mapping of template name to :class:`~cookieplone._types.CookieploneTemplate`.
+
+    Each entry in the ``"templates"`` dict is expected to have ``title``,
+    ``description``, ``path``, and an optional ``hidden`` key.  Templates
+    marked as hidden are excluded unless *all_* is ``True``.
+
+    :param base_path: Resolved root directory of the template repository.
+        Template paths are resolved relative to this directory.
+    :param config: Parsed ``cookiecutter.json`` / ``cookieplone.json`` dict.
+    :param all_: When ``True`` include templates that are marked as hidden.
+    :returns: Ordered dict mapping each template's ``name`` to its
+        :class:`~cookieplone._types.CookieploneTemplate` instance.
+    """
     available_templates = config.get("templates", {})
     templates = {}
     for name in available_templates:
@@ -143,6 +175,31 @@ def determine_repo_dir(
     password: str = "",
     directory: str = "",
 ) -> tuple[Path, bool]:
+    """Resolve *template* to a local repository directory and return it.
+
+    Expands abbreviations, then determines the source type (local path, zip
+    archive, or VCS URL) and either locates or downloads the repository.  A
+    sub-directory inside the repository can be targeted with *directory*.
+
+    :param template: Repository source — a local :class:`~pathlib.Path`, a
+        remote VCS URL, a zip-file URL/path, or a registered abbreviation.
+    :param abbreviations: Mapping of short aliases to full repository URLs,
+        as loaded from the user config.
+    :param clone_to_dir: Parent directory where remote repositories are cloned
+        or zip archives are unpacked.
+    :param checkout: Git branch, tag, or commit to check out when cloning.
+        Ignored for local paths and zip files.
+    :param no_input: When ``True`` suppress interactive prompts during cloning
+        or zip extraction.
+    :param password: Password for decrypting a password-protected zip archive.
+    :param directory: Relative sub-directory within the repository to use as
+        the template root.  An empty string means the repository root.
+    :returns: A ``(repo_dir, cleanup)`` tuple where *repo_dir* is the resolved
+        local template directory and *cleanup* is ``True`` when the caller is
+        responsible for deleting *repo_dir* after use (i.e. it was downloaded).
+    :raises RepositoryNotFound: When no valid config file is found in any of
+        the candidate directories.
+    """
     if isinstance(template, str):
         template = str(base.expand_abbreviations(template, abbreviations))
 
@@ -222,7 +279,34 @@ def get_repository(
     config_file: Path | str | None = None,
     default_config: dict[str, Any] | bool = False,
 ) -> t.RepositoryInfo:
-    """Repository."""
+    """Prepare and return a :class:`~cookieplone._types.RepositoryInfo` for a template.
+
+    Resolves the template repository, runs the ``pre_prompt`` hook when
+    requested, and collects the paths that should be removed after generation.
+
+    :param repository: Repository source — a local path, VCS URL, zip path, or
+        registered abbreviation.
+    :param template_name: Logical name of the selected sub-template (used for
+        replay and display purposes).
+    :param template_path: Relative path inside *repository* that contains the
+        sub-template's config file.  Pass an empty string to use the repository
+        root.
+    :param checkout: Git branch, tag, or commit to check out when cloning.
+    :param no_input: When ``True`` suppress interactive prompts.
+    :param accept_hooks: When ``True`` run the ``pre_prompt`` hook if one
+        exists in the repository.
+    :param password: Password for decrypting a password-protected zip archive.
+    :param config_file: Path to a custom cookieplone/cookiecutter config file.
+        When ``None`` the default config-resolution chain is used.
+    :param default_config: When ``True`` skip all config files and use
+        built-in defaults; when a :class:`dict` merge it on top of the defaults.
+    :returns: A fully populated :class:`~cookieplone._types.RepositoryInfo`
+        instance ready for use by the generator.
+    :raises PreFlightException: If the ``pre_prompt`` hook exits with a
+        non-zero status.
+    :raises RepositoryNotFound: If the template source cannot be resolved to a
+        valid local directory.
+    """
     config_dict = get_user_config(
         config_file=config_file,
         default_config=default_config,

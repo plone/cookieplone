@@ -1,10 +1,12 @@
 import json
 import random
 import string
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
 from git import Repo
+from pytest import MonkeyPatch
 
 pytest_plugins = "pytester"
 
@@ -96,3 +98,24 @@ def template_path(base_template_path, read_data_file):
         return path
 
     return func
+
+
+@pytest.fixture(scope="session")
+def home_folder(tmpdir_factory) -> Generator[Path]:
+    """Create a new home folder during the tests."""
+    tmp_path = Path(tmpdir_factory.mktemp("myhome"))
+
+    def expanduser(self) -> Path:
+        path = f"{self}"
+        if path[:1] == "~":
+            path = f"{tmp_path}/{path[1:]}"
+        return Path(path)
+
+    def home() -> Path:
+        return tmp_path
+
+    with MonkeyPatch.context() as m:
+        m.setattr(Path, "home", home)
+        m.setattr(Path, "expanduser", expanduser)
+        m.setenv("HOME", f"{tmp_path}")
+        yield tmp_path

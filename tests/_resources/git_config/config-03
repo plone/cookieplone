@@ -1,0 +1,3 @@
+[branch]
+    autosetupmerge = true
+    autoSetupRemote = true
