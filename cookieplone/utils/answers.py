@@ -22,23 +22,38 @@ def remove_internal_keys(raw_answers: OrderedDict[str, Any] | dict[str, Any]) ->
     return new_context
 
 
-def write_answers(wizard_answers: Answers, template_name: str) -> Path:
-    """Persist user answers to a local JSON file.
+def write_answers(
+    wizard_answers: Answers, template_name: str, no_input: bool = False
+) -> Path:
+    """Persist answers to a local JSON file for replay or inspection.
 
-    Writes only the user-supplied answers (not computed/internal keys) so
-    they can be replayed or inspected after a failed generation run.  The
-    file is created in the current working directory and named after the
-    generated folder.
+    The source of answers depends on whether the run was interactive:
+
+    * **Interactive** (``no_input=False``): ``wizard_answers.user_answers``
+      is written — the values explicitly entered or confirmed by the user
+      through the wizard.
+    * **Non-interactive** (``no_input=True``): the wizard is never shown, so
+      ``user_answers`` is empty.  ``wizard_answers.initial_answers`` is
+      written instead — the pre-populated, user-facing values derived from the
+      user config, extra context, or replay file.
+
+    In both cases the file is created in the current working directory and
+    named after the generated folder (``_folder_name`` answer key), falling
+    back to *template_name*.
 
     :param wizard_answers: The :class:`~cookieplone.config.state.Answers`
-        collected by the wizard.
-    :param template_name: Fallback name for the output file when the answers
-        do not contain a ``_folder_name`` key.
+        instance produced by the run.
+    :param template_name: Fallback stem for the output filename when the
+        answers do not contain a ``_folder_name`` key.
+    :param no_input: When ``True`` the wizard was skipped; persist
+        ``initial_answers`` rather than ``user_answers``.
     :returns: Path to the written JSON file.
     """
     answers = wizard_answers.answers
-    user_answers = deepcopy(wizard_answers.user_answers)
+    user_answers = wizard_answers.user_answers
+    initial_answers = wizard_answers.initial_answers
+    persisted_answers = deepcopy(initial_answers if no_input else user_answers)
     file_name = answers.get("_folder_name", template_name)
     path = Path(f".cookieplone_answers_{file_name}.json")
     user_answers["__template__"] = template_name
-    return files.save_json(path, user_answers)
+    return files.save_json(path, persisted_answers)

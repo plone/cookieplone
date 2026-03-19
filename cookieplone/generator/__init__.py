@@ -24,9 +24,22 @@ from cookieplone.utils import answers, console, cookiecutter, files
 from cookieplone.utils.cookiecutter import load_replay
 
 
-def _dump_answers(answers_: Answers, template_name: str):
-    """Dump answers."""
-    return answers.write_answers(answers_, template_name)
+def _dump_answers(answers_: Answers, template_name: str, no_input: bool = False):
+    """Persist generation answers to a local JSON file via
+    :func:`~cookieplone.utils.answers.write_answers`.
+
+    Thin wrapper that forwards *no_input* so the correct answer source is
+    selected: ``user_answers`` for interactive runs, ``initial_answers`` when
+    the wizard was skipped.
+
+    :param answers_: The :class:`~cookieplone.config.state.Answers` collected
+        during the run.
+    :param template_name: Fallback stem for the output filename.
+    :param no_input: When ``True`` the wizard was skipped; persist
+        ``initial_answers`` instead of ``user_answers``.
+    :returns: Path to the written JSON file.
+    """
+    return answers.write_answers(answers_, template_name, no_input)
 
 
 def generate(
@@ -162,7 +175,7 @@ def generate(
         return Path(result)
     finally:
         if dump_answers:
-            path = _dump_answers(state.answers, template_name)
+            path = _dump_answers(state.answers, template_name, no_input)
             if dump_location:
                 # Move file
                 path.rename(dump_location / COOKIEPLONE_ANSWERS_FILE)

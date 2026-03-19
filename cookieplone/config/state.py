@@ -33,17 +33,23 @@ class Context:
 
 @dataclass
 class Answers:
-    """Wizard output split into full answers and user-supplied answers.
+    """Wizard output split into full answers, user-supplied answers, and initial answers
 
     :param answers: Complete set of answers after Jinja rendering, including
         computed and internal keys.  Used as the cookiecutter context.
-    :param user_answers: Only the values explicitly entered (or defaulted) by
-        the user, without computed keys.  Suitable for persisting to a replay
-        file.
+    :param user_answers: Only the values explicitly entered (or confirmed) by
+        the user through the wizard, without computed keys.  Used for
+        persisting answers in interactive runs.
+    :param initial_answers: User-facing values derived from the pre-populated
+        context (user config, extra context, or replay) before the wizard
+        runs, excluding ``computed`` and ``constant`` fields.  Used for
+        persisting answers when running with ``no_input=True``, since the
+        wizard is skipped and ``user_answers`` remains empty.
     """
 
     answers: dict[str, Any] = field(default_factory=dict)
     user_answers: dict[str, Any] = field(default_factory=dict)
+    initial_answers: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -87,6 +93,36 @@ def _parse_schema(context: dict[str, Any], version: str = "1.0") -> dict[str, An
         logger.debug(f"Setting {val_func} for question {key}")
         question["validator"] = val_func
     return context
+
+
+def _filter_initial_answers(
+    initial_answers: dict[str, Any],
+    schema: dict[str, Any],
+) -> dict[str, Any]:
+    """Return only the user-facing keys from *initial_answers*, filtered by *schema*.
+
+    Iterates over the schema's ``properties`` and copies each key that is
+    present in *initial_answers*, skipping properties whose ``format`` is
+    ``"computed"`` or ``"constant"`` (values the user never sets directly).
+    Keys that exist in *initial_answers* but are absent from the schema are
+    also excluded.
+
+    :param initial_answers: Pre-populated context values (from user config,
+        extra context, or a replay file) collected before the wizard runs.
+    :param schema: Parsed schema dict whose ``properties`` describe the
+        template variables and their metadata.
+    :returns: Filtered dict containing only user-facing keys with their
+        initial values.
+    """
+    data = {}
+    properties = schema.get("properties", {})
+    for key, property_ in properties.items():
+        if property_.get("format", "") in ("computed", "constant"):
+            continue
+        if (value := initial_answers.get(key, _NO_VALUE)) == _NO_VALUE:
+            continue
+        data[key] = value
+    return data
 
 
 def _apply_overwrites_to_schema(
@@ -199,21 +235,25 @@ def _generate_state(
         replay=replay_context if replay_context else {},
     )
     data: dict[str, Any] = {}
+    initial_data: dict[str, Any] = {}
     if replay_context:
         # Update data with information from replay context, if provided.
         # replay_context is the full replay file; extract the inner dict.
-        data.update(replay_context.get("cookiecutter", {}) or {})
+        replay_data = replay_context.get(DEFAULT_DATA_KEY, {}) or {}
+        data.update(replay_data)
+        initial_data.update(replay_data)
     else:
         # Overwrite schema default values with the values from the context, if provided.
         # This allows us to load user configuration, or extra configuration
         # to apply default values from the context
         for additional_context in (default_context, extra_context):
             if additional_context:
+                initial_data.update(additional_context)
                 try:
                     _apply_overwrites_to_schema(schema, additional_context)
                 except ValueError as error:
                     warnings.warn(f"Invalid default received: {error}", stacklevel=1)
-
+    answers = Answers(initial_answers=_filter_initial_answers(initial_data, schema))
     # Update default value in the form config with the value from data
     for variable, value in data.items():
         if variable in schema.get("properties", {}):
@@ -224,6 +264,7 @@ def _generate_state(
         data={DEFAULT_DATA_KEY: data},
         context=context,
         extensions=extensions,
+        answers=answers,
     )
 
     return state
