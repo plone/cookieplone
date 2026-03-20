@@ -36,6 +36,7 @@ dependencies = [
   "ruff",
   "isort",
   "zpretty",
+  "tui-forms>=1.0.0a1",
 ]
 
 [project.entry-points.pytest11]
@@ -43,6 +44,7 @@ cookieplone = "cookieplone.templates.fixtures"
 
 [project.scripts]
 cookieplone = 'cookieplone.__main__:main'
+cutter2plone = 'cookieplone.cli.converter:main'
 
 [project.urls]
 Documentation = "https://github.com/plone/cookieplone#readme"
@@ -55,9 +57,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "cookieplone/__init__.py"
-
-[tool.hatch.build.targets.wheel]
-sources = ["."]
 
 [tool.hatch.build.targets.sdist]
 only-include = ["cookieplone", "tests", "CHANGES.md", "Makefile"]
@@ -99,7 +98,7 @@ docs = [
 default-groups = ["dev", "docs"]
 
 [tool.coverage.run]
-source_pkgs = ["cookieplone", "tests"]
+source_pkgs = ["cookieplone"]
 branch = true
 parallel = true
 omit = ["cookieplone/__init__.py"]
@@ -120,6 +119,7 @@ testpaths = ["tests"]
 target-version = "py310"
 line-length = 88
 fix = true
+extend-exclude = ["tests/_resources/templates/"]
 lint.select = [
   # flake8-2020
   "YTT",

@@ -1,0 +1,1 @@
+Update `make coverage` command to use `coverage run -m pytest` instead of `pytest --cov` . @ericof

@@ -79,3 +79,51 @@ REPO_PASSWORD = "COOKIEPLONE_REPO_PASSWORD"  # noQA:S105
 
 # Connectivity
 REQUESTS_TIMEOUT = 10
+
+# Allowed computed keys in config file
+CONFIG_COMPUTED_KEYS = [
+    "__generator_sha",
+    "__generator_signature",
+    "__cookieplone_template",
+    "__cookieplone_repository_path",
+]
+
+# Root key used for templates
+DEFAULT_DATA_KEY = "cookiecutter"
+
+# Configurations
+BUILTIN_ABBREVIATIONS = {
+    "gh": "https://github.com/{0}.git",
+    "gl": "https://gitlab.com/{0}.git",
+    "bb": "https://bitbucket.org/{0}",
+}
+
+DEFAULT_CONFIG = {
+    "cookiecutters_dir": "~/.cookiecutters/",
+    "replay_dir": "~/.cookiecutter_replay/",
+    "default_context": {},
+    "abbreviations": BUILTIN_ABBREVIATIONS,
+}
+
+# Cookieplone answers
+COOKIEPLONE_ANSWERS_FILE = ".cookieplone.json"
+
+# Questions validators
+## The keys are the variable names in cookiecutter.json/cookieplone.json,
+## and the values are the import paths to the validator functions.
+DEFAULT_VALIDATORS = {
+    "plone_version": "cookieplone.validators.plone_version",
+    "volto_version": "cookieplone.validators.volto_version",
+    "python_package_name": "cookieplone.validators.python_package_name",
+    "hostname": "cookieplone.validators.hostname",
+    "language_code": "cookieplone.validators.language_code",
+}
+
+# Jinja2 default extensions
+DEFAULT_EXTENSIONS = [
+    "cookiecutter.extensions.JsonifyExtension",
+    "cookiecutter.extensions.RandomStringExtension",
+    "cookiecutter.extensions.SlugifyExtension",
+    "cookiecutter.extensions.TimeExtension",
+    "cookiecutter.extensions.UUIDExtension",
+]

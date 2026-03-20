@@ -3,9 +3,12 @@ import re
 from pathlib import Path
 
 import pytest
+import yaml
 from binaryornot.check import is_binary
 
-from . import types
+from cookieplone.templates import types
+
+from .bake import Cookies
 
 IGNORED_KEYS = (
     "_extensions",
@@ -31,7 +34,7 @@ def find_variables(variable_pattern, valid_key) -> types.VariableFinder:
     """Find variables in a string."""
 
     def func(data: str) -> set:
-        keys = set()
+        keys: set[str] = set()
         for pattern in variable_pattern:
             matches = {match.groupdict()["key"] for match in pattern.finditer(data)}
             matches = {key for key in matches if valid_key(key)}
@@ -89,13 +92,13 @@ def configuration_data(template_repository_root) -> dict:
 def sub_templates(configuration_data, template_repository_root) -> list[Path]:
     """Return a list of subtemplates used by this template."""
     templates = []
-    parent = template_repository_root.parent
+    parent = Path(template_repository_root).parent
     sub_templates = configuration_data.get("__cookieplone_subtemplates", [])
     for sub_template in sub_templates:
         sub_template_id = sub_template[0]
         sub_template_path = (parent / sub_template_id).resolve()
         if not sub_template_path.exists():
-            sub_template_path = (parent.parent / sub_template_id).resolve()
+            sub_template_path = Path(parent.parent / sub_template_id).resolve()
         templates.append(sub_template_path)
     return templates
 
@@ -183,3 +186,114 @@ def annotate_context() -> types.ContextAnnotator:
         return annotate_context(context, repo_path, template)
 
     return func
+
+
+@pytest.fixture(scope="session")
+def _cookiecutter_config_file(tmpdir_factory):
+    user_dir = tmpdir_factory.mktemp("user_dir")
+    config_file = user_dir.join("config")
+
+    config = {
+        "cookiecutters_dir": str(user_dir.mkdir("cookiecutters")),
+        "replay_dir": str(user_dir.mkdir("cookiecutter_replay")),
+    }
+
+    with config_file.open("w", encoding="utf-8") as f:
+        yaml.dump(config, f, Dumper=yaml.Dumper)
+
+    return config_file
+
+
+@pytest.fixture
+def cookies(request, tmpdir, _cookiecutter_config_file):
+    """Yield an instance of the Cookies helper class that can be used to
+    generate a project from a template.
+
+    Run cookiecutter:
+        result = cookies.bake(extra_context={
+            'variable1': 'value1',
+            'variable2': 'value2',
+        })
+    """
+    template_dir = request.config.option.template
+
+    output_dir = tmpdir.mkdir("cookies")
+    output_factory = output_dir.mkdir
+
+    yield Cookies(template_dir, output_factory, _cookiecutter_config_file)
+
+    # Add option to keep generated output directories.
+    if not request.config.option.keep_baked_projects:
+        output_dir.remove()
+
+
+@pytest.fixture(scope="module")
+def cookies_module(request, tmpdir_factory, _cookiecutter_config_file):
+    """Yield an instance of the Cookies helper class that can be used to
+    generate a project from a template.
+
+    Run cookiecutter:
+        result = cookies.bake(extra_context={
+            'variable1': 'value1',
+            'variable2': 'value2',
+        })
+    """
+    template_dir = request.config.option.template
+
+    output_dir = tmpdir_factory.mktemp("cookies")
+    output_factory = output_dir.mkdir
+
+    yield Cookies(template_dir, output_factory, _cookiecutter_config_file)
+
+    # Add option to keep generated output directories.
+    if not request.config.option.keep_baked_projects:
+        output_dir.remove()
+
+
+@pytest.fixture(scope="session")
+def cookies_session(request, tmpdir_factory, _cookiecutter_config_file):
+    """Yield an instance of the Cookies helper class that can be used to
+    generate a project from a template.
+
+    Run cookiecutter:
+        result = cookies.bake(extra_context={
+            'variable1': 'value1',
+            'variable2': 'value2',
+        })
+    """
+    template_dir = request.config.option.template
+
+    output_dir = tmpdir_factory.mktemp("cookies")
+    output_factory = output_dir.mkdir
+
+    yield Cookies(template_dir, output_factory, _cookiecutter_config_file)
+
+    # Add option to keep generated output directories.
+    if not request.config.option.keep_baked_projects:
+        output_dir.remove()
+
+
+def pytest_addoption(parser):
+    group = parser.getgroup("cookies")
+    group.addoption(
+        "--template",
+        action="store",
+        default=".",
+        dest="template",
+        help="specify the template to be rendered",
+        type=str,
+    )
+
+    group.addoption(
+        "--keep-baked-projects",
+        action="store_true",
+        default=False,
+        dest="keep_baked_projects",
+        help="Keep projects directories generated with 'cookies.bake()'.",
+    )
+
+
+def pytest_configure(config):
+    # To protect ourselves from tests or fixtures changing directories, keep
+    # an absolute path to the template.
+    config.option.template = Path(config.option.template).resolve()

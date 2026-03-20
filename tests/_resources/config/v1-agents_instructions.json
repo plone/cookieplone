@@ -1,0 +1,33 @@
+{
+  "docs_file": [
+    "backend-addon-docs.instructions.md",
+    "frontend-addon-docs.instructions.md",
+    "monorepo-addon-docs.instructions.md",
+    "project-docs.instructions.md",
+    "classic-project-docs.instructions.md"
+  ],
+  "has_volto": [
+    "0",
+    "1"
+  ],
+  "__folder_name": "instructions",
+  "_copy_without_render": [],
+  "__prompts__": {
+    "has_volto": {
+      "__prompt__": "Would you like to add instructions for Volto?",
+      "1": "Yes",
+      "0": "No"
+    },
+    "docs_file": {
+      "__prompt__": "Which type of documentation instructions would you like to include?",
+      "backend-addon-docs.instructions.md": "Backend Addon",
+      "frontend-addon-docs.instructions.md": "Frontend Addon",
+      "monorepo-addon-docs.instructions.md": "Monorepo Addon",
+      "project-docs.instructions.md": "Project with backend and frontend documentation",
+      "classic-project-docs.instructions.md": "Project with backend documentation"
+    }
+  },
+  "_extensions": [],
+  "__cookieplone_repository_path": "",
+  "__cookieplone_template": ""
+}

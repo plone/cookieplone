@@ -78,7 +78,9 @@ test: ## Test the code with pytest
 .PHONY: test-coverage
 test-coverage: ## Test the code with pytest
 	@echo "🚀 Testing code: Running pytest"
-	@uv run pytest
+	@uv run coverage run -m pytest
+	@uv run coverage combine
+	@uv run coverage report
 
 ############################################
 # Release

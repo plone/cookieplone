@@ -1,0 +1,54 @@
+{
+  "title": "Project Title",
+  "description": "A new project using Plone 6.",
+  "project_slug": "{{ cookiecutter.title | slugify }}",
+  "author": "Plone Foundation",
+  "email": "collective@plone.org",
+  "python_package_name": "{{ cookiecutter.project_slug|replace(' ', '')|replace('-', '.') }}",
+  "language_code": "en",
+  "plone_version": "{{ 'No' | latest_plone }}",
+  "github_organization": "collective",
+  "container_registry": [
+    "github",
+    "docker_hub",
+    "gitlab"
+  ],
+  "__feature_headless": "0",
+  "__feature_distribution": "0",
+  "__backend_managed_by_uv": "false",
+  "__project_slug": "{{ cookiecutter.project_slug }}",
+  "__repository_url": "https://github.com/{{ cookiecutter.github_organization }}/{{ cookiecutter.__project_slug }}",
+  "__repository_git": "git@github.com:{{ cookiecutter.github_organization }}/{{ cookiecutter.__project_slug }}",
+  "__container_registry_prefix": "{{ cookiecutter.container_registry | image_prefix }}",
+  "__container_image_prefix": "{{ cookiecutter.__container_registry_prefix }}{{ cookiecutter.github_organization }}/{{ cookiecutter.project_slug }}",
+  "__folder_name": "{{ cookiecutter.project_slug }}",
+  "__package_path": "{{ cookiecutter.python_package_name | package_path }}",
+  "__profile_language": "{{ cookiecutter.language_code|gs_language_code }}",
+  "__locales_language": "{{ cookiecutter.language_code|locales_language_code }}",
+  "__python_version": "3.12",
+  "__supported_versions_python": [
+    "{{ cookiecutter.__python_version }}"
+  ],
+  "__supported_versions_plone": [
+    "{{ cookiecutter.plone_version | as_major_minor }}"
+  ],
+  "__python_version_identifier": "{{ cookiecutter.__python_version | replace('.', '') }}",
+  "_copy_without_render": [],
+  "_extensions": [
+    "cookieplone.filters.extract_host",
+    "cookieplone.filters.image_prefix",
+    "cookieplone.filters.pascal_case",
+    "cookieplone.filters.locales_language_code",
+    "cookieplone.filters.gs_language_code",
+    "cookieplone.filters.package_namespace_path",
+    "cookieplone.filters.package_path",
+    "cookieplone.filters.as_major_minor",
+    "cookieplone.filters.latest_plone"
+  ],
+  "__cookieplone_repository_path": "",
+  "__cookieplone_template": "",
+  "__generator_sha": "",
+  "__generator_template_url": "https://github.com/plone/cookieplone-templates/tree/main/{{ cookiecutter.__cookieplone_template }}",
+  "__generator_date_long": "{% now 'utc', '%Y-%m-%d %H:%M:%S' %}",
+  "__generator_signature": "Generated from the [`cookieplone-templates` {{ cookiecutter.__cookieplone_template }} template]({{ cookiecutter.__generator_template_url }}) on {{ cookiecutter.__generator_date_long }}."
+}

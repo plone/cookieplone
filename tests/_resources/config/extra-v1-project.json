@@ -1,0 +1,21 @@
+{
+  "title": "Titulo",
+  "description": "A new project using Plone 6.",
+  "project_slug": "project-title",
+  "hostname": "project-title.example.com",
+  "author": "Plone Foundation",
+  "email": "collective@plone.org",
+  "use_prerelease_versions": "No",
+  "plone_version": "6.1.4",
+  "volto_version": "18.32.1",
+  "python_package_name": "project.title",
+  "frontend_addon_name": "volto-project-title",
+  "language_code": "en",
+  "github_organization": "collective",
+  "container_registry": "github",
+  "devops_storage": "relstorage",
+  "devops_cache": "1",
+  "devops_ansible": "1",
+  "devops_gha_deploy": "1",
+  "initialize_documentation": "1"
+}

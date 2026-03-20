@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 import xmltodict
@@ -63,7 +64,8 @@ def create_namespace_packages(path: Path, package_name: str, style: str = "nativ
     current = path.parent
     for namespace in package_name.split(".")[:-1]:
         current = current / namespace
-        current.mkdir()
+        # Create directory structure, but do not fail is something is in place
+        current.mkdir(parents=True, exist_ok=True)
         if style == "pkg_resources":
             (current / "__init__.py").write_text(
                 '__import__("pkg_resources").declare_namespace(__name__)\n'
@@ -76,4 +78,10 @@ def create_namespace_packages(path: Path, package_name: str, style: str = "nativ
         else:
             # PEP 420 implicit namespace; no file needed.
             pass
-    path.rename(current / package_name.split(".")[-1])
+    destination = current / package_name.split(".")[-1]
+    if path.exists():
+        if destination.exists():
+            shutil.copytree(path, destination, dirs_exist_ok=True)
+            shutil.rmtree(path)
+        else:
+            path.rename(destination)
