@@ -1,0 +1,215 @@
+{
+  "title": "Project Title",
+  "description": "A new project using Plone 6.",
+  "project_slug": "{{ cookiecutter.title | slugify }}",
+  "hostname": "{{ cookiecutter.project_slug }}.example.com",
+  "author": "Plone Foundation",
+  "email": "collective@plone.org",
+  "use_prerelease_versions": "{{ 'No' | use_prerelease_versions }}",
+  "plone_version": "{{ cookiecutter.use_prerelease_versions | latest_plone }}",
+  "volto_version": "{{ cookiecutter.use_prerelease_versions | latest_volto }}",
+  "python_package_name": "{{ cookiecutter.project_slug|replace(' ', '')|replace('-', '.') }}",
+  "frontend_addon_name": "volto-{{ cookiecutter.python_package_name|replace('_', '-')|replace('.', '-') }}",
+  "language_code": [
+    "en",
+    "de",
+    "es",
+    "pt-br",
+    "nl",
+    "fi",
+    "it",
+    "sv"
+  ],
+  "github_organization": "collective",
+  "container_registry": [
+    "github",
+    "docker_hub",
+    "gitlab"
+  ],
+  "devops_storage": [
+    "relstorage",
+    "zeo",
+    "filestorage"
+  ],
+  "devops_cache": [
+    "1",
+    "0"
+  ],
+  "devops_ansible": [
+    "1",
+    "0"
+  ],
+  "devops_gha_deploy": [
+    "1",
+    "0"
+  ],
+  "initialize_documentation": [
+    "1",
+    "0"
+  ],
+  "__project_slug": "{{ cookiecutter.project_slug }}",
+  "__repository_url": "https://github.com/{{ cookiecutter.github_organization }}/{{ cookiecutter.__project_slug }}",
+  "__repository_git": "git@github.com:{{ cookiecutter.github_organization }}/{{ cookiecutter.__project_slug }}",
+  "__version_package": "1.0.0a0",
+  "__version_frontend_package": "1.0.0-alpha.0",
+  "__feature_headless": "1",
+  "__feature_distribution": "0",
+  "__backend_managed_by_uv": "false",
+  "__frontend_package_name": "{{ cookiecutter.frontend_addon_name | unscoped_package_name }}",
+  "__npm_package_name": "{{ cookiecutter.frontend_addon_name }}",
+  "__folder_name": "{{ cookiecutter.project_slug }}",
+  "__python_package_name_upper": "{{ cookiecutter.python_package_name | pascal_case }}",
+  "__python_version": "3.13",
+  "__node_version": "{{ cookiecutter.volto_version | node_version_for_volto }}",
+  "__version_plone_volto": "{{ cookiecutter.volto_version }}",
+  "__version_pnpm": "{{ '10.20.0' if cookiecutter.volto_version >= '19' else '9.1.1' }}",
+  "__container_registry_prefix": "{{ cookiecutter.container_registry | image_prefix }}",
+  "__container_image_prefix": "{{ cookiecutter.__container_registry_prefix }}{{ cookiecutter.github_organization }}/{{ cookiecutter.project_slug }}",
+  "__profile_version": "{% now 'utc', '%Y%m%d001' %}",
+  "__profile_language": "{{ cookiecutter.language_code|gs_language_code }}",
+  "__locales_language": "{{ cookiecutter.language_code|locales_language_code }}",
+  "__devops_host": "{{ cookiecutter.hostname | extract_host }}",
+  "__devops_compose_name": "{{ cookiecutter.project_slug | replace('.','-') | replace('_','-') }}",
+  "__devops_stack_name": "{{ cookiecutter.hostname | replace('.','-') | replace('_','-') }}",
+  "__devops_swarm_public_network": "nw-public",
+  "__devops_swarm_stack_network": "nw-internal",
+  "__devops_traefik_version": "v2.11",
+  "__devops_traefik_local_include_ui": "yes",
+  "__devops_traefik_stack_include_ui": "no",
+  "__devops_traefik_docker_network": "{{ cookiecutter.__devops_stack_name }}_{{ cookiecutter.__devops_swarm_stack_network }}",
+  "__devops_varnish_version": "7.6",
+  "__devops_db_version": "14.15",
+  "__devops_db_password": "{{ random_ascii_string(12) }}",
+  "__devops_zeo_version": "6.0.0",
+  "__backend_addon_git_initialize": "0",
+  "__backend_addon_format": "1",
+  "__project_git_initialize": "1",
+  "__validators__": {
+    "title": "cookieplone.validators.non_empty",
+    "description": "cookieplone.validators.non_empty",
+    "hostname": "cookieplone.validators.hostname",
+    "python_package_name": "cookieplone.validators.python_package_name",
+    "plone_version": "cookieplone.validators.plone_version",
+    "volto_version": "cookieplone.validators.volto_version"
+  },
+  "__prompts__": {
+    "title": "Project Title",
+    "project_slug": "Project Slug (Used for repository id)",
+    "hostname": "Project URL (without protocol)",
+    "description": "Project Description",
+    "author": "Author",
+    "email": "Author E-mail",
+    "python_package_name": "Python Package Name",
+    "frontend_addon_name": "Volto Addon Name",
+    "use_prerelease_versions": "Should we use prerelease versions?",
+    "plone_version": "Plone Version",
+    "volto_version": "Volto Version",
+    "language_code": {
+      "__prompt__": "Language",
+      "en": "English",
+      "de": "Deutsch",
+      "es": "Español",
+      "fi": "Suomi",
+      "it": "Italiano",
+      "pt-br": "Português (Brasil)",
+      "nl": "Nederlands",
+      "sv": "Svenska"
+    },
+    "github_organization": "GitHub or GitLab username or organization slug from URL",
+    "container_registry": {
+      "__prompt__": "Container Registry",
+      "github": "GitHub Container Registry",
+      "docker_hub": "Docker Hub",
+      "gitlab": "GitLab"
+    },
+    "devops_storage": {
+      "__prompt__": "Which persistent storage to use in the deployment stack?",
+      "relstorage": "RelStorage with PostgreSQL (recommended)",
+      "zeo": "ZEO with FileStorage",
+      "filestorage": "Local FileStorage, implies a single backend"
+    },
+    "devops_cache": {
+      "__prompt__": "Should we setup a caching server?",
+      "1": "Yes",
+      "0": "No"
+    },
+    "devops_ansible": {
+      "__prompt__": "Add Ansible playbooks?",
+      "1": "Yes",
+      "0": "No"
+    },
+    "devops_gha_deploy": {
+      "__prompt__": "Add GitHub Action to Deploy this project?",
+      "1": "Yes",
+      "0": "No"
+    },
+    "initialize_documentation": {
+      "__prompt__": "Would you like to add a documentation scaffold to your project?",
+      "1": "Yes",
+      "0": "No"
+    }
+  },
+  "_copy_without_render": [
+    "devops/etc",
+    "devops/playbooks",
+    "devops/requirements",
+    "devops/tasks",
+    "devops/inventory/group_vars/all/users.yml",
+    "news/.changelog_template.jinja"
+  ],
+  "_extensions": [
+    "cookieplone.filters.use_prerelease_versions",
+    "cookieplone.filters.node_version_for_volto",
+    "cookieplone.filters.extract_host",
+    "cookieplone.filters.image_prefix",
+    "cookieplone.filters.pascal_case",
+    "cookieplone.filters.locales_language_code",
+    "cookieplone.filters.gs_language_code",
+    "cookieplone.filters.unscoped_package_name",
+    "cookieplone.filters.latest_volto",
+    "cookieplone.filters.latest_plone"
+  ],
+  "__cookieplone_subtemplates": [
+    [
+      "add-ons/backend",
+      "Setup Backend",
+      "1"
+    ],
+    [
+      "add-ons/frontend",
+      "Setup Frontend",
+      "1"
+    ],
+    [
+      "docs/starter",
+      "Generate documentation scaffold",
+      "{{cookiecutter.initialize_documentation}}"
+    ],
+    [
+      "sub/cache",
+      "Setup Cache",
+      "{{cookiecutter.devops_cache}}"
+    ],
+    [
+      "sub/project_settings",
+      "Setup Project Settings",
+      "1"
+    ],
+    [
+      "ide/vscode",
+      "Setup VSCode configuration",
+      "1"
+    ],
+    [
+      "ci/gh_project",
+      "Setup GitHub CI",
+      "1"
+    ]
+  ],
+  "__cookieplone_repository_path": "",
+  "__cookieplone_template": "project",
+  "__generator_sha": "",
+  "__generator_template_url": "https://github.com/plone/cookieplone-templates/tree/main/{{ cookiecutter.__cookieplone_template }}",
+  "__generator_date_long": "{% now 'utc', '%Y-%m-%d %H:%M:%S' %}",
+  "__generator_signature": "This was generated by [the cookieplone-templates {{ cookiecutter.__cookieplone_template }} template]({{ cookiecutter.__generator_template_url }}) on {{ cookiecutter.__generator_date_long }}"
+}

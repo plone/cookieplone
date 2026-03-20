@@ -1,0 +1,15 @@
+{
+  "title": "Project Title",
+  "project_slug": "{{ cookiecutter.title | slugify }}",
+  "author": "Plone Foundation",
+  "email": "collective@plone.org",
+  "__folder_name": "{{ cookiecutter.project_slug }}",
+  "__devops_varnish_version": "7.6",
+  "_copy_without_render": [],
+  "_extensions": [
+    "cookieplone.filters.extract_host",
+    "cookieplone.filters.image_prefix"
+  ],
+  "__cookieplone_repository_path": "",
+  "__cookieplone_template": ""
+}

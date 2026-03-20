@@ -1,3 +1,4 @@
+import pytest
 from git import Commit, Repo
 
 from cookieplone.utils import git
@@ -40,3 +41,23 @@ def test_get_last_commit(tmp_repo):
 
 def test_get_last_commit_invalid(no_repo):
     assert git.get_last_commit(no_repo) is None
+
+
+@pytest.mark.parametrize(
+    "config_file,name,email",
+    (
+        ("", "", ""),
+        ("git_config/config-01", "John Doe", "doe@plone.org"),
+        ("git_config/config-02", "Jane Doe", "jane@plone.org"),
+        ("git_config/config-03", "", ""),
+    ),
+)
+def test_get_user_info(home_folder, resources_folder, config_file, name, email):
+    if config_file:
+        src = resources_folder / config_file
+        dst = home_folder / ".gitconfig"
+        dst.write_text(src.read_text())
+    info = git.get_user_info()
+    assert isinstance(info, git.GitUserInfo)
+    assert info.name == name
+    assert info.email == email

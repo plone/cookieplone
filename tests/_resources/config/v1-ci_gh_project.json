@@ -1,0 +1,57 @@
+{
+  "hostname": "example.com",
+  "npm_package_name": "@plone-collective/volto-addon",
+  "container_image_prefix": "ghcr.io/collective/volto-addon",
+  "python_version": "3.13",
+  "node_version": "24",
+  "has_cache": [
+    "0",
+    "1"
+  ],
+  "has_docs": [
+    "0",
+    "1"
+  ],
+  "has_deploy": [
+    "0",
+    "1"
+  ],
+  "__folder_name": ".github",
+  "__gha_version_checkout": "v5",
+  "__gha_version_plone_meta": "2.x",
+  "__gha_version_paths_filter": "v3.0.2",
+  "__gha_version_docker_stack": "v1.3.0",
+  "__gha_version_setup_node": "v4",
+  "__gha_version_node": "{{ cookiecutter.node_version }}",
+  "__container_image_prefix": "{{ cookiecutter.container_image_prefix }}",
+  "__prompts__": {
+    "has_docs": {
+      "__prompt__": "Do you want to include documentation CI workflows?",
+      "0": "No",
+      "1": "Yes"
+    },
+    "has_cache": {
+      "__prompt__": "Do you want to include cache CI workflows?",
+      "0": "No",
+      "1": "Yes"
+    },
+    "has_deploy": {
+      "__prompt__": "Do you want to include deploy CI workflows?",
+      "0": "No",
+      "1": "Yes"
+    }
+  },
+  "_copy_without_render": [],
+  "_extensions": [
+    "cookieplone.filters.unscoped_package_name"
+  ],
+  "__cookieplone_subtemplates": [
+    [
+      "agents/instructions",
+      "Add instructions",
+      "1"
+    ]
+  ],
+  "__cookieplone_repository_path": "",
+  "__cookieplone_template": ""
+}

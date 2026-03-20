@@ -1,0 +1,21 @@
+{
+  "npm_package_name": "volto-addon",
+  "node_version": "24.x",
+  "__folder_name": ".github",
+  "__gha_version_checkout": "v5",
+  "__gha_version_setup_node": "v4",
+  "__gha_version_node": "{{ cookiecutter.node_version }}",
+  "_copy_without_render": [],
+  "_extensions": [
+    "cookieplone.filters.unscoped_package_name"
+  ],
+  "__cookieplone_subtemplates": [
+    [
+      "agents/instructions",
+      "Add instructions",
+      "1"
+    ]
+  ],
+  "__cookieplone_repository_path": "",
+  "__cookieplone_template": ""
+}

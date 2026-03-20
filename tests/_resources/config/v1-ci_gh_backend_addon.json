@@ -1,0 +1,30 @@
+{
+  "plone_version": "6.1.4",
+  "python_version": "3.13",
+  "__folder_name": ".github",
+  "__gha_version_checkout": "v5",
+  "__gha_version_plone_meta": "2.x",
+  "__gha_version_paths_filter": "v3.0.2",
+  "__gha_python_versions": [
+    "3.10",
+    "3.11",
+    "3.12",
+    "3.13"
+  ],
+  "__gha_plone_versions": [
+    "6.2-latest",
+    "6.1-latest",
+    "6.0-latest"
+  ],
+  "_copy_without_render": [],
+  "_extensions": [],
+  "__cookieplone_subtemplates": [
+    [
+      "agents/instructions",
+      "Add instructions",
+      "1"
+    ]
+  ],
+  "__cookieplone_repository_path": "",
+  "__cookieplone_template": ""
+}

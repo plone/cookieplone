@@ -20,12 +20,6 @@ repos:
       - id: check-symlinks
       - id: check-case-conflict
       - id: check-docstring-first
-      - id: pretty-format-json
-        args:
-          - "--autofix"
-          - "--indent=2"
-          - "--no-sort-keys"
-          - "--no-ensure-ascii"
       - id: check-toml
       - id: check-xml
       - id: check-yaml
@@ -39,6 +33,7 @@ repos:
     rev: v2.4.2
     hooks:
       - id: codespell
+        args: ['--skip=tests/*']
         additional_dependencies:
           - tomli
 
