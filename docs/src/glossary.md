@@ -34,7 +34,7 @@ cookieplone-templates
 uv
 uvx
     [uv](https://docs.astral.sh/uv/) is an extremely fast Python package and project manager written in Rust, developed by [Astral](https://astral.sh/).
-    `uvx` is the tool runner bundled with `uv` — it installs and runs Python tools in isolated environments without requiring a manual virtual environment setup.
+    `uvx` is the tool runner bundled with `uv`—it installs and runs Python tools in isolated environments without requiring a manual virtual environment setup.
     Running `uvx cookieplone` is the recommended way to use {term}`Cookieplone`.
 
 Plone

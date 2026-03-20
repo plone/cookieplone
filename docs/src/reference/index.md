@@ -1,23 +1,25 @@
 ---
 myst:
   html_meta:
-    "description": "Docs Reference"
-    "property=og:description": "Docs Reference"
-    "property=og:title": "Docs Reference"
-    "keywords": "Plone, _Docs,_ reference"
+    "description": "Complete reference documentation for the Cookieplone command-line interface, schema formats, filters, validators, and configuration."
+    "property=og:description": "Complete reference documentation for the Cookieplone command-line interface, schema formats, filters, validators, and configuration."
+    "property=og:title": "Reference"
+    "keywords": "Cookieplone, reference, CLI, schema, filters, validators, configuration, environment variables"
 ---
 
 # Reference
 
-This part of the documentation contains reference material, including APIs, configuration values, and environment variables.
+Reference material is information-oriented.
+Use these pages to look up exact behaviour, accepted values, and defaults.
 
-> Reference guides are technical descriptions of the machinery and how to operate it.
-> Reference material is information-oriented.
+```{toctree}
+:maxdepth: 1
 
-```{seealso}
-https://diataxis.fr/reference/
+cli
+schema-v2
+schema-v1
+filters
+validators
+configuration
+environment-variables
 ```
-
-## Configuration
-
--   {doc}`plone:contributing/documentation/themes-and-extensions`

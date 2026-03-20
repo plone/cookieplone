@@ -1,27 +1,46 @@
 ---
 myst:
   html_meta:
-    "description": "Your starting point for every Plone project."
-    "property=og:description": "Your starting point for every Plone project."
+    "description": "Cookieplone is your starting point for every Plone project—run one command and get a fully configured codebase."
+    "property=og:description": "Cookieplone is your starting point for every Plone project—run one command and get a fully configured codebase."
     "property=og:title": "Cookieplone"
-    "keywords": "Cookieplone, Plone, cookiecutter, templates, scaffolding"
+    "keywords": "Cookieplone, Plone, Cookiecutter, templates, scaffolding, project generator"
 ---
 
 # Cookieplone
 
 Your starting point for every Plone project.
 
-This documentation is structured following the [Diátaxis](https://diataxis.fr/) framework.
+## Quick start
+
+```console
+uvx cookieplone
+```
+
+Cookieplone downloads the latest templates and guides you through the setup.
+
+## Where to start
+
+Choose the section that matches your goal:
+
+**Creating a Plone project:** Start with {doc}`tutorials/create-your-first-plone-project`.
+
+**Building a custom template:** Start with {doc}`tutorials/create-a-template`.
+
+**Contributing to Cookieplone itself:** Start with {doc}`how-to-guides/set-up-dev-environment`.
+
+**Looking something up:** Browse the {doc}`reference/index`.
 
 ```{toctree}
 :caption: Contents
 :maxdepth: 2
 :hidden: true
 
+tutorials/index
 how-to-guides/index
 reference/index
-tutorials/index
 concepts/index
+troubleshooting
 ```
 
 ```{toctree}

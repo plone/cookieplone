@@ -1,40 +1,54 @@
 ---
 myst:
   html_meta:
-    "description": "The history and reasoning behind Cookieplone's existence."
-    "property=og:description": "The history and reasoning behind Cookieplone's existence."
-    "property=og:title": "Background and History"
-    "keywords": "Cookieplone, history, background, cookiecutter, Plone, design decisions"
+    "description": "The history of Cookieplone: why it exists, what it adds over raw Cookiecutter, and how it has evolved."
+    "property=og:description": "The history of Cookieplone: why it exists, what it adds over raw Cookiecutter, and how it has evolved."
+    "property=og:title": "History"
+    "keywords": "Cookieplone, history, background, Cookiecutter, Plone, design decisions"
 ---
 
 (background)=
 
-# Background and History
+# History
 
-```{todo}
-This page is a work in progress.
-```
+## The problem
 
-## The Problem
+The Plone community maintained many separate template repositories over the years.
+Each repository followed slightly different conventions, used different variable names, and required manual updates when community standards changed.
+New contributors faced inconsistent setups, and experienced developers spent time reconciling differences between projects.
+There was no single entry point that worked for all Plone project types.
 
-<!-- Why did Plone need a scaffolding tool in the first place?
-     What pain points existed before Cookieplone?
-     e.g. fragmented templates, inconsistent conventions, maintenance burden -->
+## Starting as a Cookiecutter wrapper
 
-## Starting as a Cookiecutter Wrapper
+Cookieplone started as a thin wrapper around [Cookiecutter](https://cookiecutter.readthedocs.io/), a widely used Python project scaffolding tool.
+Cookiecutter already handled template rendering via Jinja2, git-based template fetching, and a simple JSON-based schema (`cookiecutter.json`).
 
-<!-- How and when Cookieplone started.
-     Why Cookiecutter was chosen as the foundation.
-     What Cookieplone added on top: validators, Jinja2 filters, sub-templates, sane defaults. -->
+Rather than replace it, Cookieplone extended it with:
 
-## Evolving into a Full Solution
+- Built-in validators for common Plone fields such as `plone_version`, `python_package_name`, and `hostname`.
+- Built-in Jinja2 filters for transformations such as `package_name`, `pascal_case`, `latest_plone`, and `node_version_for_volto`.
+- A sub-template mechanism, allowing a single repository to expose multiple related templates (for example, backend add-on, frontend add-on, and full project) that share validators and filters.
+- Sane defaults for Plone-specific configuration, drawn from the active Plone release matrix.
 
-<!-- How the project is growing beyond a thin wrapper.
-     What "full solution" means: TUI, template discovery, broader tooling.
-     Relationship with cookieplone-templates. -->
+## Evolving into a fuller solution
 
-## Design Decisions
+As the community consolidated templates into a single `cookieplone-templates` repository, Cookieplone took on more responsibilities:
 
-<!-- Key architectural choices and the reasoning behind them.
-     e.g. why uv/uvx, why keeping cookiecutter as a dependency vs. replacing it,
-     why a separate templates repository. -->
+- A terminal user interface (TUI) for interactive prompts, replacing Cookiecutter's plain `input()` calls.
+- A richer schema format (`cookieplone.json`) that supports typed fields, computed defaults, and per-field validators, while remaining backward-compatible with plain `cookiecutter.json`.
+- Template discovery: a root `cookiecutter.json` in a repository can declare multiple templates, and Cookieplone presents them as a menu.
+- Support for any template source—local paths, git URLs, zip archives, and abbreviations such as `gh:`, `gl:`, and `bb:`: not only `cookieplone-templates`.
+
+## Design decisions
+
+**Why keep Cookiecutter as a dependency?**
+Cookiecutter's hook system, file rendering, and replay mechanism are mature and well-tested.
+Replacing them would duplicate significant work with little benefit for end-users.
+Cookieplone stays thin where Cookiecutter is strong and adds only where Cookiecutter is absent.
+
+**Why a separate templates repository?**
+Separating the tool (`cookieplone`) from the templates (`cookieplone-templates`) means the templates can evolve at their own pace, and third parties can provide their own template repositories without forking Cookieplone itself.
+
+**Why `uvx`?**
+`uvx` runs Cookieplone in an isolated environment without requiring the user to manage a virtual environment.
+This lowers the barrier to entry for Plone beginners significantly.

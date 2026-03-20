@@ -1,19 +1,20 @@
 ---
 myst:
   html_meta:
-    "description": "Docs Tutorials"
-    "property=og:description": "Docs Tutorials"
-    "property=og:title": "Docs Tutorials"
-    "keywords": "Plone, Docs, tutorials"
+    "description": "Step-by-step tutorials for learning to use Cookieplone and build templates."
+    "property=og:description": "Step-by-step tutorials for learning to use Cookieplone and build templates."
+    "property=og:title": "Tutorials"
+    "keywords": "Cookieplone, tutorials, learning, Plone, getting started"
 ---
 
 # Tutorials
 
-This part of the documentation contains tutorials.
+Tutorials are learning-oriented guides.
+They take you through a process step by step, so you can learn by doing.
 
-> A tutorial is an experience that takes place under the guidance of a tutor.
-> A tutorial is always learning-oriented.
+```{toctree}
+:maxdepth: 1
 
-```{seealso}
-https://diataxis.fr/tutorials/
+create-your-first-plone-project
+create-a-template
 ```

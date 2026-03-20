@@ -1,30 +1,49 @@
 ---
 myst:
   html_meta:
-    "description": "Docs how-to guides"
-    "property=og:description": "Docs how-to guides"
-    "property=og:title": "Docs how-to guides"
-    "keywords": "Plone, Docs, how-to, guides"
+    "description": "Task-oriented guides for using Cookieplone, building templates, and contributing to the project."
+    "property=og:description": "Task-oriented guides for using Cookieplone, building templates, and contributing to the project."
+    "property=og:title": "How-to guides"
+    "keywords": "Cookieplone, how-to, guides, tasks, Plone"
 ---
 
 # How-to guides
 
-This part of the documentation contains how-to guides, including installation and usage.
+How-to guides are goal-oriented.
+Each guide walks you through completing a specific task.
 
-> How-to guides are directions that guide the reader through a problem or towards a result.
-> How-to guides are goal-oriented.
+## End-user guides
 
-```{seealso}
-https://diataxis.fr/how-to-guides/
+```{toctree}
+:maxdepth: 1
+
+use-an-answers-file
+automate-with-ci
+update-existing-project
+recover-from-mistakes
+use-a-custom-template-repository
+configure-cookieplone
+debug-a-failed-generation
 ```
 
+## Template developer guides
 
-## Authors
+```{toctree}
+:maxdepth: 1
 
--   {doc}`plone:contributing/documentation/myst-reference`
--   {doc}`plone:contributing/documentation/authors`
+add-validators-to-your-template
+add-computed-fields
+use-built-in-filters
+create-a-hidden-template
+write-a-pre-prompt-hook
+```
 
+## Contributor guides
 
-## Designers
+```{toctree}
+:maxdepth: 1
 
--   [Contribute to Plone Sphinx Theme](https://plone-sphinx-theme.readthedocs.io/guides/contribute.html)
+set-up-dev-environment
+add-a-filter
+add-a-validator
+```
