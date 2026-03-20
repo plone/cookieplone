@@ -1,0 +1,1 @@
+Fixed `create_namespace_packages` to handle re-runs gracefully — existing namespace directories and destination packages are no longer raised as errors when running with the `-f` flag. @ericof
