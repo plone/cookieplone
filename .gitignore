@@ -167,6 +167,8 @@ cython_debug/
 # Other
 tmp
 
-
 # Ruff
 .ruff_cache
+
+# Local files
+*.local.md
