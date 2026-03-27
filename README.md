@@ -22,8 +22,8 @@
 
 </div>
 
-Welcome to Cookieplone, a powerful wrapper around Cookiecutter designed to streamline the development of Plone codebases.
-Whether you're building a backend add-on, a new Volto add-on, a full project with both backend and frontend, Cookieplone simplifies the process using robust Cookiecutter templates.
+Welcome to Cookieplone, your starting point for every Plone project.
+Whether you're building an add-on, starting a new project, or even creating your own Plone Distribution, Cookieplone simplifies the process by using templates maintained by the Plone Community.
 
 ## Key features 🌟
 
