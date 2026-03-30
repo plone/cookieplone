@@ -57,6 +57,9 @@ A free-text input field.
 | `default` | string | no | Default value pre-filled in the prompt. |
 | `validator` | string | no | Dotted import path to a validator function. |
 | `format` | string | no | Set to `"computed"` or `"constant"` for non-interactive fields. |
+| `minLength` | integer | no | Minimum number of characters. |
+| `maxLength` | integer | no | Maximum number of characters. |
+| `pattern` | string | no | Regular expression the value must match. |
 
 ### `integer`
 
@@ -79,6 +82,8 @@ A numeric input field.
 | `title` | string | yes | Label shown as the prompt question. |
 | `default` | integer | no | Default integer value. |
 | `validator` | string | no | Dotted import path to a validator function. |
+| `minimum` | integer | no | Minimum allowed value. |
+| `maximum` | integer | no | Maximum allowed value. |
 
 ### Choice (via `oneOf`)
 
@@ -191,6 +196,18 @@ See {doc}`/reference/validators` for the complete list.
   }
 }
 ```
+
+## Wizard features
+
+### Confirmation page
+
+After the last question the wizard shows a summary of the answers.
+The user can confirm to proceed or decline to restart the wizard with their previous answers pre-populated.
+
+### Back-navigation
+
+While filling in the wizard the user can type `<` at any prompt to go back to the previous question.
+A hint is displayed automatically when going back is possible.
 
 ## Related pages
 

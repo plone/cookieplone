@@ -40,7 +40,7 @@ def wizard(
     renderer_name = "noinput" if no_input else "cookiecutter"
     renderer_klass = get_renderer(renderer_name)
     renderer = renderer_klass(frm, config=jinja_config, extensions=jinja_extensions)
-    answers.update(renderer.render(initial_answers=base_answers))
+    answers.update(renderer.render(initial_answers=base_answers, confirm=not no_input))
     state.answers.answers = answers[root_key]
     state.answers.user_answers = frm.user_answers
     return state.answers

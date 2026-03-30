@@ -36,7 +36,7 @@ dependencies = [
   "ruff",
   "isort",
   "zpretty",
-  "tui-forms>=1.0.0a1",
+  "tui-forms>=1.0.0a2",
 ]
 
 [project.entry-points.pytest11]

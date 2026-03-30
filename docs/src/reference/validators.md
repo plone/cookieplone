@@ -10,7 +10,7 @@ myst:
 # Validators reference
 
 Validators check user input at prompt time.
-A validator function accepts a single string value and returns `bool` (`True` means the value is accepted).
+A validator function accepts a single string value and either returns `True` (value accepted) or raises `ValidationError` with a message describing what is wrong.
 
 All validators are defined in `cookieplone/validators/__init__.py`.
 
@@ -134,6 +134,20 @@ Returns `True` when the value is a Volto version number of at least `18.0.0-alph
 Automatically applied to fields named `volto_version`.
 
 ---
+
+## Validation errors
+
+When a validator rejects user input, it raises a `ValidationError` with a human-readable message.
+The renderer displays the message inline so the user knows what to fix.
+
+```python
+from tui_forms.form.question import ValidationError
+
+def my_validator(value: str) -> bool:
+    if not value.startswith("plone"):
+        raise ValidationError("Value must start with 'plone'.")
+    return True
+```
 
 ## Using a validator in a template
 
