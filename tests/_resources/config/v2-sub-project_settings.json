@@ -86,7 +86,7 @@
       "default": "github",
       "validator": "",
       "type": "string",
-      "options": []
+      "oneOf": []
     },
     "__feature_distribution": {
       "title": "__feature_distribution",

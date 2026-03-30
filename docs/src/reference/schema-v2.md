@@ -57,6 +57,9 @@ A free-text input field.
 | `default` | string | no | Default value pre-filled in the prompt. |
 | `validator` | string | no | Dotted import path to a validator function. |
 | `format` | string | no | Set to `"computed"` or `"constant"` for non-interactive fields. |
+| `minLength` | integer | no | Minimum number of characters. |
+| `maxLength` | integer | no | Maximum number of characters. |
+| `pattern` | string | no | Regular expression the value must match. |
 
 ### `integer`
 
@@ -79,19 +82,22 @@ A numeric input field.
 | `title` | string | yes | Label shown as the prompt question. |
 | `default` | integer | no | Default integer value. |
 | `validator` | string | no | Dotted import path to a validator function. |
+| `minimum` | integer | no | Minimum allowed value. |
+| `maximum` | integer | no | Maximum allowed value. |
 
-### `choice`
+### Choice (via `oneOf`)
 
-A multiple-choice field where the user selects one option.
+A single-choice field where the user selects one option.
+Uses standard JSON Schema `oneOf` with `const`/`title` pairs.
 
 ```json
 {
   "database_backend": {
-    "type": "choice",
+    "type": "string",
     "title": "Database backend",
-    "options": [
-      ["postgresql", "PostgreSQL"],
-      ["sqlite", "SQLite (development only)"]
+    "oneOf": [
+      {"const": "postgresql", "title": "PostgreSQL"},
+      {"const": "sqlite", "title": "SQLite (development only)"}
     ],
     "default": "postgresql"
   }
@@ -100,10 +106,10 @@ A multiple-choice field where the user selects one option.
 
 | Key | Type | Required | Description |
 |---|---|---|---|
-| `type` | `"choice"` | yes | Field type. |
+| `type` | `"string"` | yes | Field type. |
 | `title` | string | yes | Label shown as the prompt question. |
-| `options` | array of `[value, label]` pairs | yes | Available choices. |
-| `default` | string | no | The `value` of the preselected option. |
+| `oneOf` | array of `{"const", "title"}` objects | yes | Available choices. Each entry has a `const` (the stored value) and a `title` (the label shown to the user). |
+| `default` | string | no | The `const` of the preselected option. |
 | `validator` | string | no | Dotted import path to a validator function. |
 
 ## Computed fields
@@ -190,6 +196,18 @@ See {doc}`/reference/validators` for the complete list.
   }
 }
 ```
+
+## Wizard features
+
+### Confirmation page
+
+After the last question the wizard shows a summary of the answers.
+The user can confirm to proceed or decline to restart the wizard with their previous answers pre-populated.
+
+### Back-navigation
+
+While filling in the wizard the user can type `<` at any prompt to go back to the previous question.
+A hint is displayed automatically when going back is possible.
 
 ## Related pages
 

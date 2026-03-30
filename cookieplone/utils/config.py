@@ -46,10 +46,10 @@ Version 2 (cookieplone.json) configuration format.
             "default": 0
         },
         "other_field_name": {
-            "type": "choice",
-            "options": [
-                ["option1", "Option 1 description"],
-                ["option2", "Option 2 description"],
+            "type": "string",
+            "oneOf": [
+                {"const": "option1", "title": "Option 1 description"},
+                {"const": "option2", "title": "Option 2 description"}
             ],
             "title": "Choose an option",
             "validator": "path.to.another_validator_function",
@@ -124,9 +124,11 @@ def convert_v1_to_v2(src: dict[str, Any]) -> dict[str, Any]:
         elif key.startswith("_"):
             prop["format"] = "constant"
         elif isinstance(raw_value, list):
-            # Old style choice, we need to convert it to the new style with options
+            # Old style choice, convert to JSONSchema oneOf with const/title
             prop["default"] = raw_value[0] if raw_value else raw_value
-            prop["options"] = list(prompt_info.options)
+            prop["oneOf"] = [
+                {"const": value, "title": label} for value, label in prompt_info.options
+            ]
         elif isinstance(raw_value, bool):
             prop["type"] = "boolean"
         elif isinstance(raw_value, int):

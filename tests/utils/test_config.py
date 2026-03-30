@@ -253,6 +253,84 @@ def test_convert_v1_to_v2(read_config_file, config_file: str):
     assert isinstance(properties, dict)
 
 
+@pytest.mark.parametrize("config_file", CONFIG_FILES)
+def test_convert_v1_to_v2_choice_uses_one_of(read_config_file, config_file: str):
+    """Test that choice fields use oneOf instead of options."""
+    data = read_config_file(config_file)
+    result = config.convert_v1_to_v2(data)
+    properties = result["properties"]
+    for key, prop in properties.items():
+        assert "options" not in prop, (
+            f"Property '{key}' uses 'options' instead of 'oneOf'"
+        )
+        if "oneOf" in prop:
+            for entry in prop["oneOf"]:
+                assert "const" in entry, f"oneOf entry in '{key}' missing 'const'"
+                assert "title" in entry, f"oneOf entry in '{key}' missing 'title'"
+
+
+class TestConvertV1ToV2ChoiceFields:
+    """Tests for oneOf conversion of choice fields."""
+
+    def test_simple_choice_field(self):
+        """Test that a list field is converted to oneOf format."""
+        data = {
+            "language_code": ["en", "de", "es"],
+            "__prompts__": {
+                "language_code": {
+                    "__prompt__": "Language",
+                    "en": "English",
+                    "de": "Deutsch",
+                    "es": "Español",
+                },
+            },
+        }
+        result = config.convert_v1_to_v2(data)
+        prop = result["properties"]["language_code"]
+
+        assert "options" not in prop
+        assert "oneOf" in prop
+        assert prop["default"] == "en"
+        assert prop["oneOf"] == [
+            {"const": "en", "title": "English"},
+            {"const": "de", "title": "Deutsch"},
+            {"const": "es", "title": "Español"},
+        ]
+
+    def test_boolean_like_choice_field(self):
+        """Test that boolean-like choice fields use oneOf."""
+        data = {
+            "enable_feature": ["1", "0"],
+            "__prompts__": {
+                "enable_feature": {
+                    "__prompt__": "Enable feature?",
+                    "1": "Yes",
+                    "0": "No",
+                },
+            },
+        }
+        result = config.convert_v1_to_v2(data)
+        prop = result["properties"]["enable_feature"]
+
+        assert "options" not in prop
+        assert prop["oneOf"] == [
+            {"const": "1", "title": "Yes"},
+            {"const": "0", "title": "No"},
+        ]
+
+    def test_choice_field_without_prompts(self):
+        """Test choice field when no prompt descriptions are provided."""
+        data = {
+            "color": ["red", "blue", "green"],
+        }
+        result = config.convert_v1_to_v2(data)
+        prop = result["properties"]["color"]
+
+        assert "options" not in prop
+        assert prop["oneOf"] == []
+        assert prop["default"] == "red"
+
+
 @pytest.mark.parametrize(
     "data,expected",
     (

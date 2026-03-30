@@ -20,10 +20,10 @@
             "default": 0
         },
         "other_field_name": {
-            "type": "choice",
-            "options": [
-                ["option1", "Option 1 description"],
-                ["option2", "Option 2 description"],
+            "type": "string",
+            "oneOf": [
+                {"const": "option1", "title": "Option 1 description"},
+                {"const": "option2", "title": "Option 2 description"}
             ],
             "title": "Choose an option",
             "validator": "path.to.another_validator_function",

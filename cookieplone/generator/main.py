@@ -9,10 +9,10 @@ from cookiecutter.generate import generate_files
 
 from cookieplone._types import RepositoryInfo, RunConfig
 from cookieplone.config import CookieploneState
-from cookieplone.exceptions import GeneratorException
+from cookieplone.exceptions import GeneratorException, OutputDirExistsException
 from cookieplone.utils import files as f
 from cookieplone.utils.answers import remove_internal_keys
-from cookieplone.utils.cookiecutter import import_patch
+from cookieplone.utils.cookiecutter import import_patch, parse_output_dir_exception
 from cookieplone.wizard import wizard
 
 
@@ -117,13 +117,31 @@ def cookieplone(
         )
     except (
         exc.ContextDecodingException,
-        exc.OutputDirExistsException,
         exc.InvalidModeException,
         exc.FailedHookException,
         exc.UnknownExtension,
     ) as exc_info:
         raise GeneratorException(
             message=str(exc_info), state=state, original=exc_info
+        ) from exc_info
+    except exc.OutputDirExistsException as exc_info:
+        msg = parse_output_dir_exception(exc_info)
+        raise OutputDirExistsException(
+            message=msg, state=state, original=exc_info
+        ) from exc_info
+    except exc.UndefinedVariableInTemplate as exc_info:
+        msg = f"Undefined variable in template: {exc_info.message}"
+        # Sometimes the exception is wrapped in a cookiecutter exception with
+        # the original error as an attribute, so we check for that to preserve
+        # the original error message and type.
+        exc_info = exc_info.error if hasattr(exc_info, "error") else exc_info
+        if isinstance(exc_info, exc.OutputDirExistsException):
+            msg = parse_output_dir_exception(exc_info)
+            raise OutputDirExistsException(
+                message=msg, state=state, original=exc_info
+            ) from exc_info
+        raise GeneratorException(
+            message=msg, state=state, original=exc_info
         ) from exc_info
 
     # Cleanup tmp repository info

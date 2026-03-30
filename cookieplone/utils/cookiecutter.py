@@ -1,9 +1,10 @@
 import os
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from copy import copy
 from pathlib import Path
 
+from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.replay import dump, load
 
 from cookieplone.config import Answers
@@ -58,3 +59,27 @@ def dump_replay(answers: Answers, replay_dir: Path, template_name: str) -> None:
     """Dump data to replay this session."""
     context = {DEFAULT_DATA_KEY: answers.answers}
     dump(replay_dir, template_name, context)
+
+
+def parse_output_dir_exception(exc_info: OutputDirExistsException) -> str:
+    """Parse the output directory from a cookiecutter OutputDirExistsException.
+
+    The exception message typically contains the path to the existing output
+    directory, but the format may vary between cookiecutter versions.  This
+    function attempts to extract the path from the message for use in error
+    reporting and in the GeneratorException.original attribute.
+
+    :param exc_info: The exception instance raised by cookiecutter when the
+        output directory already exists.
+    :returns: The path to the existing output directory, or a fallback string
+        if it cannot be determined.
+    """
+    message = exc_info.args[0] if exc_info.args else str(exc_info)
+    # Attempt to extract the path from the message using known formats
+    for part in message.split(" "):
+        part = part.strip('"')  # Remove any surrounding quotes
+        with suppress(Exception):
+            path = Path(part)
+            if path.exists():
+                return f"'{path}'"
+    return ""

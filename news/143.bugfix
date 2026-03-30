@@ -1,0 +1,1 @@
+v1→v2 config converter now produces JSONSchema-compliant ``oneOf`` with ``const``/``title`` instead of the non-standard ``options`` keyword for choice fields. @ericof

@@ -1,0 +1,1 @@
+Fixed ``OutputDirExistsException`` not properly handled — added a dedicated ``OutputDirExistsException`` subclass with a user-friendly error message, fixed ``CookieploneException`` hierarchy to call ``super().__init__()``, and added a ``parse_output_dir_exception`` helper to extract the directory path from cookiecutter errors. @ericof

@@ -154,14 +154,8 @@ def generate(
             run_config=run_config,
         )
         dump_location = result
-    except (
-        exc.ContextDecodingException,
-        exc.OutputDirExistsException,
-        exc.InvalidModeException,
-        exc.FailedHookException,
-        exc.UnknownExtension,
-    ) as e:
-        raise GeneratorException(message=str(e), state=state, original=e)  # noQA:B904
+    except GeneratorException:
+        raise
     except exc.UndefinedVariableInTemplate as undefined_err:
         context_str = json.dumps(undefined_err.context, indent=2, sort_keys=True)
         msg = f"""{undefined_err.message}
