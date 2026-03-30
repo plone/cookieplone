@@ -88,7 +88,7 @@ A numeric input field.
 ### Choice (via `oneOf`)
 
 A single-choice field where the user selects one option.
-Uses standard JSONSchema `oneOf` with `const`/`title` pairs.
+Uses standard JSON Schema `oneOf` with `const`/`title` pairs.
 
 ```json
 {

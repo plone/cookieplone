@@ -17,16 +17,12 @@ class CookieploneException(Exception):
     message: str
 
     def __init__(self, message: str):
+        super().__init__(message)
         self.message = message
 
 
 class PreFlightException(CookieploneException):
     """Exception raised when a pre-prompt-hook fails."""
-
-    message: str
-
-    def __init__(self, message: str):
-        self.message = message
 
 
 class GeneratorException(CookieploneException):
@@ -46,9 +42,30 @@ class GeneratorException(CookieploneException):
             preserved so it can be persisted for replay.
         :param original: The underlying exception that triggered this one, if any.
         """
-        self.message = message
+        super().__init__(message)
         self.original = original
         self.state = state
+
+
+class OutputDirExistsException(GeneratorException):
+    """Raised when the output directory already exists."""
+
+    def __init__(
+        self, message: str, state: CookieploneState, original: Exception | None = None
+    ):
+        """Initialise with a human-readable message, the current run state, and
+        the original exception.
+
+        :param message: Description of the failure.
+        :param state: The ``CookieploneState`` at the time of failure,
+            preserved so it can be persisted for replay.
+        :param original: The underlying exception that triggered this one, if any.
+        """
+        message = (
+            f"Output directory {message} already exists. Use --overwrite-if-exists "
+            "or choose a different directory."
+        )
+        super().__init__(message, state, original)
 
 
 class RepositoryException(exc.CookiecutterException):

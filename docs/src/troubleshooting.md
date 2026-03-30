@@ -65,6 +65,23 @@ If a hook fails:
 
 See {doc}`how-to-guides/debug-a-failed-generation` for a full debugging workflow.
 
+## "Output directory already exists"
+
+This error occurs when the target directory already exists and `--overwrite-if-exists` was not passed.
+You have two options:
+
+1. Pass `-f` (`--overwrite-if-exists`) to merge new output over the existing directory:
+
+   ```console
+   cookieplone -f
+   ```
+
+2. Choose a different output directory with `-o`:
+
+   ```console
+   cookieplone -o ~/projects/new-location
+   ```
+
 ## "File exists error when re-running with -f"
 
 Re-running Cookieplone with `-f` (`--overwrite-if-exists`) on an existing project merges the new output over the existing directory.
