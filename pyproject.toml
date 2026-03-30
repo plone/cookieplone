@@ -47,7 +47,7 @@ cookieplone = 'cookieplone.__main__:main'
 cutter2plone = 'cookieplone.cli.converter:main'
 
 [project.urls]
-Documentation = "https://github.com/plone/cookieplone#readme"
+Documentation = "https://plone.github.io/cookieplone/"
 Issues = "https://github.com/plone/cookieplone/issues"
 Source = "https://github.com/plone/cookieplone"
 

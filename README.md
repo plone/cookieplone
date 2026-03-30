@@ -20,6 +20,9 @@
 [![GitHub contributors](https://img.shields.io/github/contributors/plone/cookieplone)](https://github.com/plone/cookieplone)
 [![GitHub Repo stars](https://img.shields.io/github/stars/plone/cookieplone?style=social)](https://github.com/plone/cookieplone)
 
+[![Static Badge](https://img.shields.io/badge/Cookieplone-Docs-blue?style=flat&logo=sphinx&link=https%3A%2F%2Fplone.github.io%2Fcookieplone%2F)](https://plone.github.io/cookieplone/)
+
+
 </div>
 
 Welcome to Cookieplone, your starting point for every Plone project.
@@ -59,7 +62,7 @@ uvx cookieplone
 It is also possible to run a specific version of Cookieplone:
 
 ```shell
-uvx cookieplone@0.9.3
+uvx cookieplone@1.0.0
 ```
 
 Cookieplone will walk you through the necessary steps, using sensible defaults and offering customization options where needed.
