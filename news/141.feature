@@ -1,0 +1,1 @@
+Implemented `cookieplone-config.json` repository configuration format with JSON Schema validation, grouped templates, global version pinning, and backward-compatible fallback to `cookiecutter.json`. @ericof

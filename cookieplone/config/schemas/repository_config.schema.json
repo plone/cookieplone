@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["version", "title", "templates"],
+  "properties": {
+    "version": {"type": "string", "const": "1.0"},
+    "title": {"type": "string"},
+    "description": {"type": "string"},
+    "extends": {"type": "string"},
+    "groups": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["title", "description", "templates"],
+        "properties": {
+          "title": {"type": "string"},
+          "description": {"type": "string"},
+          "templates": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1
+          },
+          "hidden": {"type": "boolean", "default": false}
+        },
+        "additionalProperties": false
+      }
+    },
+    "templates": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["path", "title", "description"],
+        "properties": {
+          "path": {"type": "string"},
+          "title": {"type": "string"},
+          "description": {"type": "string"},
+          "hidden": {"type": "boolean", "default": false}
+        },
+        "additionalProperties": false
+      },
+      "minProperties": 1
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "versions": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

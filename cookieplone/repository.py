@@ -17,9 +17,12 @@ from cookieplone.exceptions import (
     RepositoryNotFound,
 )
 
-CONFIG_FILENAME = "cookiecutter.json"
+REPO_CONFIG_FILENAME = "cookieplone-config.json"
+
+LEGACY_CONFIG_FILENAME = "cookiecutter.json"
 
 CONFIG_FILENAMES = [
+    REPO_CONFIG_FILENAME,
     "cookiecutter.json",
     "cookieplone.json",
 ]
@@ -68,11 +71,41 @@ def get_base_repository(
 
 
 def get_repository_config(base_path: Path) -> dict[str, Any]:
-    """Open and parse the repository configuration file."""
-    path = base_path / CONFIG_FILENAME
-    if not path.exists():
-        raise RuntimeError(f"{CONFIG_FILENAME} not found in {base_path}")
-    return json.loads(path.read_text())
+    """Open and parse the repository configuration file.
+
+    Looks for ``cookieplone-config.json`` first.  When found, the file is
+    validated against :data:`~cookieplone.config.schemas.REPOSITORY_CONFIG_SCHEMA`
+    and the ``templates`` mapping is returned directly.
+
+    Falls back to the legacy ``cookiecutter.json`` when the new format is
+    not present.
+
+    :param base_path: Root directory of the template repository.
+    :returns: Parsed configuration dict containing at least a ``templates`` key.
+    :raises RuntimeError: When no configuration file is found or when
+        ``cookieplone-config.json`` fails validation.
+    """
+    repo_config_path = base_path / REPO_CONFIG_FILENAME
+    if repo_config_path.exists():
+        data = json.loads(repo_config_path.read_text())
+        from cookieplone.config.schemas import validate_repository_config
+
+        valid, errors = validate_repository_config(data)
+        if not valid:
+            msg = f"Invalid {REPO_CONFIG_FILENAME} in {base_path}:\n" + "\n".join(
+                f"  - {e}" for e in errors
+            )
+            raise RuntimeError(msg)
+        return data
+
+    legacy_path = base_path / LEGACY_CONFIG_FILENAME
+    if legacy_path.exists():
+        return json.loads(legacy_path.read_text())
+
+    raise RuntimeError(
+        f"No configuration file found in {base_path}. "
+        f"Expected {REPO_CONFIG_FILENAME} or {LEGACY_CONFIG_FILENAME}."
+    )
 
 
 def _parse_template_options(

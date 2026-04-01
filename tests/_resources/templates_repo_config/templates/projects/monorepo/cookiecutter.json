@@ -1,0 +1,26 @@
+{
+  "title": "Add-on",
+  "description": "A new add-on for Plone",
+  "check": "1",
+  "__folder_name": "test",
+  "__profile_language": "en",
+  "__prompts__": {
+    "title": "Add-on Title",
+    "description": "A short description of your add-on"
+  },
+  "_copy_without_render": [],
+  "_extensions": [
+    "cookieplone.filters.pascal_case",
+    "cookieplone.filters.package_name",
+    "cookieplone.filters.package_namespace"
+  ],
+  "__cookieplone_subtemplates": [
+    [
+      "sub/bar",
+      "Bar",
+      "1"
+    ]
+  ],
+  "__cookieplone_repository_path": "",
+  "__cookieplone_template": ""
+}
