@@ -119,3 +119,21 @@ def home_folder(tmpdir_factory) -> Generator[Path]:
         m.setattr(Path, "expanduser", expanduser)
         m.setenv("HOME", f"{tmp_path}")
         yield tmp_path
+
+
+@pytest.fixture
+def dummy_package(tmpdir_factory, resources_folder) -> Generator[Path]:
+    """Create a dummy package to be used in tests."""
+    tmp_path = Path(tmpdir_factory.mktemp("dummy_package"))
+
+    src = (resources_folder / "dummy_package").resolve()
+    for item in src.rglob("*"):
+        if item.is_file():
+            parent = item.parent.relative_to(src)
+            name = item.name
+            if name.endswith("_zcml") or name.endswith("_xml"):
+                name = name.replace("_", ".")
+            dst = tmp_path / parent / name
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_text(item.read_text())
+    yield tmp_path

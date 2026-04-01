@@ -32,10 +32,6 @@ dependencies = [
   "packaging==26.0",
   "gitpython==3.1.46",
   "xmltodict==1.0.4",
-  "black==26.3.1",
-  "ruff",
-  "isort",
-  "zpretty",
   "tui-forms>=1.0.0a2",
 ]
 
@@ -119,7 +115,7 @@ testpaths = ["tests"]
 target-version = "py310"
 line-length = 88
 fix = true
-extend-exclude = ["tests/_resources/templates/"]
+extend-exclude = ["tests/_resources"]
 lint.select = [
   # flake8-2020
   "YTT",
