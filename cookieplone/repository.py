@@ -366,6 +366,15 @@ def get_repository(
 
     base_repo_dir = Path(base_repo_dir)
 
+    # Extract global versions from the repository-level config (if present).
+    global_versions: dict[str, str] = {}
+    if _repository_has_config(root_repo_dir):
+        try:
+            repo_config = get_repository_config(root_repo_dir)
+            global_versions = repo_config.get("config", {}).get("versions", {})
+        except RuntimeError:
+            pass
+
     repo_dir = _run_pre_hook(base_repo_dir, repo_dir, accept_hooks)
 
     # Prepare cleanup_paths
@@ -384,5 +393,6 @@ def get_repository(
         template_name=template_name,
         accept_hooks=accept_hooks,
         config_dict=config_dict,
+        global_versions=global_versions,
         cleanup_paths=cleanup_paths,
     )

@@ -32,6 +32,7 @@ class RepositoryInfo:
     checkout: str
     accept_hooks: bool
     config_dict: dict[str, Any]
+    global_versions: dict[str, str] = field(default_factory=dict)
     cleanup_paths: list[Path] = field(default_factory=list)
 
 

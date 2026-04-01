@@ -111,6 +111,25 @@ class TestGetRepositoryConfigNew:
             repository.get_repository_config(tmp_path)
 
 
+class TestGetRepositoryConfigVersions:
+    """Tests for config.versions extraction from cookieplone-config.json."""
+
+    @pytest.fixture(scope="class")
+    def project_source(self, resources_folder) -> Path:
+        return (resources_folder / "templates_repo_config").resolve()
+
+    def test_config_versions_present(self, project_source):
+        result = repository.get_repository_config(project_source)
+        versions = result.get("config", {}).get("versions", {})
+        assert versions == {"gha_version_checkout": "v6"}
+
+    def test_legacy_config_has_no_versions(self, resources_folder):
+        project_source = (resources_folder / "templates_sub_folder").resolve()
+        result = repository.get_repository_config(project_source)
+        versions = result.get("config", {}).get("versions", {})
+        assert versions == {}
+
+
 class TestGetTemplateOptionsLegacy:
     """Tests for get_template_options with legacy cookiecutter.json."""
 

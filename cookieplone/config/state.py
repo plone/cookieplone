@@ -215,11 +215,29 @@ def _apply_overwrites_to_schema(
             property_["default"] = overwrite
 
 
+def _merge_versions(
+    global_versions: dict[str, str] | None,
+    template_versions: dict[str, str],
+) -> dict[str, str]:
+    """Merge repository-level and per-template version pinning dicts.
+
+    *global_versions* provides the base layer (from ``cookieplone-config.json``).
+    *template_versions* provides per-template overrides that take precedence
+    for any key present in both dicts.
+
+    :param global_versions: Repository-level version pins, or ``None``.
+    :param template_versions: Per-template version pins.
+    :returns: Merged version dict.
+    """
+    return {**(global_versions or {}), **template_versions}
+
+
 def _generate_state(
     parsed: ParsedConfig,
     default_context: dict[str, Any] | None = None,
     extra_context: dict[str, Any] | None = None,
     replay_context: dict[str, Any] | None = None,
+    global_versions: dict[str, str] | None = None,
 ) -> CookieploneState:
     """Build a :class:`CookieploneState` from a parsed config and optional
       context overrides.
@@ -234,6 +252,9 @@ def _generate_state(
     :param extra_context: Explicit overrides supplied by the caller.
     :param replay_context: Full replay file dict (the top-level structure with a
         ``"cookiecutter"`` key).  The inner dict is extracted automatically.
+    :param global_versions: Repository-level version pinning from
+        ``cookieplone-config.json``.  Merged as a base layer under the
+        per-template versions so that templates can override individual keys.
     :returns: A fully initialised :class:`CookieploneState`.
     """
     schema = parsed.schema
@@ -267,9 +288,12 @@ def _generate_state(
         if variable in schema.get("properties", {}):
             schema["properties"][variable]["default"] = value
 
+    # Merge versions: global (repository-level) as base, per-template overrides
+    versions = _merge_versions(global_versions, parsed.versions)
+
     state_data = {
         DEFAULT_DATA_KEY: data,
-        "versions": parsed.versions,
+        "versions": versions,
     }
 
     state: CookieploneState = CookieploneState(
@@ -280,7 +304,7 @@ def _generate_state(
         no_render=parsed.no_render,
         subtemplates=parsed.subtemplates,
         template_id=parsed.template_id,
-        versions=parsed.versions,
+        versions=versions,
         answers=answers,
     )
 
@@ -292,6 +316,7 @@ def generate_state(
     default_context: dict[str, Any] | None = None,
     extra_context: dict[str, Any] | None = None,
     replay_context: dict[str, Any] | None = None,
+    global_versions: dict[str, str] | None = None,
 ) -> CookieploneState:
     """Generate the state for a Cookieplone run.
 
@@ -303,6 +328,9 @@ def generate_state(
     :param extra_context: Explicit key/value overrides supplied by the caller.
     :param replay_context: Full replay file dict.  When provided, schema defaults
         are replaced by previously recorded answers.
+    :param global_versions: Repository-level version pinning from
+        ``cookieplone-config.json``.  Passed through to :func:`_generate_state`
+        where it is merged as a base layer under per-template versions.
     :returns: A fully initialised :class:`CookieploneState`.
     :raises exc.ConfigDoesNotExistException: If no schema file is found under
         *template_path*.
@@ -313,7 +341,9 @@ def generate_state(
             f"No configuration file found in {template_path}. "
             "Please ensure a 'cookieplone.json' or 'cookiecutter.json' file exists."
         )
-    return _generate_state(parsed, default_context, extra_context, replay_context)
+    return _generate_state(
+        parsed, default_context, extra_context, replay_context, global_versions
+    )
 
 
 def load_schema_from_path(template_path: Path) -> ParsedConfig | None:

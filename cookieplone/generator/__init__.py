@@ -98,6 +98,7 @@ def generate(config: GenerateConfig) -> Path:
         default_context=repository_info.config_dict["default_context"],
         extra_context=config.extra_context,
         replay_context=context_from_replayfile if config.replay else None,
+        global_versions=repository_info.global_versions,
     )
 
     run_config = config.to_run_config()
