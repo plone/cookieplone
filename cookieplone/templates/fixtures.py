@@ -15,6 +15,8 @@ IGNORED_KEYS = (
     "_copy_without_render",
     "__prompts__",
     "__cookieplone_subtemplates",
+    "__cookieplone_template",
+    "__validators__",
     "json",  # Probably `cookiecutter.json`
 )
 
@@ -77,14 +79,17 @@ def valid_key() -> types.VariableValidator:
 
 
 def _read_configuration(base_folder: Path) -> dict:
-    """Read cookiecutter.json."""
-    file_ = base_folder / "cookiecutter.json"
-    return json.loads(file_.read_text())
+    """Read template configuration from cookieplone.json or cookiecutter.json."""
+    v2_file = base_folder / "cookieplone.json"
+    v1_file = base_folder / "cookiecutter.json"
+    if v2_file.is_file():
+        return json.loads(v2_file.read_text())
+    return json.loads(v1_file.read_text())
 
 
 @pytest.fixture
 def configuration_data(template_repository_root) -> dict:
-    """Return configuration from cookiecutter.json."""
+    """Return configuration from cookieplone.json or cookiecutter.json."""
     return _read_configuration(template_repository_root)
 
 
@@ -93,9 +98,18 @@ def sub_templates(configuration_data, template_repository_root) -> list[Path]:
     """Return a list of subtemplates used by this template."""
     templates = []
     parent = Path(template_repository_root).parent
-    sub_templates = configuration_data.get("__cookieplone_subtemplates", [])
-    for sub_template in sub_templates:
-        sub_template_id = sub_template[0]
+    # v2 format: config.subtemplates as list of {"id", "title", "enabled"}
+    config = configuration_data.get("config", {})
+    raw_subtemplates = config.get("subtemplates", [])
+    if not raw_subtemplates:
+        # v1 fallback: flat __cookieplone_subtemplates as list of [id, title, enabled]
+        raw_subtemplates = configuration_data.get("__cookieplone_subtemplates", [])
+    for sub_template in raw_subtemplates:
+        if isinstance(sub_template, dict):
+            sub_template_id = sub_template["id"]
+        else:
+            # v1 tuple/list format
+            sub_template_id = sub_template[0]
         sub_template_path = (parent / sub_template_id).resolve()
         if not sub_template_path.exists():
             sub_template_path = Path(parent.parent / sub_template_id).resolve()
@@ -103,15 +117,28 @@ def sub_templates(configuration_data, template_repository_root) -> list[Path]:
     return templates
 
 
+def _get_variable_keys(config_data: dict) -> set[str]:
+    """Extract variable keys from a configuration dict (v1 or v2 format)."""
+    # v2 format: keys are in schema.properties
+    schema = config_data.get("schema", {})
+    properties = schema.get("properties", {})
+    if properties:
+        return set(properties.keys())
+    # v1 format: keys are at the top level
+    return set(config_data.keys())
+
+
 @pytest.fixture
 def configuration_variables(configuration_data, sub_templates, valid_key) -> set[str]:
-    """Return a set of variables available in cookiecutter.json."""
+    """Return a set of variables available in the template configuration."""
     # Variables
-    variables = {key for key in configuration_data if valid_key(key)}
+    all_keys = _get_variable_keys(configuration_data)
+    variables = {key for key in all_keys if valid_key(key)}
     for sub_template in sub_templates:
         sub_config = _read_configuration(sub_template)
+        sub_keys = _get_variable_keys(sub_config)
         variables.update({
-            key for key in sub_config if valid_key(key) and key.startswith("__")
+            key for key in sub_keys if valid_key(key) and key.startswith("__")
         })
     return variables
 
@@ -126,7 +153,12 @@ def _all_files_in_template(
     project_files = list(template_folder.glob("**/*"))
     all_files = hooks_files + project_files
     if include_configuration:
-        all_files.append(base_path / "cookiecutter.json")
+        v2_config = base_path / "cookieplone.json"
+        v1_config = base_path / "cookiecutter.json"
+        if v2_config.is_file():
+            all_files.append(v2_config)
+        elif v1_config.is_file():
+            all_files.append(v1_config)
     return all_files
 
 

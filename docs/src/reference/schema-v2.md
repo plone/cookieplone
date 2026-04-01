@@ -4,7 +4,7 @@ myst:
     "description": "Full specification for the cookieplone.json v2 template schema."
     "property=og:description": "Full specification for the cookieplone.json v2 template schema."
     "property=og:title": "Schema v2 reference (cookieplone.json)"
-    "keywords": "Cookieplone, cookieplone.json, schema, v2, properties, computed, choice, validator"
+    "keywords": "Cookieplone, cookieplone.json, schema, v2, properties, computed, choice, validator, config, extensions, versions, subtemplates"
 ---
 
 # Schema v2 reference (`cookieplone.json`)
@@ -13,12 +13,44 @@ Template schemas in v2 format are stored in a file named `cookieplone.json` at t
 
 ## Top-level structure
 
+A v2 file separates the **form schema** (what the user sees) from the **generator configuration** (how the template is processed).
+
 ```json
 {
-  "title": "My template",
-  "description": "A short description shown to the user.",
-  "version": "2.0",
-  "properties": { }
+  "id": "project",
+  "schema": {
+    "title": "My template",
+    "description": "A short description shown to the user.",
+    "version": "2.0",
+    "properties": { }
+  },
+  "config": {
+    "extensions": [],
+    "no_render": [],
+    "versions": {},
+    "subtemplates": []
+  }
+}
+```
+
+| Key | Type | Required | Description |
+|---|---|---|---|
+| `id` | string | no | Unique identifier for the template. |
+| `schema` | object | yes | Form definition shown to the user. |
+| `config` | object | no | Generator configuration (extensions, versions, etc.). |
+
+## Schema object
+
+The `schema` object defines the interactive form.
+
+```json
+{
+  "schema": {
+    "title": "My template",
+    "description": "A short description shown to the user.",
+    "version": "2.0",
+    "properties": { }
+  }
 }
 ```
 
@@ -164,34 +196,187 @@ The function at that path must accept a single string argument and return `bool`
 Fields whose names match an entry in `DEFAULT_VALIDATORS` are wired automatically.
 See {doc}`/reference/validators` for the complete list.
 
+## Configuration object
+
+The optional `config` object holds generator settings that are **not** shown in the wizard.
+These values control how Cookieplone processes the template after the user answers all questions.
+
+```json
+{
+  "config": {
+    "extensions": [
+      "cookieplone.filters.latest_plone",
+      "cookieplone.filters.latest_volto"
+    ],
+    "no_render": ["*.png", "devops/etc"],
+    "versions": {
+      "gha_checkout": "v6",
+      "plone": "6.1"
+    },
+    "subtemplates": [
+      {"id": "sub/backend", "title": "Backend", "enabled": "1"},
+      {"id": "sub/frontend", "title": "Frontend", "enabled": "{{ cookiecutter.has_frontend }}"}
+    ]
+  }
+}
+```
+
+| Key | Type | Description |
+|---|---|---|
+| `extensions` | array of strings | Jinja2 extension classes to load (dotted import paths). These make custom filters and tags available in template files. |
+| `no_render` | array of strings | Glob patterns for files that should be copied as-is, without Jinja2 rendering. |
+| `versions` | object | String-to-string mapping of version identifiers. Injected into the template context as `{{ version.<key> }}`. |
+| `subtemplates` | array of objects | Sub-templates to run after the main template. Each entry has `id`, `title`, and `enabled` keys. |
+
+All `config` keys are optional.
+When a key is absent or empty, the corresponding feature is not activated.
+
+### `extensions`
+
+Jinja2 extension modules to load.
+Each entry is a dotted Python import path pointing to a class that extends `jinja2.ext.Extension`.
+
+```json
+{
+  "config": {
+    "extensions": [
+      "cookieplone.filters.latest_plone",
+      "cookieplone.filters.pascal_case"
+    ]
+  }
+}
+```
+
+### `no_render`
+
+Glob patterns for files that should be copied verbatim, without Jinja2 rendering.
+Use this for binary files or files whose content conflicts with Jinja2 syntax.
+
+```json
+{
+  "config": {
+    "no_render": ["*.png", "*.ico", "devops/etc"]
+  }
+}
+```
+
+### `versions`
+
+A flat mapping of version identifiers to version strings.
+These are injected into the template context as a top-level `versions` namespace, separate from the `cookiecutter` namespace.
+
+```json
+{
+  "config": {
+    "versions": {
+      "gha_checkout": "v6",
+      "plone": "6.1",
+      "volto": "18.10.0"
+    }
+  }
+}
+```
+
+In template files, reference these values with `{{ versions.gha_checkout }}`, `{{ versions.plone }}`, etc.
+
+```{note}
+Unlike other config keys, `versions` lives outside the `cookiecutter` namespace.
+The full template context passed to Jinja2 looks like `{"cookiecutter": {...}, "versions": {...}}`.
+```
+
+### `subtemplates`
+
+Sub-templates that run after the main template completes.
+Each entry is an object with three required keys.
+
+```json
+{
+  "config": {
+    "subtemplates": [
+      {"id": "sub/backend", "title": "Backend", "enabled": "1"},
+      {"id": "sub/frontend", "title": "Frontend", "enabled": "{{ cookiecutter.has_frontend }}"}
+    ]
+  }
+}
+```
+
+| Key | Type | Description |
+|---|---|---|
+| `id` | string | Path to the sub-template directory, relative to the template repository root. |
+| `title` | string | Human-readable label shown in logs and passed to post-generation hooks. |
+| `enabled` | string | Controls whether the sub-template runs. See below. |
+
+#### The `enabled` field
+
+The `enabled` field determines whether a sub-template is activated.
+It can be a **static value** or a **Jinja2 expression**:
+
+- **Static**: `"1"` to always enable, `"0"` to always disable.
+- **Jinja2 expression**: An expression like `"{{ cookiecutter.has_frontend }}"` that is rendered against the current template context after all user answers are collected. The resolved value is passed through to the post-generation hook.
+
+```json
+{
+  "config": {
+    "subtemplates": [
+      {"id": "sub/backend", "title": "Backend", "enabled": "1"},
+      {"id": "sub/docs", "title": "Documentation", "enabled": "{{ cookiecutter.initialize_docs }}"},
+      {"id": "sub/frontend", "title": "Frontend", "enabled": "{{ cookiecutter.has_frontend }}"}
+    ]
+  }
+}
+```
+
+In this example, `sub/backend` always runs, while `sub/docs` and `sub/frontend` depend on the user's answers.
+
+#### How subtemplates are processed
+
+During generation, each subtemplate entry is converted into a `[id, title, enabled]` list and injected into the template context as `__cookieplone_subtemplates`.
+Post-generation hooks read this list to decide which sub-templates to invoke.
+
+The processing order matches the declaration order in the configuration file.
+
 ## Complete example
 
 ```json
 {
-  "title": "Plone add-on",
-  "description": "A minimal Plone add-on template.",
-  "version": "2.0",
-  "properties": {
-    "python_package_name": {
-      "type": "string",
-      "title": "Python package name",
-      "description": "Use dots for namespaces: collective.myaddon",
-      "default": "collective.myaddon"
-    },
-    "plone_version": {
-      "type": "string",
-      "title": "Plone version",
-      "default": "6.1.2"
-    },
-    "class_name": {
-      "type": "string",
-      "format": "computed",
-      "default": "{{ cookiecutter.python_package_name | pascal_case }}"
-    },
-    "package_path": {
-      "type": "string",
-      "format": "computed",
-      "default": "{{ cookiecutter.python_package_name | package_path }}"
+  "id": "addon",
+  "schema": {
+    "title": "Plone add-on",
+    "description": "A minimal Plone add-on template.",
+    "version": "2.0",
+    "properties": {
+      "python_package_name": {
+        "type": "string",
+        "title": "Python package name",
+        "description": "Use dots for namespaces: collective.myaddon",
+        "default": "collective.myaddon"
+      },
+      "plone_version": {
+        "type": "string",
+        "title": "Plone version",
+        "default": "6.1.2"
+      },
+      "class_name": {
+        "type": "string",
+        "format": "computed",
+        "default": "{{ cookiecutter.python_package_name | pascal_case }}"
+      },
+      "package_path": {
+        "type": "string",
+        "format": "computed",
+        "default": "{{ cookiecutter.python_package_name | package_path }}"
+      }
+    }
+  },
+  "config": {
+    "extensions": [
+      "cookieplone.filters.latest_plone",
+      "cookieplone.filters.pascal_case",
+      "cookieplone.filters.package_path"
+    ],
+    "no_render": ["*.png"],
+    "versions": {
+      "gha_checkout": "v6"
     }
   }
 }

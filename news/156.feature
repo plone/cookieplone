@@ -1,0 +1,1 @@
+Refactored v2 config format to separate schema from generator configuration, with `SubTemplate` TypedDict, `config.versions` as a top-level context namespace, and Jinja2 rendering for subtemplate `enabled` fields. @ericof

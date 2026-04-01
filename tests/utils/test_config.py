@@ -246,11 +246,18 @@ def test_convert_v1_to_v2(read_config_file, config_file: str):
     result = config.convert_v1_to_v2(data)
 
     assert isinstance(result, dict)
-    assert result.get("title") == "Cookieplone"
-    assert result.get("version") == "2.0"
-    assert "properties" in result
-    properties = result["properties"]
+    assert "schema" in result
+    schema = result["schema"]
+    assert schema.get("title") == "Cookieplone"
+    assert schema.get("version") == "2.0"
+    assert "properties" in schema
+    properties = schema["properties"]
     assert isinstance(properties, dict)
+    # Config keys should not appear in properties
+    assert "_extensions" not in properties
+    assert "_copy_without_render" not in properties
+    assert "__cookieplone_subtemplates" not in properties
+    assert "__cookieplone_template" not in properties
 
 
 @pytest.mark.parametrize("config_file", CONFIG_FILES)
@@ -258,7 +265,7 @@ def test_convert_v1_to_v2_choice_uses_one_of(read_config_file, config_file: str)
     """Test that choice fields use oneOf instead of options."""
     data = read_config_file(config_file)
     result = config.convert_v1_to_v2(data)
-    properties = result["properties"]
+    properties = result["schema"]["properties"]
     for key, prop in properties.items():
         assert "options" not in prop, (
             f"Property '{key}' uses 'options' instead of 'oneOf'"
@@ -286,7 +293,7 @@ class TestConvertV1ToV2ChoiceFields:
             },
         }
         result = config.convert_v1_to_v2(data)
-        prop = result["properties"]["language_code"]
+        prop = result["schema"]["properties"]["language_code"]
 
         assert "options" not in prop
         assert "oneOf" in prop
@@ -310,7 +317,7 @@ class TestConvertV1ToV2ChoiceFields:
             },
         }
         result = config.convert_v1_to_v2(data)
-        prop = result["properties"]["enable_feature"]
+        prop = result["schema"]["properties"]["enable_feature"]
 
         assert "options" not in prop
         assert prop["oneOf"] == [
@@ -324,7 +331,7 @@ class TestConvertV1ToV2ChoiceFields:
             "color": ["red", "blue", "green"],
         }
         result = config.convert_v1_to_v2(data)
-        prop = result["properties"]["color"]
+        prop = result["schema"]["properties"]["color"]
 
         assert "options" not in prop
         assert prop["oneOf"] == []

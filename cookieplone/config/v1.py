@@ -25,10 +25,20 @@
 
 from typing import Any
 
+from cookieplone.config.v2 import ParsedConfig
 from cookieplone.utils.config import convert_v1_to_v2
 
 
-def parse_v1(context: dict[str, Any]) -> dict[str, Any]:
+def parse_v1(context: dict[str, Any]) -> ParsedConfig:
     """Parse configuration from the old format used in cookiecutter.json files."""
     schema: dict[str, Any] = context.get("cookiecutter", context)
-    return convert_v1_to_v2(schema)
+    converted = convert_v1_to_v2(schema)
+    config = converted.get("config", {})
+    return ParsedConfig(
+        schema=converted["schema"],
+        extensions=config.get("extensions", []),
+        no_render=config.get("no_render", []),
+        versions=config.get("versions", {}),
+        subtemplates=config.get("subtemplates", []),
+        template_id=converted.get("id", ""),
+    )

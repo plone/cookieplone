@@ -3,10 +3,11 @@
 from typing import Any
 
 from cookieplone.config.v1 import parse_v1
+from cookieplone.config.v2 import ParsedConfig
 
 
-def test_returns_dict():
-    """parse_v1 returns a dict."""
+def test_returns_parsed_config():
+    """parse_v1 returns a ParsedConfig."""
     context = {
         "cookiecutter": {
             "title": "My Project",
@@ -14,7 +15,7 @@ def test_returns_dict():
         }
     }
     result = parse_v1(context)
-    assert isinstance(result, dict)
+    assert isinstance(result, ParsedConfig)
 
 
 def test_result_has_version_2():
@@ -25,7 +26,7 @@ def test_result_has_version_2():
         }
     }
     result = parse_v1(context)
-    assert result.get("version") == "2.0"
+    assert result.schema.get("version") == "2.0"
 
 
 def test_result_has_properties():
@@ -37,7 +38,7 @@ def test_result_has_properties():
         }
     }
     result = parse_v1(context)
-    assert "properties" in result
+    assert "properties" in result.schema
 
 
 def test_string_field_conversion():
@@ -48,7 +49,7 @@ def test_string_field_conversion():
         }
     }
     result = parse_v1(context)
-    prop = result["properties"]["title"]
+    prop = result.schema["properties"]["title"]
     assert prop["type"] == "string"
     assert prop["default"] == "My Project"
 
@@ -61,20 +62,33 @@ def test_computed_field_conversion():
         }
     }
     result = parse_v1(context)
-    prop = result["properties"]["__folder_name"]
+    prop = result.schema["properties"]["__folder_name"]
     assert prop["format"] == "computed"
 
 
 def test_constant_field_conversion():
-    """Fields prefixed with _ (single underscore) are converted to constant format."""
+    """Fields with _ prefix are extracted to config, not properties."""
     context = {
         "cookiecutter": {
-            "_copy_without_render": [],
+            "_copy_without_render": ["*.png"],
         }
     }
     result = parse_v1(context)
-    prop = result["properties"]["_copy_without_render"]
-    assert prop["format"] == "constant"
+    assert "_copy_without_render" not in result.schema.get("properties", {})
+    assert result.no_render == ["*.png"]
+
+
+def test_extensions_extracted_to_config():
+    """_extensions is extracted to ParsedConfig.extensions."""
+    context = {
+        "cookiecutter": {
+            "_extensions": ["cookieplone.filters.latest_plone"],
+            "title": "My Project",
+        }
+    }
+    result = parse_v1(context)
+    assert "_extensions" not in result.schema.get("properties", {})
+    assert result.extensions == ["cookieplone.filters.latest_plone"]
 
 
 def test_choice_field_default():
@@ -85,7 +99,7 @@ def test_choice_field_default():
         }
     }
     result = parse_v1(context)
-    prop = result["properties"]["license"]
+    prop = result.schema["properties"]["license"]
     assert prop["default"] == "MIT"
 
 
@@ -105,7 +119,7 @@ def test_choice_field_with_prompts():
         }
     }
     result = parse_v1(context)
-    prop = result["properties"]["license"]
+    prop = result.schema["properties"]["license"]
     assert "oneOf" in prop
     assert len(prop["oneOf"]) == 3
     assert prop["oneOf"][0]["const"] == "MIT"
@@ -124,7 +138,7 @@ def test_prompts_become_titles():
         }
     }
     result = parse_v1(context)
-    assert result["properties"]["title"]["title"] == "Enter project title"
+    assert result.schema["properties"]["title"]["title"] == "Enter project title"
 
 
 def test_prompts_not_in_properties():
@@ -138,7 +152,7 @@ def test_prompts_not_in_properties():
         }
     }
     result = parse_v1(context)
-    assert "__prompts__" not in result["properties"]
+    assert "__prompts__" not in result.schema["properties"]
 
 
 def test_validators_applied():
@@ -153,7 +167,7 @@ def test_validators_applied():
     }
     result = parse_v1(context)
     assert (
-        result["properties"]["hostname"]["validator"]
+        result.schema["properties"]["hostname"]["validator"]
         == "cookieplone.validators.hostname"
     )
 
@@ -169,7 +183,7 @@ def test_validators_not_in_properties():
         }
     }
     result = parse_v1(context)
-    assert "__validators__" not in result["properties"]
+    assert "__validators__" not in result.schema["properties"]
 
 
 def test_extracts_from_cookiecutter_key():
@@ -180,7 +194,7 @@ def test_extracts_from_cookiecutter_key():
         }
     }
     result = parse_v1(context)
-    assert "title" in result["properties"]
+    assert "title" in result.schema["properties"]
 
 
 def test_works_without_cookiecutter_key():
@@ -189,7 +203,7 @@ def test_works_without_cookiecutter_key():
         "title": "My Project",
     }
     result = parse_v1(context)
-    assert "title" in result["properties"]
+    assert "title" in result.schema["properties"]
 
 
 def test_integer_field_conversion():
@@ -200,7 +214,7 @@ def test_integer_field_conversion():
         }
     }
     result = parse_v1(context)
-    prop = result["properties"]["port"]
+    prop = result.schema["properties"]["port"]
     assert prop["type"] == "integer"
     assert prop["default"] == 8080
 
@@ -213,4 +227,43 @@ def test_boolean_field_conversion():
         }
     }
     result = parse_v1(context)
-    assert "has_volto" in result["properties"]
+    assert "has_volto" in result.schema["properties"]
+
+
+def test_subtemplates_extracted():
+    """__cookieplone_subtemplates are extracted as structured objects."""
+    context = {
+        "cookiecutter": {
+            "title": "My Project",
+            "__cookieplone_subtemplates": [
+                ["sub/backend", "Backend", "1"],
+                ["sub/frontend", "Frontend", "{{ cookiecutter.has_frontend }}"],
+            ],
+        }
+    }
+    result = parse_v1(context)
+    assert "__cookieplone_subtemplates" not in result.schema.get("properties", {})
+    assert len(result.subtemplates) == 2
+    assert result.subtemplates[0] == {
+        "id": "sub/backend",
+        "title": "Backend",
+        "enabled": "1",
+    }
+    assert result.subtemplates[1] == {
+        "id": "sub/frontend",
+        "title": "Frontend",
+        "enabled": "{{ cookiecutter.has_frontend }}",
+    }
+
+
+def test_template_id_extracted():
+    """__cookieplone_template is extracted as template_id."""
+    context = {
+        "cookiecutter": {
+            "title": "My Project",
+            "__cookieplone_template": "project",
+        }
+    }
+    result = parse_v1(context)
+    assert "__cookieplone_template" not in result.schema.get("properties", {})
+    assert result.template_id == "project"

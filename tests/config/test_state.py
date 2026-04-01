@@ -2,6 +2,7 @@ import pytest
 
 from cookieplone.config import CookieploneState
 from cookieplone.config import state as config
+from cookieplone.config.v2 import ParsedConfig
 
 CONFIG_FILES = [
     "config/v1-agents_instructions.json",
@@ -44,9 +45,9 @@ def test_generate_state(template_path, config_file: str):
 @pytest.mark.parametrize(
     "config_file,use_extra,use_replay,len_properties,len_questions,key,default",
     [
-        ("config/v1-project.json", False, False, 65, 19, "title", "Project Title"),
-        ("config/v1-project.json", True, False, 65, 19, "title", "Titulo"),
-        ("config/v1-project.json", True, True, 65, 19, "title", "Other Project"),
+        ("config/v1-project.json", False, False, 61, 19, "title", "Project Title"),
+        ("config/v1-project.json", True, False, 61, 19, "title", "Titulo"),
+        ("config/v1-project.json", True, True, 61, 19, "title", "Other Project"),
     ],
 )
 def test_generate_state_overrides(
@@ -76,3 +77,26 @@ def test_generate_state_overrides(
     assert len(questions) == len_questions
     question = properties[key]
     assert question["default"] == default
+
+
+class TestGenerateStateVersions:
+    """Tests for versions handling in _generate_state."""
+
+    def test_versions_in_state_data(self):
+        """state.data contains a 'versions' key after state creation."""
+        parsed = ParsedConfig(
+            schema={"version": "2.0", "properties": {}},
+            versions={"gha_checkout": "v6", "plone": "6.1"},
+        )
+        state = config._generate_state(parsed)
+        assert "versions" in state.data
+        assert state.data["versions"] == {"gha_checkout": "v6", "plone": "6.1"}
+
+    def test_empty_versions_in_state_data(self):
+        """state.data contains an empty 'versions' dict when config has none."""
+        parsed = ParsedConfig(
+            schema={"version": "2.0", "properties": {}},
+        )
+        state = config._generate_state(parsed)
+        assert "versions" in state.data
+        assert state.data["versions"] == {}
