@@ -26,9 +26,13 @@ A post-generation hook in the main template then calls the sub-templates program
 
 This keeps each sub-template focused, testable, and reusable independently.
 
-## The `templates` key
+## Declaring sub-templates
 
-Sub-templates are declared in the root `cookiecutter.json` under the `templates` key:
+There are two levels where sub-templates appear in a Cookieplone repository.
+
+### Repository-level: the `templates` key
+
+The root `cookiecutter.json` lists all templates the repository provides under the `templates` key:
 
 ```json
 {
@@ -58,6 +62,29 @@ In this example:
 
 - `project` is the main template, visible to users.
 - `backend` and `frontend` are sub-templates called programmatically; they are hidden from the menu.
+
+### Template-level: `config.subtemplates`
+
+Inside each template's `cookieplone.json` (v2 format), the `config.subtemplates` array declares which sub-templates should run after generation.
+Each entry has an `id`, a `title`, and an `enabled` field:
+
+```json
+{
+  "config": {
+    "subtemplates": [
+      {"id": "sub/backend", "title": "Backend", "enabled": "1"},
+      {"id": "sub/frontend", "title": "Frontend", "enabled": "{{ cookiecutter.has_frontend }}"}
+    ]
+  }
+}
+```
+
+The `enabled` field can be a static value (`"1"` or `"0"`) or a Jinja2 expression.
+Expressions are rendered against the current template context after the user completes the wizard, allowing sub-templates to be conditionally enabled based on user answers.
+
+During generation, these entries are converted into `[id, title, enabled]` lists and injected into the template context as `__cookieplone_subtemplates`, where post-generation hooks can read them.
+
+See {doc}`/reference/schema-v2` for the full specification of the `config.subtemplates` format.
 
 ## Calling a sub-template from a hook
 

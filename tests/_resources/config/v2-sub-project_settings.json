@@ -1,305 +1,290 @@
 {
-  "title": "Cookieplone",
-  "description": "",
-  "version": "2.0",
-  "properties": {
-    "title": {
-      "title": "title",
-      "default": "Project Title",
-      "validator": "",
-      "type": "string"
-    },
-    "description": {
-      "title": "description",
-      "default": "A new project using Plone 6.",
-      "validator": "",
-      "type": "string"
-    },
-    "project_slug": {
-      "title": "project_slug",
-      "default": "{{ cookiecutter.title | slugify }}",
-      "validator": "",
-      "type": "string"
-    },
-    "author": {
-      "title": "author",
-      "default": "Plone Foundation",
-      "validator": "",
-      "type": "string"
-    },
-    "email": {
-      "title": "email",
-      "default": "collective@plone.org",
-      "validator": "",
-      "type": "string"
-    },
-    "python_package_name": {
-      "title": "python_package_name",
-      "default": "{{ cookiecutter.project_slug|replace(' ', '')|replace('-', '.') }}",
-      "validator": "",
-      "type": "string"
-    },
-    "frontend_addon_name": {
-      "title": "frontend_addon_name",
-      "default": "volto-{{ cookiecutter.python_package_name|replace('_', '-')|replace('.', '-') }}",
-      "validator": "",
-      "type": "string"
-    },
-    "npm_package_name": {
-      "title": "npm_package_name",
-      "default": "{{ cookiecutter.frontend_addon_name }}",
-      "validator": "",
-      "type": "string"
-    },
-    "language_code": {
-      "title": "language_code",
-      "default": "en",
-      "validator": "",
-      "type": "string"
-    },
-    "use_prerelease_versions": {
-      "title": "use_prerelease_versions",
-      "default": "{{ 'No' | use_prerelease_versions }}",
-      "validator": "",
-      "type": "string"
-    },
-    "plone_version": {
-      "title": "plone_version",
-      "default": "{{ 'No' | latest_plone }}",
-      "validator": "",
-      "type": "string"
-    },
-    "volto_version": {
-      "title": "volto_version",
-      "default": "{{ cookiecutter.use_prerelease_versions | latest_volto }}",
-      "validator": "",
-      "type": "string"
-    },
-    "github_organization": {
-      "title": "github_organization",
-      "default": "collective",
-      "validator": "",
-      "type": "string"
-    },
-    "container_registry": {
-      "title": "container_registry",
-      "default": "github",
-      "validator": "",
-      "type": "string",
-      "oneOf": []
-    },
-    "__feature_distribution": {
-      "title": "__feature_distribution",
-      "default": "0",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__backend_managed_by_uv": {
-      "title": "__backend_managed_by_uv",
-      "default": "false",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__project_slug": {
-      "title": "__project_slug",
-      "default": "{{ cookiecutter.project_slug }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__repository_url": {
-      "title": "__repository_url",
-      "default": "https://github.com/{{ cookiecutter.github_organization }}/{{ cookiecutter.__project_slug }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__repository_git": {
-      "title": "__repository_git",
-      "default": "git@github.com:{{ cookiecutter.github_organization }}/{{ cookiecutter.__project_slug }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__node_version": {
-      "title": "__node_version",
-      "default": "{{ cookiecutter.volto_version | node_version_for_volto }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__npm_package_name": {
-      "title": "__npm_package_name",
-      "default": "{{ cookiecutter.npm_package_name }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__container_registry_prefix": {
-      "title": "__container_registry_prefix",
-      "default": "{{ cookiecutter.container_registry | image_prefix }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__container_image_prefix": {
-      "title": "__container_image_prefix",
-      "default": "{{ cookiecutter.__container_registry_prefix }}{{ cookiecutter.github_organization }}/{{ cookiecutter.project_slug }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__folder_name": {
-      "title": "__folder_name",
-      "default": "{{ cookiecutter.project_slug }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__package_path": {
-      "title": "__package_path",
-      "default": "{{ cookiecutter.python_package_name | package_path }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__profile_language": {
-      "title": "__profile_language",
-      "default": "{{ cookiecutter.language_code|gs_language_code }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__locales_language": {
-      "title": "__locales_language",
-      "default": "{{ cookiecutter.language_code|locales_language_code }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__python_version": {
-      "title": "__python_version",
-      "default": "3.12",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__supported_versions_python": {
-      "title": "__supported_versions_python",
-      "default": [
-        "{{ cookiecutter.__python_version }}"
-      ],
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__supported_versions_plone": {
-      "title": "__supported_versions_plone",
-      "default": [
-        "{{ cookiecutter.plone_version | as_major_minor }}"
-      ],
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__python_version_identifier": {
-      "title": "__python_version_identifier",
-      "default": "{{ cookiecutter.__python_version | replace('.', '') }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__version_plone_volto": {
-      "title": "__version_plone_volto",
-      "default": "{{ cookiecutter.volto_version }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__version_pnpm": {
-      "title": "__version_pnpm",
-      "default": "{{ '10.20.0' if cookiecutter.volto_version >= '19' else '9.1.1' }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__test_framework": {
-      "title": "__test_framework",
-      "default": "{{ 'vitest' if cookiecutter.volto_version >= '19' else 'jest'}}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "_copy_without_render": {
-      "title": "_copy_without_render",
-      "default": [],
-      "validator": "",
-      "type": "string",
-      "format": "constant"
-    },
-    "_extensions": {
-      "title": "_extensions",
-      "default": [
-        "cookieplone.filters.use_prerelease_versions",
-        "cookieplone.filters.node_version_for_volto",
-        "cookieplone.filters.extract_host",
-        "cookieplone.filters.image_prefix",
-        "cookieplone.filters.pascal_case",
-        "cookieplone.filters.locales_language_code",
-        "cookieplone.filters.gs_language_code",
-        "cookieplone.filters.package_namespace_path",
-        "cookieplone.filters.package_path",
-        "cookieplone.filters.as_major_minor",
-        "cookieplone.filters.latest_volto",
-        "cookieplone.filters.latest_plone"
-      ],
-      "validator": "",
-      "type": "string",
-      "format": "constant"
-    },
-    "__cookieplone_repository_path": {
-      "title": "__cookieplone_repository_path",
-      "default": "",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__cookieplone_template": {
-      "title": "__cookieplone_template",
-      "default": "",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__generator_sha": {
-      "title": "__generator_sha",
-      "default": "",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__generator_template_url": {
-      "title": "__generator_template_url",
-      "default": "https://github.com/plone/cookieplone-templates/tree/main/{{ cookiecutter.__cookieplone_template }}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__generator_date_long": {
-      "title": "__generator_date_long",
-      "default": "{% now 'utc', '%Y-%m-%d %H:%M:%S' %}",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
-    },
-    "__generator_signature": {
-      "title": "__generator_signature",
-      "default": "Generated from the [`cookieplone-templates` {{ cookiecutter.__cookieplone_template }} template]({{ cookiecutter.__generator_template_url }}) on {{ cookiecutter.__generator_date_long }}.",
-      "validator": "",
-      "type": "string",
-      "format": "computed"
+  "id": "",
+  "schema": {
+    "title": "Cookieplone",
+    "description": "",
+    "version": "2.0",
+    "properties": {
+      "title": {
+        "title": "title",
+        "default": "Project Title",
+        "validator": "",
+        "type": "string"
+      },
+      "description": {
+        "title": "description",
+        "default": "A new project using Plone 6.",
+        "validator": "",
+        "type": "string"
+      },
+      "project_slug": {
+        "title": "project_slug",
+        "default": "{{ cookiecutter.title | slugify }}",
+        "validator": "",
+        "type": "string"
+      },
+      "author": {
+        "title": "author",
+        "default": "Plone Foundation",
+        "validator": "",
+        "type": "string"
+      },
+      "email": {
+        "title": "email",
+        "default": "collective@plone.org",
+        "validator": "",
+        "type": "string"
+      },
+      "python_package_name": {
+        "title": "python_package_name",
+        "default": "{{ cookiecutter.project_slug|replace(' ', '')|replace('-', '.') }}",
+        "validator": "",
+        "type": "string"
+      },
+      "frontend_addon_name": {
+        "title": "frontend_addon_name",
+        "default": "volto-{{ cookiecutter.python_package_name|replace('_', '-')|replace('.', '-') }}",
+        "validator": "",
+        "type": "string"
+      },
+      "npm_package_name": {
+        "title": "npm_package_name",
+        "default": "{{ cookiecutter.frontend_addon_name }}",
+        "validator": "",
+        "type": "string"
+      },
+      "language_code": {
+        "title": "language_code",
+        "default": "en",
+        "validator": "",
+        "type": "string"
+      },
+      "use_prerelease_versions": {
+        "title": "use_prerelease_versions",
+        "default": "{{ 'No' | use_prerelease_versions }}",
+        "validator": "",
+        "type": "string"
+      },
+      "plone_version": {
+        "title": "plone_version",
+        "default": "{{ 'No' | latest_plone }}",
+        "validator": "",
+        "type": "string"
+      },
+      "volto_version": {
+        "title": "volto_version",
+        "default": "{{ cookiecutter.use_prerelease_versions | latest_volto }}",
+        "validator": "",
+        "type": "string"
+      },
+      "github_organization": {
+        "title": "github_organization",
+        "default": "collective",
+        "validator": "",
+        "type": "string"
+      },
+      "container_registry": {
+        "title": "container_registry",
+        "default": "github",
+        "validator": "",
+        "type": "string",
+        "oneOf": []
+      },
+      "__feature_distribution": {
+        "title": "__feature_distribution",
+        "default": "0",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__backend_managed_by_uv": {
+        "title": "__backend_managed_by_uv",
+        "default": "false",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__project_slug": {
+        "title": "__project_slug",
+        "default": "{{ cookiecutter.project_slug }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__repository_url": {
+        "title": "__repository_url",
+        "default": "https://github.com/{{ cookiecutter.github_organization }}/{{ cookiecutter.__project_slug }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__repository_git": {
+        "title": "__repository_git",
+        "default": "git@github.com:{{ cookiecutter.github_organization }}/{{ cookiecutter.__project_slug }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__node_version": {
+        "title": "__node_version",
+        "default": "{{ cookiecutter.volto_version | node_version_for_volto }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__npm_package_name": {
+        "title": "__npm_package_name",
+        "default": "{{ cookiecutter.npm_package_name }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__container_registry_prefix": {
+        "title": "__container_registry_prefix",
+        "default": "{{ cookiecutter.container_registry | image_prefix }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__container_image_prefix": {
+        "title": "__container_image_prefix",
+        "default": "{{ cookiecutter.__container_registry_prefix }}{{ cookiecutter.github_organization }}/{{ cookiecutter.project_slug }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__folder_name": {
+        "title": "__folder_name",
+        "default": "{{ cookiecutter.project_slug }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__package_path": {
+        "title": "__package_path",
+        "default": "{{ cookiecutter.python_package_name | package_path }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__profile_language": {
+        "title": "__profile_language",
+        "default": "{{ cookiecutter.language_code|gs_language_code }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__locales_language": {
+        "title": "__locales_language",
+        "default": "{{ cookiecutter.language_code|locales_language_code }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__python_version": {
+        "title": "__python_version",
+        "default": "3.12",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__supported_versions_python": {
+        "title": "__supported_versions_python",
+        "default": [
+          "{{ cookiecutter.__python_version }}"
+        ],
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__supported_versions_plone": {
+        "title": "__supported_versions_plone",
+        "default": [
+          "{{ cookiecutter.plone_version | as_major_minor }}"
+        ],
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__python_version_identifier": {
+        "title": "__python_version_identifier",
+        "default": "{{ cookiecutter.__python_version | replace('.', '') }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__version_plone_volto": {
+        "title": "__version_plone_volto",
+        "default": "{{ cookiecutter.volto_version }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__version_pnpm": {
+        "title": "__version_pnpm",
+        "default": "{{ '10.20.0' if cookiecutter.volto_version >= '19' else '9.1.1' }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__test_framework": {
+        "title": "__test_framework",
+        "default": "{{ 'vitest' if cookiecutter.volto_version >= '19' else 'jest'}}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__cookieplone_repository_path": {
+        "title": "__cookieplone_repository_path",
+        "default": "",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__generator_sha": {
+        "title": "__generator_sha",
+        "default": "",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__generator_template_url": {
+        "title": "__generator_template_url",
+        "default": "https://github.com/plone/cookieplone-templates/tree/main/{{ cookiecutter.__cookieplone_template }}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__generator_date_long": {
+        "title": "__generator_date_long",
+        "default": "{% now 'utc', '%Y-%m-%d %H:%M:%S' %}",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      },
+      "__generator_signature": {
+        "title": "__generator_signature",
+        "default": "Generated from the [`cookieplone-templates` {{ cookiecutter.__cookieplone_template }} template]({{ cookiecutter.__generator_template_url }}) on {{ cookiecutter.__generator_date_long }}.",
+        "validator": "",
+        "type": "string",
+        "format": "computed"
+      }
     }
+  },
+  "config": {
+    "extensions": [
+      "cookieplone.filters.use_prerelease_versions",
+      "cookieplone.filters.node_version_for_volto",
+      "cookieplone.filters.extract_host",
+      "cookieplone.filters.image_prefix",
+      "cookieplone.filters.pascal_case",
+      "cookieplone.filters.locales_language_code",
+      "cookieplone.filters.gs_language_code",
+      "cookieplone.filters.package_namespace_path",
+      "cookieplone.filters.package_path",
+      "cookieplone.filters.as_major_minor",
+      "cookieplone.filters.latest_volto",
+      "cookieplone.filters.latest_plone"
+    ]
   }
 }

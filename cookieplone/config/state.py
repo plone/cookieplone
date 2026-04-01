@@ -5,8 +5,9 @@ from typing import Any
 
 from cookiecutter import exceptions as exc
 
+from cookieplone.config.schemas import SubTemplate
 from cookieplone.config.v1 import parse_v1
-from cookieplone.config.v2 import parse_v2
+from cookieplone.config.v2 import ParsedConfig, parse_v2
 from cookieplone.logger import logger
 from cookieplone.settings import DEFAULT_DATA_KEY, DEFAULT_VALIDATORS
 from cookieplone.utils import files as f
@@ -57,16 +58,30 @@ class CookieploneState:
     """All state needed to drive a single Cookieplone template generation run.
 
     :param schema: Parsed schema dict (v1 or v2) describing the template's variables.
-    :param data: Runtime context keyed by ``root_key`` (usually ``"cookiecutter"``).
-        This dict is mutated during generation as wizard answers are collected.
+    :param data: Runtime context passed to cookiecutter's ``generate_files``.
+        Contains ``root_key`` (usually ``"cookiecutter"``) with template variables
+        and ``"versions"`` with the version pinning dict.  Mutated during
+        generation as wizard answers and internal keys are injected.
     :param root_key: The top-level key under which template variables are stored.
         Defaults to :data:`~cookieplone.settings.DEFAULT_DATA_KEY`.
     :param context: The three override sources (user config, extra, replay) captured
         at initialisation time for later introspection.
     :param answers: Wizard output — both the full rendered answers and the subset
         supplied by the user.  Populated after the wizard completes.
-    :param extensions: Jinja2 extension class paths extracted from the schema's
-        ``_extensions`` property.
+    :param extensions: Jinja2 extension class paths extracted from the config's
+        ``extensions`` list.
+    :param no_render: Glob patterns for files that should be copied without Jinja
+        rendering, extracted from the config's ``no_render`` list.
+    :param subtemplates: Sub-template definitions extracted from the
+        config's ``subtemplates`` list.  Each entry is a
+        :class:`~cookieplone.config.schemas.SubTemplate` with ``id``,
+        ``title``, and ``enabled`` keys.  The ``enabled`` value can be a
+        static string (``"1"``/``"0"``) or a Jinja2 expression rendered
+        against the current context during generation.
+    :param template_id: Template identifier from the config's top-level ``id`` field.
+    :param versions: Version pinning dict from the config's ``versions`` mapping.
+        Injected into ``data["versions"]`` so templates can access values via
+        ``{{ versions.<key> }}``.
     """
 
     schema: dict[str, Any]
@@ -75,24 +90,24 @@ class CookieploneState:
     context: Context = field(default_factory=Context)
     answers: Answers = field(default_factory=Answers)
     extensions: list[str] = field(default_factory=list)
+    no_render: list[str] = field(default_factory=list)
+    subtemplates: list[SubTemplate] = field(default_factory=list)
+    template_id: str = ""
+    versions: dict[str, str] = field(default_factory=dict)
 
 
-def _parse_schema(context: dict[str, Any], version: str = "1.0") -> dict[str, Any]:
-    """Parse the raw schema from the context."""
-    if version == "1.0":
-        context = parse_v1(context)
-    elif version == "2.0":
-        context = parse_v2(context)
+def _parse_schema(context: dict[str, Any], version: str = "1.0") -> ParsedConfig:
+    """Parse the raw schema from the context and return a :class:`ParsedConfig`."""
+    parsed = parse_v1(context) if version == "1.0" else parse_v2(context)
 
+    schema = parsed.schema
     # All questions will be under `properties`
     for key, val_func in DEFAULT_VALIDATORS.items():
-        if not (question := context["properties"].get(key)) or question.get(
-            "validator"
-        ):
+        if not (question := schema["properties"].get(key)) or question.get("validator"):
             continue
         logger.debug(f"Setting {val_func} for question {key}")
         question["validator"] = val_func
-    return context
+    return parsed
 
 
 def _filter_initial_answers(
@@ -200,20 +215,13 @@ def _apply_overwrites_to_schema(
             property_["default"] = overwrite
 
 
-def _get_extensions_from_schema(schema: dict[str, Any]) -> list[str]:
-    """Extract Jinja extensions from the schema."""
-    properties: dict[str, Any] = schema.get("properties", {})
-    extensions_property: dict[str, Any] = properties.get("_extensions", {})
-    return extensions_property.get("default", [])
-
-
 def _generate_state(
-    schema: dict[str, Any],
+    parsed: ParsedConfig,
     default_context: dict[str, Any] | None = None,
     extra_context: dict[str, Any] | None = None,
     replay_context: dict[str, Any] | None = None,
 ) -> CookieploneState:
-    """Build a :class:`CookieploneState` from a parsed schema and optional
+    """Build a :class:`CookieploneState` from a parsed config and optional
       context overrides.
 
     When *replay_context* is provided the schema defaults are ignored and the
@@ -221,14 +229,14 @@ def _generate_state(
     *default_context* and *extra_context* are applied in order to overwrite
     schema defaults before the wizard runs.
 
-    :param schema: Parsed v2 schema dict (``{"version": "2.0", "properties": ...}``).
+    :param parsed: A :class:`ParsedConfig` containing the schema and config fields.
     :param default_context: Values from the user-level config file.
     :param extra_context: Explicit overrides supplied by the caller.
     :param replay_context: Full replay file dict (the top-level structure with a
         ``"cookiecutter"`` key).  The inner dict is extracted automatically.
     :returns: A fully initialised :class:`CookieploneState`.
     """
-    extensions = _get_extensions_from_schema(schema)
+    schema = parsed.schema
     context = Context(
         default=default_context if default_context else {},
         extra=extra_context if extra_context else {},
@@ -259,11 +267,20 @@ def _generate_state(
         if variable in schema.get("properties", {}):
             schema["properties"][variable]["default"] = value
 
+    state_data = {
+        DEFAULT_DATA_KEY: data,
+        "versions": parsed.versions,
+    }
+
     state: CookieploneState = CookieploneState(
         schema=schema,
-        data={DEFAULT_DATA_KEY: data},
+        data=state_data,
         context=context,
-        extensions=extensions,
+        extensions=parsed.extensions,
+        no_render=parsed.no_render,
+        subtemplates=parsed.subtemplates,
+        template_id=parsed.template_id,
+        versions=parsed.versions,
         answers=answers,
     )
 
@@ -291,22 +308,22 @@ def generate_state(
         *template_path*.
     :raises exc.ContextDecodingException: If the schema file contains invalid JSON.
     """
-    if (schema := load_schema_from_path(template_path)) is None:
+    if (parsed := load_schema_from_path(template_path)) is None:
         raise exc.ConfigDoesNotExistException(
             f"No configuration file found in {template_path}. "
             "Please ensure a 'cookieplone.json' or 'cookiecutter.json' file exists."
         )
-    return _generate_state(schema, default_context, extra_context, replay_context)
+    return _generate_state(parsed, default_context, extra_context, replay_context)
 
 
-def load_schema_from_path(template_path: Path) -> dict | None:
+def load_schema_from_path(template_path: Path) -> ParsedConfig | None:
     """Load and parse the schema from the filesystem.
 
     Tries ``cookieplone.json`` (v2) then ``cookiecutter.json`` (v1) under
     *template_path*.  Returns ``None`` if neither file exists.
 
     :param template_path: Directory to search for a schema file.
-    :returns: Parsed schema dict, or ``None`` if no schema file was found.
+    :returns: A :class:`ParsedConfig`, or ``None`` if no schema file was found.
     :raises exc.ContextDecodingException: If the file exists but contains
         invalid JSON.
     """

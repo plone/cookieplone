@@ -112,10 +112,15 @@ See {doc}`/concepts/template-repositories` for the full structure.
 To upgrade a v1 schema to v2:
 
 1. Rename `cookiecutter.json` to `cookieplone.json`.
-2. Replace the flat structure with the `"version": "2.0"` and `"properties"` structure.
+2. Wrap the field definitions under `schema.properties` and add `schema.version: "2.0"`.
 3. Move prompts from `__prompts__` into each field's `"title"` key.
 4. Move validators from `__validators__` into each field's `"validator"` key.
 5. Convert computed fields from `__key` to a property with `"format": "computed"`.
+6. Move `_extensions` to `config.extensions`.
+7. Move `_copy_without_render` to `config.no_render`.
+8. Move `__cookieplone_subtemplates` to `config.subtemplates`, converting each `[id, title, enabled]` tuple to an object `{"id": "...", "title": "...", "enabled": "..."}`.
+9. Move `__cookieplone_template` to the top-level `id` key.
+10. Add version pins to `config.versions` as needed (accessible in templates as `{{ version.<key> }}`).
 
 ## Related pages
 

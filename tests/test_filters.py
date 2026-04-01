@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pytest
 from cookiecutter.generate import generate_context
-from cookiecutter.utils import create_env_with_context
+
+from cookieplone.utils.cookiecutter import create_jinja_env
 
 
 @pytest.fixture
@@ -101,6 +102,5 @@ def generate_context_file(tmp_path):
 def test_filters(generate_context_file, filter_: str, raw: str, expected: str):
     path = generate_context_file(filter_)
     context = generate_context(path)
-    env = create_env_with_context(context)
-    result = env.from_string(raw)
-    assert result.render() == expected
+    env = create_jinja_env(context)
+    assert env.from_string(raw).render() == expected

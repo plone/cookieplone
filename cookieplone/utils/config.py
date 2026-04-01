@@ -65,10 +65,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import jsonschema
-from jsonschema.exceptions import ValidationError
-from tui_forms.parser import _FORM_SCHEMA
-
 from cookieplone.utils import files
 
 
@@ -103,51 +99,100 @@ def _get_validator(validators: dict[str, str], key: str) -> str:
     return validator_name if validator_name is not None else ""
 
 
+def _convert_subtemplates(
+    raw_subtemplates: list[Any],
+) -> list[dict[str, str]]:
+    """Convert v1 subtemplate tuples ``[id, title, enabled]`` to dicts."""
+    subtemplates: list[dict[str, str]] = []
+    for entry in raw_subtemplates:
+        if isinstance(entry, (list, tuple)) and len(entry) >= 3:
+            subtemplates.append({
+                "id": entry[0],
+                "title": entry[1],
+                "enabled": entry[2],
+            })
+    return subtemplates
+
+
+def _convert_property(
+    key: str,
+    raw_value: Any,
+    prompts: dict[str, Any],
+    validators: dict[str, str],
+) -> dict[str, Any]:
+    """Convert a single v1 property to a v2 property definition."""
+    prompt_info = _get_prompt_info(prompts, key, raw_value)
+    validator = _get_validator(validators, key)
+    prop: dict[str, Any] = {
+        "type": "string",
+        "title": prompt_info.title,
+        "default": raw_value,
+        "validator": validator,
+    }
+    if key.startswith("__"):
+        prop["format"] = "computed"
+    elif key.startswith("_"):
+        prop["format"] = "constant"
+    elif isinstance(raw_value, list):
+        prop["default"] = raw_value[0] if raw_value else raw_value
+        prop["oneOf"] = [
+            {"const": value, "title": label} for value, label in prompt_info.options
+        ]
+    elif isinstance(raw_value, bool):
+        prop["type"] = "boolean"
+    elif isinstance(raw_value, int):
+        prop["type"] = "integer"
+    elif isinstance(raw_value, str):
+        prop["type"] = "string"
+    else:
+        raise ValueError(f"Unsupported type for key '{key}': {type(raw_value)}")
+    return prop
+
+
 def convert_v1_to_v2(src: dict[str, Any]) -> dict[str, Any]:
-    """Convert a version 1 config dict to a version 2 config dict."""
+    """Convert a version 1 config dict to a version 2 config dict.
+
+    Extracts generator configuration keys (``_extensions``,
+    ``_copy_without_render``, ``__cookieplone_subtemplates``,
+    ``__cookieplone_template``) from the flat v1 properties into a
+    separate ``config`` section and wraps the remaining fields under
+    ``schema``.
+    """
     data: dict[str, Any] = src.get("cookiecutter", src.copy())
     data = dict(data)
     prompts = data.pop("__prompts__", {})
     validators = data.pop("__validators__", {})
+
+    # Extract config keys before iterating properties
+    extensions = data.pop("_extensions", [])
+    no_render = data.pop("_copy_without_render", [])
+    template_id = data.pop("__cookieplone_template", "")
+    subtemplates = _convert_subtemplates(data.pop("__cookieplone_subtemplates", []))
+
     properties: OrderedDict[str, Any] = OrderedDict()
     for key, raw_value in data.items():
-        prompt_info = _get_prompt_info(prompts, key, raw_value)
-        validator = _get_validator(validators, key)
-        prop: dict[str, Any] = {
-            "type": "string",
-            "title": prompt_info.title,
-            "default": raw_value,
-            "validator": validator,
-        }
-        if key.startswith("__"):
-            prop["format"] = "computed"
-        elif key.startswith("_"):
-            prop["format"] = "constant"
-        elif isinstance(raw_value, list):
-            # Old style choice, convert to JSONSchema oneOf with const/title
-            prop["default"] = raw_value[0] if raw_value else raw_value
-            prop["oneOf"] = [
-                {"const": value, "title": label} for value, label in prompt_info.options
-            ]
-        elif isinstance(raw_value, bool):
-            prop["type"] = "boolean"
-        elif isinstance(raw_value, int):
-            prop["type"] = "integer"
-        elif isinstance(raw_value, str):
-            prop["type"] = "string"
-        # Sub-dict values (nested dicts) are not yet supported in the
-        # cookieplone schema; they would need a recursive conversion or a
-        # dedicated "object" type.  For now they fall through to the
-        # ValueError below.
-        else:
-            raise ValueError(f"Unsupported type for key '{key}': {type(raw_value)}")
-        properties[key] = prop
-    return {
+        properties[key] = _convert_property(key, raw_value, prompts, validators)
+
+    config: dict[str, Any] = {}
+    if extensions:
+        config["extensions"] = extensions
+    if no_render:
+        config["no_render"] = no_render
+    if subtemplates:
+        config["subtemplates"] = subtemplates
+
+    result: dict[str, Any] = {}
+    if template_id:
+        result["id"] = template_id
+    result["schema"] = {
         "title": "Cookieplone",
         "description": "",
         "version": "2.0",
         "properties": properties,
     }
+    if config:
+        result["config"] = config
+    return result
 
 
 def cookiecutter_to_cookieplone(src: Path, dst: Path) -> Path:
@@ -158,10 +203,7 @@ def cookiecutter_to_cookieplone(src: Path, dst: Path) -> Path:
 
 
 def validate_config(config: dict[str, Any]) -> bool:
-    """Validate the config is a valid JSONSchema."""
-    try:
-        jsonschema.validate(config, _FORM_SCHEMA)
-        status = True
-    except ValidationError:
-        status = False
-    return status
+    """Validate the config against the cookieplone v2 JSONSchema."""
+    from cookieplone.config.schemas import validate_cookieplone_config
+
+    return validate_cookieplone_config(config)

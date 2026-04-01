@@ -1,48 +1,70 @@
-"""Format used by cookieplone.json files in cookieplone templates.
+"""Parser for the cookieplone.json v2 configuration format.
 
-```json
-{
-    "title": "Form title",
-    "description": "Form description",
-    "version": "2.0",
-    "properties": {
-        "field_name": {
-            "type": "string",
-            "title": "Question to ask the user",
-            "description": "Description of the question",
-            "validator": "path.to.validator_function",
-            "default": "default value"
+The v2 format separates form schema from generator configuration::
+
+    {
+        "id": "project",
+        "schema": {
+            "title": "Cookieplone Project",
+            "description": "",
+            "version": "2.0",
+            "properties": { ... }
         },
-        "number": {
-            "type": "integer",
-            "title": "Enter a number",
-            "validator": "path.to.number_validator_function",
-            "default": 0
-        },
-        "other_field_name": {
-            "type": "string",
-            "oneOf": [
-                {"const": "option1", "title": "Option 1 description"},
-                {"const": "option2", "title": "Option 2 description"}
-            ],
-            "title": "Choose an option",
-            "validator": "path.to.another_validator_function",
-            "default": "option1"
-        },
-        "a_computed_field": {
-            "type": "string",
-            "format": "computed",
-            "title": "Choose an option",
-            "default": "{{ cookiecutter.field_name }}_computed"
+        "config": {
+            "extensions": [...],
+            "no_render": [...],
+            "versions": { ... },
+            "subtemplates": [
+                {"id": "...", "title": "...", "enabled": "..."}
+            ]
         }
     }
-}
-```
 """
 
+from dataclasses import dataclass, field
 from typing import Any
 
+from cookieplone.config.schemas import SubTemplate
 
-def parse_v2(context: dict[str, Any]) -> dict[str, Any]:
-    """Return the configuration."""
-    return context
+
+@dataclass
+class ParsedConfig:
+    """Result of parsing a v2 configuration file.
+
+    :param schema: The form schema dict (``title``, ``description``,
+        ``version``, ``properties``).
+    :param extensions: Jinja2 extension class paths.
+    :param no_render: Glob patterns for files copied without rendering.
+    :param versions: Version pinning mapping (e.g. ``{"gha_checkout": "v6"}``).
+    :param subtemplates: Sub-template definitions as
+        :class:`~cookieplone.config.schemas.SubTemplate` dicts with
+        ``id``, ``title``, and ``enabled`` keys.
+    :param template_id: The template identifier from the top-level ``id`` field.
+    """
+
+    schema: dict[str, Any] = field(default_factory=dict)
+    extensions: list[str] = field(default_factory=list)
+    no_render: list[str] = field(default_factory=list)
+    versions: dict[str, str] = field(default_factory=dict)
+    subtemplates: list[SubTemplate] = field(default_factory=list)
+    template_id: str = ""
+
+
+def parse_v2(context: dict[str, Any]) -> ParsedConfig:
+    """Parse a v2 configuration dict into schema and config components.
+
+    :param context: The raw v2 configuration dict.
+    :returns: A :class:`ParsedConfig` with the schema and config fields separated.
+    """
+    config = context.get("config", {})
+    schema = context.get("schema", context)
+    template_id = context.get("id", "")
+
+    return ParsedConfig(
+        schema=schema,
+        extensions=config.get("extensions", []),
+        no_render=config.get("no_render", []),
+        versions=config.get("versions", {}),
+        subtemplates=config.get("subtemplates", []),
+        template_id=template_id,
+    )

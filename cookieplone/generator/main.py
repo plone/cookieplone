@@ -6,18 +6,25 @@ from typing import Any
 
 from cookiecutter import exceptions as exc
 from cookiecutter.generate import generate_files
+from jinja2.exceptions import UndefinedError
 
 from cookieplone._types import RepositoryInfo, RunConfig
 from cookieplone.config import CookieploneState
 from cookieplone.exceptions import GeneratorException, OutputDirExistsException
 from cookieplone.utils import files as f
 from cookieplone.utils.answers import remove_internal_keys
-from cookieplone.utils.cookiecutter import import_patch, parse_output_dir_exception
+from cookieplone.utils.cookiecutter import (
+    import_patch,
+    parse_output_dir_exception,
+    parse_undefined_error,
+)
+from cookieplone.utils.subtemplates import process_subtemplates
 from cookieplone.wizard import wizard
 
 
 def _annotate_data(
     data: dict[str, Any],
+    state: CookieploneState,
     run_config: RunConfig,
     repository_info: RepositoryInfo,
 ) -> None:
@@ -25,10 +32,15 @@ def _annotate_data(
 
     These ``_`` and ``__`` prefixed keys are read by cookiecutter's hook
     runner and file renderer to locate the template, resolve paths, and
-    record provenance.  They are written directly into *data* in-place.
+    record provenance.  Config keys from the parsed schema (extensions,
+    no-render patterns, subtemplates, versions) are also injected so that
+    cookiecutter and post-generation hooks can consume them.
+
+    All keys are written directly into *data* in-place.
 
     :param data: The mutable context dict for the current template key
         (e.g. ``state.data["cookiecutter"]``).
+    :param state: Current run state containing parsed config fields.
     :param run_config: Runtime options providing the output directory.
     :param repository_info: Resolved repository paths and metadata.
     """
@@ -44,6 +56,13 @@ def _annotate_data(
 
     # include checkout details in the context dict
     data["_checkout"] = repository_info.checkout
+
+    # Inject config keys from the parsed schema so cookiecutter,
+    # its Jinja environment, and post-generation hooks can read them.
+    data["_extensions"] = state.extensions or []
+    data["_copy_without_render"] = state.no_render or []
+    data["__cookieplone_template"] = state.template_id
+    data["__cookieplone_subtemplates"] = process_subtemplates(state, data)
 
 
 def _cookieplone(
@@ -73,7 +92,8 @@ def _cookieplone(
         )
         internal_data.update(wizard_answers.answers)
 
-    _annotate_data(internal_data, run_config, repository_info)
+    _annotate_data(internal_data, state, run_config, repository_info)
+
     # Create project from local context and project template.
     with import_patch(repository_info.repo_dir):
         result = generate_files(
@@ -107,6 +127,9 @@ def cookieplone(
     :returns: Path to the generated project directory.
     :raises GeneratorException: For any cookiecutter-level failure, wrapping
         the original exception and preserving the run state.
+    :raises OutputDirExistsException: When the target output directory
+        already exists (either raised directly or unwrapped from a
+        :exc:`~cookiecutter.exceptions.UndefinedVariableInTemplate`).
     """
 
     try:
@@ -130,7 +153,8 @@ def cookieplone(
             message=msg, state=state, original=exc_info
         ) from exc_info
     except exc.UndefinedVariableInTemplate as exc_info:
-        msg = f"Undefined variable in template: {exc_info.message}"
+        src_message = exc_info.message
+        msg = f"Undefined variable in template: {src_message}"
         # Sometimes the exception is wrapped in a cookiecutter exception with
         # the original error as an attribute, so we check for that to preserve
         # the original error message and type.
@@ -140,6 +164,8 @@ def cookieplone(
             raise OutputDirExistsException(
                 message=msg, state=state, original=exc_info
             ) from exc_info
+        elif isinstance(exc_info, UndefinedError):
+            msg = parse_undefined_error(exc_info, src_message)
         raise GeneratorException(
             message=msg, state=state, original=exc_info
         ) from exc_info

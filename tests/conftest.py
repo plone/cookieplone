@@ -128,6 +128,8 @@ def dummy_package(tmpdir_factory, resources_folder) -> Generator[Path]:
 
     src = (resources_folder / "dummy_package").resolve()
     for item in src.rglob("*"):
+        if any(part.startswith(".") for part in item.relative_to(src).parts):
+            continue
         if item.is_file():
             parent = item.parent.relative_to(src)
             name = item.name

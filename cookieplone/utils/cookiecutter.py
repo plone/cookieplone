@@ -1,11 +1,19 @@
+from __future__ import annotations
+
 import os
 import sys
 from contextlib import contextmanager, suppress
 from copy import copy
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from jinja2 import Environment
 
 from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.replay import dump, load
+from cookiecutter.utils import create_env_with_context
+from jinja2.exceptions import UndefinedError
 
 from cookieplone.config import Answers
 from cookieplone.settings import DEFAULT_DATA_KEY
@@ -63,6 +71,26 @@ def dump_replay(answers: Answers, replay_dir: Path, template_name: str) -> None:
     dump(replay_dir, template_name, context)
 
 
+def create_jinja_env(context: dict) -> Environment:
+    """Create a Jinja2 environment for the given context.
+
+    If *context* does not contain a :data:`~cookieplone.settings.DEFAULT_DATA_KEY`
+    key, it is wrapped automatically so that
+    :func:`cookiecutter.utils.create_env_with_context` receives the structure
+    it expects.  This allows callers to pass either a full cookiecutter context
+    or a plain data dict.
+
+    :param context: Template context dict — either a full cookiecutter context
+        (``{"cookiecutter": {...}}``) or a plain data dict.
+    :returns: A configured :class:`~jinja2.Environment`.
+    """
+    if DEFAULT_DATA_KEY not in context:
+        context = {DEFAULT_DATA_KEY: context}
+    env = create_env_with_context(context)
+    env.globals.update(context)
+    return env
+
+
 def parse_output_dir_exception(exc_info: OutputDirExistsException) -> str:
     """Parse the output directory from a cookiecutter OutputDirExistsException.
 
@@ -85,3 +113,24 @@ def parse_output_dir_exception(exc_info: OutputDirExistsException) -> str:
             if path.exists():
                 return f"'{path}'"
     return ""
+
+
+def parse_undefined_error(exc_info: UndefinedError, msg: str = "") -> str:
+    """Extract the undefined variable name from a Jinja2 :exc:`UndefinedError`.
+
+    Parses the exception message (e.g. ``"'dict object' has no attribute
+    '__cookieplone_template'"``) and appends the variable name to *msg* when
+    it can be identified.
+
+    :param exc_info: The Jinja2 :exc:`UndefinedError` instance.
+    :param msg: Base message to augment with the variable name.
+    :returns: *msg* with the variable name appended, or *msg* unchanged if
+        the variable name cannot be determined.
+    """
+    message = exc_info.args[0] if exc_info.args else str(exc_info)
+    # "'dict object' has no attribute '__cookieplone_template'"
+    parts = message.split(" ")
+    key = parts[-1].strip("'")  # Get the last part and remove quotes
+    if key.isidentifier():
+        return f"{msg}: Variable '{key}' is undefined"
+    return msg
