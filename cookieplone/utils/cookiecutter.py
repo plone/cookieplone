@@ -24,8 +24,10 @@ def import_patch(repo_dir: Path | str):
     """
     current_path = copy(sys.path)
     sys.path.append(str(repo_dir))
-    yield
-    sys.path = current_path
+    try:
+        yield
+    finally:
+        sys.path = current_path
 
 
 def load_replay(

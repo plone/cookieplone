@@ -17,7 +17,8 @@ from cookieplone.exceptions import (
 from cookieplone.generator.main import cookieplone
 from cookieplone.repository import get_repository
 from cookieplone.settings import COOKIEPLONE_ANSWERS_FILE
-from cookieplone.utils import answers, console, cookiecutter, files
+from cookieplone.utils import answers, cookiecutter, files
+from cookieplone.utils.console import quiet_mode
 from cookieplone.utils.cookiecutter import load_replay
 
 
@@ -160,8 +161,6 @@ def generate_subtemplate(
     extra_context = answers.remove_internal_keys(context)
     ## Add folder name again
     extra_context["__folder_name"] = folder_name
-    # Enable quiet mode
-    console.enable_quiet_mode()
     # Files to be removed
     if remove_files is None:
         remove_files = []
@@ -176,15 +175,9 @@ def generate_subtemplate(
         template_path=template_path,
         dump_answers=False,
     )
-    try:
+    with quiet_mode():
         result = generate(config)
-    except GeneratorException as exc:
-        console.disable_quiet_mode()
-        raise exc
-    else:
-        console.disable_quiet_mode()
-        path = Path(result)
-        if remove_files:
-            files.remove_files(path, remove_files)
-        # Return path
-        return path
+    path = Path(result)
+    if remove_files:
+        files.remove_files(path, remove_files)
+    return path

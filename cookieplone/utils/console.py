@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 import os
+from contextlib import contextmanager
 from pathlib import Path
 from textwrap import dedent
 
@@ -218,3 +219,16 @@ def enable_quiet_mode():
 def disable_quiet_mode():
     """Disable quiet mode."""
     os.environ.pop(QUIET_MODE_VAR, "")
+
+
+@contextmanager
+def quiet_mode():
+    """Context manager that enables quiet mode for the duration of the block.
+
+    Quiet mode is always disabled on exit, even if an exception is raised.
+    """
+    enable_quiet_mode()
+    try:
+        yield
+    finally:
+        disable_quiet_mode()

@@ -95,11 +95,22 @@ def mock_generate(monkeypatch):
 
 
 @pytest.fixture()
-def mock_console(monkeypatch):
-    """Patch cookieplone.generator.console."""
-    mock = MagicMock()
-    monkeypatch.setattr("cookieplone.generator.console", mock)
-    return mock
+def mock_quiet_mode(monkeypatch):
+    """Patch cookieplone.generator.quiet_mode with a no-op context manager."""
+    from contextlib import contextmanager
+
+    calls = {"enter": 0, "exit": 0}
+
+    @contextmanager
+    def _fake_quiet_mode():
+        calls["enter"] += 1
+        try:
+            yield
+        finally:
+            calls["exit"] += 1
+
+    monkeypatch.setattr("cookieplone.generator.quiet_mode", _fake_quiet_mode)
+    return calls
 
 
 @pytest.fixture()

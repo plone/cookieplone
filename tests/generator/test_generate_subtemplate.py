@@ -9,14 +9,14 @@ from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate_subtemplate
 
 
-def test_enables_quiet_mode(
+def test_uses_quiet_mode(
     mock_remove_internal_keys,
     mock_get_repository_root,
-    mock_console,
+    mock_quiet_mode,
     mock_generate,
     tmp_path,
 ):
-    """generate_subtemplate enables quiet mode."""
+    """generate_subtemplate runs inside a quiet_mode context manager."""
     mock_remove_internal_keys.return_value = {"title": "Test"}
     mock_get_repository_root.return_value = str(tmp_path / "repo")
     mock_generate.return_value = tmp_path / "output"
@@ -28,39 +28,18 @@ def test_enables_quiet_mode(
         folder_name="my_folder",
         context=context,
     )
-    mock_console.enable_quiet_mode.assert_called_once()
+    assert mock_quiet_mode["enter"] == 1
+    assert mock_quiet_mode["exit"] == 1
 
 
-def test_disables_quiet_mode_on_success(
+def test_quiet_mode_exits_on_failure(
     mock_remove_internal_keys,
     mock_get_repository_root,
-    mock_console,
+    mock_quiet_mode,
     mock_generate,
     tmp_path,
 ):
-    """generate_subtemplate disables quiet mode after success."""
-    mock_remove_internal_keys.return_value = {"title": "Test"}
-    mock_get_repository_root.return_value = str(tmp_path / "repo")
-    mock_generate.return_value = tmp_path / "output"
-    context = OrderedDict({"title": "Test", "_template": "/some/path"})
-
-    generate_subtemplate(
-        template_path="sub",
-        output_dir=tmp_path,
-        folder_name="my_folder",
-        context=context,
-    )
-    mock_console.disable_quiet_mode.assert_called_once()
-
-
-def test_disables_quiet_mode_on_failure(
-    mock_remove_internal_keys,
-    mock_get_repository_root,
-    mock_console,
-    mock_generate,
-    tmp_path,
-):
-    """generate_subtemplate disables quiet mode even on failure."""
+    """generate_subtemplate exits quiet mode even on failure."""
     mock_remove_internal_keys.return_value = {"title": "Test"}
     mock_get_repository_root.return_value = str(tmp_path / "repo")
     state = CookieploneState(
@@ -78,13 +57,14 @@ def test_disables_quiet_mode_on_failure(
             folder_name="my_folder",
             context=context,
         )
-    mock_console.disable_quiet_mode.assert_called_once()
+    assert mock_quiet_mode["enter"] == 1
+    assert mock_quiet_mode["exit"] == 1
 
 
 def test_calls_generate_with_no_input(
     mock_remove_internal_keys,
     mock_get_repository_root,
-    mock_console,
+    mock_quiet_mode,
     mock_generate,
     tmp_path,
 ):
@@ -107,7 +87,7 @@ def test_calls_generate_with_no_input(
 def test_sets_folder_name_in_extra_context(
     mock_remove_internal_keys,
     mock_get_repository_root,
-    mock_console,
+    mock_quiet_mode,
     mock_generate,
     tmp_path,
 ):
@@ -130,7 +110,7 @@ def test_sets_folder_name_in_extra_context(
 def test_removes_files_when_specified(
     mock_remove_internal_keys,
     mock_get_repository_root,
-    mock_console,
+    mock_quiet_mode,
     mock_generate,
     mock_remove_files,
     tmp_path,
@@ -156,7 +136,7 @@ def test_removes_files_when_specified(
 def test_returns_path(
     mock_remove_internal_keys,
     mock_get_repository_root,
-    mock_console,
+    mock_quiet_mode,
     mock_generate,
     tmp_path,
 ):
