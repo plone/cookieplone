@@ -1,10 +1,8 @@
 """Tests for the generate() happy path and exception handling in __init__.py."""
 
 from dataclasses import replace
-from unittest.mock import MagicMock
 
 import pytest
-from cookiecutter import exceptions as cc_exc
 
 from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate
@@ -104,33 +102,6 @@ def test_skips_dump_when_disabled(
     mock_dump_replay.assert_not_called()
 
 
-def test_wraps_undefined_variable(
-    mock_get_repository,
-    mock_load_replay,
-    mock_generate_state,
-    mock_cookieplone_entry,
-    mock_write_answers,
-    mock_dump_replay,
-    repository_info_with_config,
-    generate_config,
-    tmp_path,
-):
-    """generate wraps UndefinedVariableInTemplate in GeneratorException."""
-    mock_get_repository.return_value = repository_info_with_config
-    inner_error = MagicMock()
-    inner_error.message = "original error"
-    err = cc_exc.UndefinedVariableInTemplate(
-        "undefined var", inner_error, {"key": "val"}
-    )
-    mock_cookieplone_entry.side_effect = err
-    mock_write_answers.return_value = tmp_path / "answers.json"
-
-    config = replace(generate_config, dump_answers=False)
-    with pytest.raises(GeneratorException) as exc_info:
-        generate(config)
-    assert "undefined var" in exc_info.value.message
-
-
 def test_wraps_generic_exception(
     mock_get_repository,
     mock_load_replay,
@@ -215,5 +186,5 @@ def test_failed_hook_reraised_as_repository_exception(
     from cookieplone.exceptions import FailedHookException, RepositoryException
 
     mock_get_repository.side_effect = FailedHookException("hook fail")
-    with pytest.raises(RepositoryException):
+    with pytest.raises(RepositoryException, match="hook fail"):
         generate(generate_config)

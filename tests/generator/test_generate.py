@@ -29,10 +29,10 @@ def test_replay_with_extra_context_raises(generate_config):
 
 
 def test_repository_exception_reraised(mock_get_repository, generate_config):
-    """RepositoryException from get_repository is re-raised."""
+    """RepositoryException from get_repository preserves the original message."""
     mock_get_repository.side_effect = RepositoryException("not found")
     config = replace(generate_config, no_input=False)
-    with pytest.raises(RepositoryException):
+    with pytest.raises(RepositoryException, match="not found"):
         generate(config)
 
 
