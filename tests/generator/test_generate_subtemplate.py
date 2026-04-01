@@ -100,9 +100,8 @@ def test_calls_generate_with_no_input(
         folder_name="my_folder",
         context=context,
     )
-    call_kwargs = mock_generate.call_args
-    # no_input is the 3rd positional arg (index 2)
-    assert call_kwargs[0][2] is True
+    config = mock_generate.call_args[0][0]
+    assert config.no_input is True
 
 
 def test_sets_folder_name_in_extra_context(
@@ -124,9 +123,8 @@ def test_sets_folder_name_in_extra_context(
         folder_name="my_folder",
         context=context,
     )
-    call_args = mock_generate.call_args[0]
-    # extra_context is the 4th positional arg (index 3)
-    assert call_args[3]["__folder_name"] == "my_folder"
+    config = mock_generate.call_args[0][0]
+    assert config.extra_context["__folder_name"] == "my_folder"
 
 
 def test_removes_files_when_specified(
