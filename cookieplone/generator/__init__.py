@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-import json
 from collections import OrderedDict
 from pathlib import Path
 
@@ -13,7 +12,6 @@ from cookieplone.config import Answers, CookieploneState, generate_state
 from cookieplone.exceptions import (
     FailedHookException,
     GeneratorException,
-    PreFlightException,
     RepositoryException,
 )
 from cookieplone.generator.main import cookieplone
@@ -65,6 +63,10 @@ def generate(config: GenerateConfig) -> Path:
         )
         raise exc.InvalidModeException(err_msg)
 
+    # Resolve the template repository.
+    # RepositoryException and FailedHookException are normalised into a
+    # single RepositoryException so callers only need one handler.
+    # PreFlightException (from pre-prompt hooks) propagates unchanged.
     try:
         repository_info = get_repository(
             config.repository,
@@ -78,10 +80,7 @@ def generate(config: GenerateConfig) -> Path:
             config.default_config,
         )
     except (RepositoryException, FailedHookException) as e:
-        raise RepositoryException() from e
-    except PreFlightException as e:
-        # Validation check
-        raise e
+        raise RepositoryException(str(e)) from e
 
     repo_dir = repository_info.repo_dir
 
@@ -102,6 +101,10 @@ def generate(config: GenerateConfig) -> Path:
 
     run_config = config.to_run_config()
     dump_location = None
+    # Run the template wizard and render files.
+    # cookieplone() (in main.py) already converts cookiecutter-level
+    # exceptions into GeneratorException, so we only re-raise those.
+    # The ``except Exception`` is a safety net for anything unexpected.
     try:
         result = cookieplone(
             state=state,
@@ -111,13 +114,6 @@ def generate(config: GenerateConfig) -> Path:
         dump_location = result
     except GeneratorException:
         raise
-    except exc.UndefinedVariableInTemplate as undefined_err:
-        context_str = json.dumps(undefined_err.context, indent=2, sort_keys=True)
-        msg = f"""{undefined_err.message}
-        Error message: {undefined_err.error.message}
-        Context: {context_str}
-        """
-        raise GeneratorException(message=msg, state=state, original=undefined_err)  # noQA:B904
     except Exception as e:
         raise GeneratorException(message=str(e), state=state, original=e)  # noQA:B904
     else:
