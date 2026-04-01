@@ -1,60 +1,52 @@
 import subprocess
 from pathlib import Path
 
-from black import main as black_main
-from click.testing import CliRunner
-from isort.main import main as isort_main
-from zpretty.xml import XMLPrettifier
-from zpretty.zcml import ZCMLPrettifier
-
 from cookieplone.logger import logger
 
-ZPRETTY_MAPPING = {
-    "xml": XMLPrettifier,
-    "zcml": ZCMLPrettifier,
-}
+
+def _uvx(tool: str, args: list[str], base_path: Path) -> None:
+    """Run a formatting tool via ``uvx``.
+
+    :param tool: The PyPI package / tool name (e.g. ``"ruff"``).
+    :param args: Extra CLI arguments passed after the tool name.
+    :param base_path: Working directory for the subprocess.
+    """
+    cmd = ["uvx", tool, *args]
+    logger.debug(f"Formatter {tool}: {' '.join(cmd)}")
+    subprocess.run(cmd, capture_output=True, check=True, cwd=base_path)  # noqa: S603
 
 
 def run_zpretty(base_path: Path):
-    """Run zpretty on the given path."""
-    files = (base_path / "src").glob("**/*")
-    for filepath in files:
-        ext = filepath.name.split(".")[-1]
-        klass = ZPRETTY_MAPPING.get(ext)
-        if not klass:
-            continue
-        prettifier = klass(filepath, encoding="utf-8")
-        result = prettifier()
-        filepath.write_text(result)
-        logger.debug(f"Formatter zpretty: {filepath}")
+    """Run zpretty on XML and ZCML files under ``src/``."""
+    src = base_path / "src"
+    if not src.exists():
+        return
+    extensions = ("xml", "zcml")
+    files = [
+        str(f.relative_to(base_path))
+        for f in src.glob("**/*")
+        if f.suffix.lstrip(".") in extensions
+    ]
+    if not files:
+        return
+    _uvx("zpretty", ["-i", *files], base_path)
 
 
 def run_isort(base_path: Path):
     """Run isort on the given path."""
     pyproject = base_path / "pyproject.toml"
-    isort_main([
-        "--quiet",
-        "--settings",
-        f"{pyproject}",
-        f"{base_path}",
-    ])
+    _uvx("isort", ["--quiet", "--settings", str(pyproject), str(base_path)], base_path)
 
 
 def run_black(base_path: Path):
     """Run black on the given path."""
     pyproject = base_path / "pyproject.toml"
-    args = ["--config", f"{pyproject}", f"{base_path}"]
-    _ = CliRunner().invoke(black_main, args)
+    _uvx("black", ["--quiet", "--config", str(pyproject), str(base_path)], base_path)
 
 
 def run_ruff(base_path: Path):
-    """Run ruff on the given path."""
+    """Run ruff check (import sorting) and ruff format on the given path."""
     pyproject = base_path / "pyproject.toml"
-    # Format codebase
-    cmds = [
-        ["ruff", "check", "--select", "I", "--fix", "--config", f"{pyproject}"],
-        ["ruff", "format", "--config", f"{pyproject}"],
-    ]
-
-    for cmd in cmds:
-        subprocess.run(cmd, capture_output=True, check=True)  # noqa: S603
+    args = ["check", "--select", "I", "--fix", "--config", str(pyproject)]
+    _uvx("ruff", args, base_path)
+    _uvx("ruff", ["format", "--config", str(pyproject)], base_path)

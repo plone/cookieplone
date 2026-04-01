@@ -32,10 +32,6 @@ dependencies = [
   "packaging==26.0",
   "gitpython==3.1.46",
   "xmltodict==1.0.4",
-  "black==26.3.1",
-  "ruff",
-  "isort",
-  "zpretty",
   "tui-forms>=1.0.0a2",
 ]
 
