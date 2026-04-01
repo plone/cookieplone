@@ -135,9 +135,10 @@ def convert_v1_to_v2(src: dict[str, Any]) -> dict[str, Any]:
             prop["type"] = "integer"
         elif isinstance(raw_value, str):
             prop["type"] = "string"
-        # TODO: Handle sub-dicts
-        # elif isinstance(raw_value, dict):
-        #     prop["type"] = "string"
+        # Sub-dict values (nested dicts) are not yet supported in the
+        # cookieplone schema; they would need a recursive conversion or a
+        # dedicated "object" type.  For now they fall through to the
+        # ValueError below.
         else:
             raise ValueError(f"Unsupported type for key '{key}': {type(raw_value)}")
         properties[key] = prop

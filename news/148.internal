@@ -1,0 +1,1 @@
+Code health: moved ``parse_boolean`` to ``utils.parsers``, fixed ``import_patch`` exception safety, added ``quiet_mode()`` context manager, and resolved stale TODO comments. @ericof

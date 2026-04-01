@@ -5,8 +5,8 @@ import os
 
 from cookiecutter.utils import simple_filter
 
-from cookieplone.cli import parse_boolean
 from cookieplone.utils import containers, npm, versions
+from cookieplone.utils.parsers import parse_boolean
 
 
 @simple_filter

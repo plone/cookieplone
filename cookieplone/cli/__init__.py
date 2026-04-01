@@ -100,10 +100,6 @@ def annotate_context(context: dict, repo_path: Path, template: str) -> dict:
     return context
 
 
-def parse_boolean(value: str) -> bool:
-    return value.lower() in ("1", "yes", "y")
-
-
 def prompt_for_template(base_path: Path, all_: bool = False) -> t.CookieploneTemplate:
     """Parse cookiecutter.json in base_path and prompt user to choose."""
     templates = get_template_options(base_path, all_)
@@ -281,14 +277,12 @@ def cli(
         generate(gen_config)
     except GeneratorException as exc:
         console.error(exc.message)
-        # TODO: Handle error
         raise typer.Exit(1)  # noQA:B904
     except PreFlightException as exc:
         console.error(exc.message)
         raise typer.Exit(1)  # noQA:B904
     except Exception as exc:
         console.error(str(exc))
-        # TODO: Handle error
         raise typer.Exit(1)  # noQA:B904
 
 
