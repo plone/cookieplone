@@ -30,7 +30,7 @@ This keeps each sub-template focused, testable, and reusable independently.
 
 There are two levels where sub-templates appear in a Cookieplone repository.
 
-### Repository-level: the `templates` key
+### Repository-level `templates` key
 
 The root `cookiecutter.json` lists all templates the repository provides under the `templates` key:
 

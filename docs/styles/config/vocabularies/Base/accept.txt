@@ -1,4 +1,5 @@
 Cookiecutter
 Cookieplone
+[Ss]ub-?templates?
 traceback
 pre_prompt
