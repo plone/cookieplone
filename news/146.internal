@@ -1,0 +1,1 @@
+Refactored `generate()` API: consolidated 15 positional parameters into a `GenerateConfig` dataclass. @ericof

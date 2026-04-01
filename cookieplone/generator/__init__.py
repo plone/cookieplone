@@ -5,11 +5,10 @@
 import json
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any
 
 from cookiecutter import exceptions as exc
 
-from cookieplone._types import RunConfig
+from cookieplone._types import GenerateConfig
 from cookieplone.config import Answers, CookieploneState, generate_state
 from cookieplone.exceptions import (
     FailedHookException,
@@ -42,63 +41,24 @@ def _dump_answers(answers_: Answers, template_name: str, no_input: bool = False)
     return answers.write_answers(answers_, template_name, no_input)
 
 
-def generate(
-    repository: str | Path,
-    tag: str,
-    no_input: bool,
-    extra_context: dict[str, Any],
-    replay: Path | bool,
-    overwrite_if_exists: bool,
-    output_dir: Path,
-    config_file: Path | None,
-    default_config,
-    passwd,
-    template_path,
-    skip_if_file_exists,
-    keep_project_on_failure,
-    template_name: str,
-    dump_answers: bool = True,
-) -> Path:
+def generate(config: GenerateConfig) -> Path:
     """Generate a project from a cookieplone template.
 
     Resolves the repository, builds the run state (including any replay or
     extra context), drives the tui-forms wizard, and renders the template
     files via cookiecutter.
 
-    :param repository: URL or local path to the cookieplone/cookiecutter
-        template repository.
-    :param tag: Git tag or branch to check out.  Pass an empty string to use
-        whatever is already checked out locally.
-    :param no_input: Skip all prompts and use default/extra context values.
-    :param extra_context: Key/value overrides applied on top of template
-        defaults.
-    :param replay: If ``True`` replay the last run; if a :class:`~pathlib.Path`
-        replay from that specific file; if ``False`` run interactively.
-    :param overwrite_if_exists: Overwrite the output directory if it already
-        exists.
-    :param output_dir: Directory in which the generated project is created.
-    :param config_file: Path to a user-level cookiecutter config file, or
-        ``None`` to use the default.
-    :param default_config: If ``True`` use the built-in default config instead
-        of reading ``~/.cookiecutterrc``.
-    :param passwd: Password for password-protected zip repositories.
-    :param template_path: Sub-directory within the repository that contains the
-        template.
-    :param skip_if_file_exists: Skip files that already exist in the output
-        directory instead of overwriting them.
-    :param keep_project_on_failure: Do not delete the partially generated
-        project if an error occurs.
-    :param template_name: Logical name of the template, used for replay file
-        naming.
-    :param dump_answers: Persist user answers to a local file after generation.
-        Set to ``False`` for sub-template calls.
+    :param config: A :class:`~cookieplone._types.GenerateConfig` holding all
+        generation options.
     :returns: Path to the generated project directory.
     :raises exc.InvalidModeException: When incompatible options are combined
         (e.g. *replay* with *no_input* or *extra_context*).
     :raises RepositoryException: When the repository cannot be resolved.
     :raises GeneratorException: For any failure during template rendering.
     """
-    if replay and ((no_input is not False) or (extra_context is not None)):
+    if config.replay and (
+        (config.no_input is not False) or (config.extra_context is not None)
+    ):
         err_msg = (
             "You can not use both replay and no_input or extra_context "
             "at the same time."
@@ -107,15 +67,15 @@ def generate(
 
     try:
         repository_info = get_repository(
-            repository,
-            template_name,
-            template_path,
-            tag,
-            no_input,
+            config.repository,
+            config.template_name,
+            config.template_path,
+            config.tag,
+            config.no_input,
             True,
-            passwd,
-            config_file,
-            default_config,
+            config.passwd,
+            config.config_file,
+            config.default_config,
         )
     except (RepositoryException, FailedHookException) as e:
         raise RepositoryException() from e
@@ -128,24 +88,19 @@ def generate(
     # Load replay
     replay_dir = repository_info.replay_dir
 
-    context_from_replayfile = load_replay(repo_dir, replay_dir, replay, template_name)
+    context_from_replayfile = load_replay(
+        repo_dir, replay_dir, config.replay, config.template_name
+    )
 
     # Define cookieplone state
     state: CookieploneState = generate_state(
         template_path=repo_dir,
         default_context=repository_info.config_dict["default_context"],
-        extra_context=extra_context,
-        replay_context=context_from_replayfile if replay else None,
+        extra_context=config.extra_context,
+        replay_context=context_from_replayfile if config.replay else None,
     )
 
-    run_config = RunConfig(
-        output_dir=output_dir,
-        no_input=no_input,
-        accept_hooks=True,
-        overwrite_if_exists=overwrite_if_exists,
-        skip_if_file_exists=skip_if_file_exists,
-        keep_project_on_failure=keep_project_on_failure,
-    )
+    run_config = config.to_run_config()
     dump_location = None
     try:
         result = cookieplone(
@@ -168,13 +123,13 @@ def generate(
     else:
         return Path(result)
     finally:
-        if dump_answers:
-            path = _dump_answers(state.answers, template_name, no_input)
+        if config.dump_answers:
+            path = _dump_answers(state.answers, config.template_name, config.no_input)
             if dump_location:
                 # Move file
                 path.rename(dump_location / COOKIEPLONE_ANSWERS_FILE)
             cookiecutter.dump_replay(
-                state.answers, repository_info.replay_dir, template_name
+                state.answers, repository_info.replay_dir, config.template_name
             )
 
 
@@ -215,24 +170,18 @@ def generate_subtemplate(
     if remove_files is None:
         remove_files = []
     # Call generate
+    config = GenerateConfig(
+        repository=repository,
+        template_name="",  # Not relevant for subtemplates
+        output_dir=output_dir,
+        no_input=True,
+        extra_context=extra_context,
+        overwrite_if_exists=True,
+        template_path=template_path,
+        dump_answers=False,
+    )
     try:
-        result = generate(
-            repository,
-            "",  # We should have the tag already locally
-            True,  # No input
-            extra_context,
-            False,  # Not running a replay
-            True,  # overwrite_if_exists
-            output_dir,
-            None,  # config_file
-            None,  # default_config,
-            None,  # password
-            template_path,
-            False,  # skip_if_file_exists,
-            False,  # keep_project_on_failure
-            "",  # template_name is not relevant for subtemplates
-            dump_answers=False,  # Do not dump answers for subtemplates
-        )
+        result = generate(config)
     except GeneratorException as exc:
         console.disable_quiet_mode()
         raise exc

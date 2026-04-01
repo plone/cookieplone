@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cookieplone._types import RepositoryInfo, RunConfig
+from cookieplone._types import GenerateConfig, RepositoryInfo, RunConfig
 from cookieplone.config.state import CookieploneState
 
 
@@ -48,6 +48,17 @@ def state():
         data={"cookiecutter": {"title": "Test"}},
         root_key="cookiecutter",
         extensions=[],
+    )
+
+
+@pytest.fixture()
+def generate_config(tmp_path):
+    """A minimal GenerateConfig with test defaults."""
+    return GenerateConfig(
+        repository="gh:plone/cookieplone-templates",
+        template_name="project",
+        output_dir=tmp_path,
+        no_input=True,
     )
 
 

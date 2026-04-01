@@ -13,6 +13,7 @@ from rich.prompt import Prompt
 
 from cookieplone import _types as t
 from cookieplone import data, settings
+from cookieplone._types import GenerateConfig
 from cookieplone.exceptions import GeneratorException, PreFlightException
 from cookieplone.generator import generate
 from cookieplone.logger import configure_logger, logger
@@ -260,23 +261,24 @@ def cli(
         )
 
     # Run generator
+    gen_config = GenerateConfig(
+        repository=repository,
+        template_name=cookieplone_template.name,
+        output_dir=output_dir,
+        tag=tag,
+        no_input=no_input,
+        extra_context=extra_context_,
+        replay=replay,
+        overwrite_if_exists=overwrite_if_exists,
+        config_file=config_file,
+        default_config=default_config,
+        passwd=passwd,
+        template_path=str(cookieplone_template.path),
+        skip_if_file_exists=skip_if_file_exists,
+        keep_project_on_failure=keep_project_on_failure,
+    )
     try:
-        generate(
-            repository,
-            tag,
-            no_input,
-            extra_context_,
-            replay,
-            overwrite_if_exists,
-            output_dir,
-            config_file,
-            default_config,
-            passwd,
-            str(cookieplone_template.path),
-            skip_if_file_exists,
-            keep_project_on_failure,
-            template_name=cookieplone_template.name,
-        )
+        generate(gen_config)
     except GeneratorException as exc:
         console.error(exc.message)
         # TODO: Handle error

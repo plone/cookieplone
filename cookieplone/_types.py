@@ -49,3 +49,40 @@ class RunConfig:
     overwrite_if_exists: bool
     skip_if_file_exists: bool
     keep_project_on_failure: bool
+
+
+@dataclass
+class GenerateConfig:
+    """Complete configuration for a single :func:`generate` invocation.
+
+    Consolidates all parameters previously passed as positional arguments
+    into a structured object with proper type annotations and sensible
+    defaults.
+    """
+
+    repository: str | Path
+    template_name: str
+    output_dir: Path
+    tag: str = ""
+    no_input: bool = False
+    extra_context: dict[str, Any] | None = None
+    replay: Path | bool = False
+    overwrite_if_exists: bool = False
+    config_file: Path | None = None
+    default_config: dict[str, Any] | bool = False
+    passwd: str | None = None
+    template_path: str | None = None
+    skip_if_file_exists: bool = False
+    keep_project_on_failure: bool = False
+    dump_answers: bool = True
+
+    def to_run_config(self) -> RunConfig:
+        """Build a :class:`RunConfig` from this generation configuration."""
+        return RunConfig(
+            output_dir=self.output_dir,
+            no_input=self.no_input,
+            accept_hooks=True,
+            overwrite_if_exists=self.overwrite_if_exists,
+            skip_if_file_exists=self.skip_if_file_exists,
+            keep_project_on_failure=self.keep_project_on_failure,
+        )
