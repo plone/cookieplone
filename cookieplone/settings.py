@@ -70,6 +70,7 @@ MIN_DOCKER_VERSION = "20.10"
 COOKIEPLONE_REPO = "https://github.com/plone/cookieplone"
 TEMPLATES_REPO = "https://github.com/plone/cookieplone-templates"
 REPO_DEFAULT = "gh:plone/cookieplone-templates"
+REPO_DEFAULT_TAG = "next"  # Default branch of cookieplone-templates
 
 # Config
 QUIET_MODE_VAR = "COOKIEPLONE_QUIET_MODE_SWITCH"

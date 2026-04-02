@@ -152,6 +152,66 @@ def get_template_options(
     return _parse_template_options(base_path, config, all_)
 
 
+def _parse_template_groups(
+    base_path: Path, config: dict[str, Any], all_: bool
+) -> dict[str, t.CookieploneTemplateGroup] | None:
+    """Parse the ``"groups"`` section of a repository config.
+
+    Returns an ordered dict mapping group IDs to
+    :class:`~cookieplone._types.CookieploneTemplateGroup` instances, or
+    ``None`` when no groups are defined in the config.
+
+    Hidden groups (and hidden templates within visible groups) are excluded
+    unless *all_* is ``True``.
+
+    :param base_path: Resolved root directory of the template repository.
+    :param config: Parsed repository config dict.
+    :param all_: When ``True`` include hidden groups and templates.
+    :returns: Ordered dict of groups, or ``None``.
+    """
+    groups_data = config.get("groups")
+    if not groups_data:
+        return None
+
+    all_templates = _parse_template_options(base_path, config, all_=True)
+
+    groups: dict[str, t.CookieploneTemplateGroup] = {}
+    for group_id, group_data in groups_data.items():
+        hidden = group_data.get("hidden", False)
+        if hidden and not all_:
+            continue
+        group_templates: dict[str, t.CookieploneTemplate] = {}
+        for tmpl_id in group_data.get("templates", []):
+            if tmpl_id in all_templates:
+                tmpl = all_templates[tmpl_id]
+                if tmpl.hidden and not all_:
+                    continue
+                group_templates[tmpl_id] = tmpl
+        if group_templates:
+            groups[group_id] = t.CookieploneTemplateGroup(
+                name=group_id,
+                title=group_data["title"],
+                description=group_data["description"],
+                templates=group_templates,
+                hidden=hidden,
+            )
+    return groups if groups else None
+
+
+def get_template_groups(
+    base_path: Path, all_: bool = False
+) -> dict[str, t.CookieploneTemplateGroup] | None:
+    """Return template groups from the repository config, or ``None``.
+
+    :param base_path: Root directory of the template repository.
+    :param all_: When ``True`` include hidden groups and templates.
+    :returns: Ordered dict of groups, or ``None`` when no groups are defined.
+    """
+    base_path = base_path.resolve()
+    config = get_repository_config(base_path)
+    return _parse_template_groups(base_path, config, all_)
+
+
 def _repository_has_config(repo_directory: Path):
     """Determine if `repo_directory` contains a `cookiecutter.json` file.
 

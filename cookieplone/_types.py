@@ -15,6 +15,17 @@ class CookieploneTemplate:
 
 
 @dataclass
+class CookieploneTemplateGroup:
+    """A named group of related templates in a cookieplone repository."""
+
+    name: str
+    title: str
+    description: str
+    templates: dict[str, "CookieploneTemplate"]
+    hidden: bool = False
+
+
+@dataclass
 class RepositoryInfo:
     """Resolved repository state for a cookieplone run.
 

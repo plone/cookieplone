@@ -206,6 +206,68 @@ class TestGetTemplateOptionsNew:
         assert len(results) == total_templates
 
 
+class TestGetTemplateGroupsNew:
+    """Tests for get_template_groups with cookieplone-config.json."""
+
+    @pytest.fixture(scope="class")
+    def project_source(self, resources_folder) -> Path:
+        return (resources_folder / "templates_repo_config").resolve()
+
+    def test_returns_dict(self, project_source):
+        result = repository.get_template_groups(project_source)
+        assert isinstance(result, dict)
+
+    def test_visible_groups_count(self, project_source):
+        result = repository.get_template_groups(project_source, all_=False)
+        assert len(result) == 3
+
+    def test_all_groups_count(self, project_source):
+        result = repository.get_template_groups(project_source, all_=True)
+        assert len(result) == 4
+
+    @pytest.mark.parametrize(
+        "group_id,title,num_templates",
+        [
+            ("projects", "Projects", 2),
+            ("addons", "Add-ons", 2),
+            ("distributions", "Distributions", 1),
+        ],
+    )
+    def test_visible_group_contents(
+        self, project_source, group_id, title, num_templates
+    ):
+        result = repository.get_template_groups(project_source, all_=False)
+        group = result[group_id]
+        assert group.title == title
+        assert len(group.templates) == num_templates
+
+    def test_hidden_group_excluded_by_default(self, project_source):
+        result = repository.get_template_groups(project_source, all_=False)
+        assert "sub" not in result
+
+    def test_hidden_group_included_with_all(self, project_source):
+        result = repository.get_template_groups(project_source, all_=True)
+        assert "sub" in result
+
+    def test_group_templates_are_cookieplone_templates(self, project_source):
+        result = repository.get_template_groups(project_source)
+        for group in result.values():
+            for tmpl in group.templates.values():
+                assert isinstance(tmpl, t.CookieploneTemplate)
+
+
+class TestGetTemplateGroupsLegacy:
+    """Tests for get_template_groups with legacy cookiecutter.json (no groups)."""
+
+    @pytest.fixture(scope="class")
+    def project_source(self, resources_folder) -> Path:
+        return (resources_folder / "templates_sub_folder").resolve()
+
+    def test_returns_none(self, project_source):
+        result = repository.get_template_groups(project_source)
+        assert result is None
+
+
 class TestRepositoryHasConfig:
     """Tests for _repository_has_config."""
 

@@ -2,21 +2,25 @@
 #
 # SPDX-License-Identifier: MIT
 import os
+from collections.abc import Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from textwrap import dedent
 
 from rich import print as base_print
 from rich.align import Align
-from rich.console import Group
+from rich.console import Console, Group
 from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
+from rich.text import Text
 
 from cookieplone import _types as t
 from cookieplone.settings import QUIET_MODE_VAR
 
 from .internal import cookieplone_info, version_info
+
+_console = Console()
 
 BANNER = """
           *******
@@ -51,6 +55,11 @@ PLONE_LOGOTYPE_BANNER = """
       ***************          ***              ***    ****     ***    ***     ****
           *******
 """
+
+
+def clear_screen():
+    """Clear the terminal screen."""
+    _console.clear()
 
 
 def choose_banner() -> str:
@@ -131,7 +140,9 @@ def panel(title: str, msg: str = "", subtitle: str = "", url: str = ""):
 
 
 def create_table(
-    columns: list[dict] | None = None, rows: list[list[str]] | None = None, **kwargs
+    columns: list[dict] | None = None,
+    rows: Sequence[Sequence[str]] | None = None,
+    **kwargs,
 ) -> Table:
     """Create table."""
     table = Table(**kwargs)
@@ -143,30 +154,55 @@ def create_table(
     return table
 
 
-def table_available_templates(
-    title: str, rows: dict[str, t.CookieploneTemplate]
-) -> Table:
-    """Display a table of options."""
-    columns = [
-        {"title": "#", "justify": "center", "style": "cyan", "no_wrap": True},
-        {"title": "Title", "style": "blue"},
-        {"title": "Description", "justify": "left", "style": "blue"},
-    ]
-    rows = [
-        (f"{idx}", template.title, template.description)
-        for idx, template in enumerate(rows.values(), start=1)
-    ]
-    return create_table(columns, rows, title=title, expand=True)
+def styled_list(
+    items: list[tuple[str, str]],
+) -> Text:
+    """Build a styled numbered list from (title, description) pairs."""
+    text = Text()
+    for idx, (title, description) in enumerate(items, start=1):
+        text.append("\n")
+        text.append(f" {idx}  ", style="bold cyan")
+        text.append(title, style="bold blue")
+        text.append(f"\n     {description}", style="dim")
+    text.append("\n")
+    return text
 
 
-def welcome_screen(templates: list[t.CookieploneTemplate] | None = None):
+def list_available_templates(
+    templates: dict[str, t.CookieploneTemplate],
+) -> Text:
+    """Display templates as a styled list."""
+    items = [(template.title, template.description) for template in templates.values()]
+    return styled_list(items)
+
+
+def list_available_groups(
+    groups: dict[str, t.CookieploneTemplateGroup],
+) -> Text:
+    """Display template groups as a styled list."""
+    items = [(group.title, group.description) for group in groups.values()]
+    return styled_list(items)
+
+
+def welcome_screen(
+    templates: dict[str, t.CookieploneTemplate] | None = None,
+    groups: dict[str, t.CookieploneTemplateGroup] | None = None,
+):
     banner = choose_banner()
     items = [
         Align.center(f"[bold blue]{banner}[/bold blue]"),
     ]
-    if templates:
+    if groups:
         items.append(
-            Panel(table_available_templates(title="Templates", rows=templates))
+            Panel(list_available_groups(groups), title="Categories", title_align="left")
+        )
+    elif templates:
+        items.append(
+            Panel(
+                list_available_templates(templates),
+                title="Templates",
+                title_align="left",
+            )
         )
     panel = Panel(
         Group(*items),

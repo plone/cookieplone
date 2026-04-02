@@ -33,15 +33,17 @@ Cookieplone resolves the template repository from one of these sources (in prior
 
 The resolved source is a git URL, local path, zip archive, or abbreviated form (`gh:`, `gl:`, `bb:`).
 Cookieplone clones or copies the repository to a temporary directory,
-checking out the tag or branch specified by `--tag` (default: `main`) or `COOKIEPLONE_REPOSITORY_TAG`.
+checking out the tag or branch specified by `--tag` (default: `next`) or `COOKIEPLONE_REPOSITORY_TAG`.
 
 ---
 
 ### 2. Template selection
 
-Cookieplone reads the root `cookiecutter.json` from the cloned repository to discover available templates.
+Cookieplone reads the root configuration (`cookieplone-config.json` or `cookiecutter.json`) from the cloned repository to discover available templates.
 If you provided a template name on the command line, Cookieplone selects it directly.
-Otherwise, it displays an interactive menu listing the non-hidden templates and asks you to choose one.
+Otherwise, it displays an interactive menu.
+When the configuration defines groups, Cookieplone first asks you to pick a category, then shows the templates in that category.
+When no groups are defined, the flat template list is shown directly.
 
 ---
 
