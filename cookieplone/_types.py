@@ -15,6 +15,17 @@ class CookieploneTemplate:
 
 
 @dataclass
+class CookieploneTemplateGroup:
+    """A named group of related templates in a cookieplone repository."""
+
+    name: str
+    title: str
+    description: str
+    templates: dict[str, "CookieploneTemplate"]
+    hidden: bool = False
+
+
+@dataclass
 class RepositoryInfo:
     """Resolved repository state for a cookieplone run.
 
@@ -32,6 +43,7 @@ class RepositoryInfo:
     checkout: str
     accept_hooks: bool
     config_dict: dict[str, Any]
+    global_versions: dict[str, str] = field(default_factory=dict)
     cleanup_paths: list[Path] = field(default_factory=list)
 
 

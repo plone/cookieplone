@@ -3,8 +3,16 @@
 from unittest.mock import MagicMock
 
 import pytest
+from tui_forms.renderer.base import BaseRenderer
+from tui_forms.renderer.cookiecutter import CookiecutterRenderer
 
 from cookieplone.config.state import CookieploneState
+
+
+@pytest.fixture()
+def renderer_klass() -> type[BaseRenderer]:
+    """Use the CookiecutterRenderer for wizard tests."""
+    return CookiecutterRenderer
 
 
 @pytest.fixture()

@@ -17,9 +17,12 @@ from cookieplone.exceptions import (
     RepositoryNotFound,
 )
 
-CONFIG_FILENAME = "cookiecutter.json"
+REPO_CONFIG_FILENAME = "cookieplone-config.json"
+
+LEGACY_CONFIG_FILENAME = "cookiecutter.json"
 
 CONFIG_FILENAMES = [
+    REPO_CONFIG_FILENAME,
     "cookiecutter.json",
     "cookieplone.json",
 ]
@@ -68,11 +71,41 @@ def get_base_repository(
 
 
 def get_repository_config(base_path: Path) -> dict[str, Any]:
-    """Open and parse the repository configuration file."""
-    path = base_path / CONFIG_FILENAME
-    if not path.exists():
-        raise RuntimeError(f"{CONFIG_FILENAME} not found in {base_path}")
-    return json.loads(path.read_text())
+    """Open and parse the repository configuration file.
+
+    Looks for ``cookieplone-config.json`` first.  When found, the file is
+    validated against :data:`~cookieplone.config.schemas.REPOSITORY_CONFIG_SCHEMA`
+    and the ``templates`` mapping is returned directly.
+
+    Falls back to the legacy ``cookiecutter.json`` when the new format is
+    not present.
+
+    :param base_path: Root directory of the template repository.
+    :returns: Parsed configuration dict containing at least a ``templates`` key.
+    :raises RuntimeError: When no configuration file is found or when
+        ``cookieplone-config.json`` fails validation.
+    """
+    repo_config_path = base_path / REPO_CONFIG_FILENAME
+    if repo_config_path.exists():
+        data = json.loads(repo_config_path.read_text())
+        from cookieplone.config.schemas import validate_repository_config
+
+        valid, errors = validate_repository_config(data)
+        if not valid:
+            msg = f"Invalid {REPO_CONFIG_FILENAME} in {base_path}:\n" + "\n".join(
+                f"  - {e}" for e in errors
+            )
+            raise RuntimeError(msg)
+        return data
+
+    legacy_path = base_path / LEGACY_CONFIG_FILENAME
+    if legacy_path.exists():
+        return json.loads(legacy_path.read_text())
+
+    raise RuntimeError(
+        f"No configuration file found in {base_path}. "
+        f"Expected {REPO_CONFIG_FILENAME} or {LEGACY_CONFIG_FILENAME}."
+    )
 
 
 def _parse_template_options(
@@ -117,6 +150,66 @@ def get_template_options(
     base_path = base_path.resolve()
     config = get_repository_config(base_path)
     return _parse_template_options(base_path, config, all_)
+
+
+def _parse_template_groups(
+    base_path: Path, config: dict[str, Any], all_: bool
+) -> dict[str, t.CookieploneTemplateGroup] | None:
+    """Parse the ``"groups"`` section of a repository config.
+
+    Returns an ordered dict mapping group IDs to
+    :class:`~cookieplone._types.CookieploneTemplateGroup` instances, or
+    ``None`` when no groups are defined in the config.
+
+    Hidden groups (and hidden templates within visible groups) are excluded
+    unless *all_* is ``True``.
+
+    :param base_path: Resolved root directory of the template repository.
+    :param config: Parsed repository config dict.
+    :param all_: When ``True`` include hidden groups and templates.
+    :returns: Ordered dict of groups, or ``None``.
+    """
+    groups_data = config.get("groups")
+    if not groups_data:
+        return None
+
+    all_templates = _parse_template_options(base_path, config, all_=True)
+
+    groups: dict[str, t.CookieploneTemplateGroup] = {}
+    for group_id, group_data in groups_data.items():
+        hidden = group_data.get("hidden", False)
+        if hidden and not all_:
+            continue
+        group_templates: dict[str, t.CookieploneTemplate] = {}
+        for tmpl_id in group_data.get("templates", []):
+            if tmpl_id in all_templates:
+                tmpl = all_templates[tmpl_id]
+                if tmpl.hidden and not all_:
+                    continue
+                group_templates[tmpl_id] = tmpl
+        if group_templates:
+            groups[group_id] = t.CookieploneTemplateGroup(
+                name=group_id,
+                title=group_data["title"],
+                description=group_data["description"],
+                templates=group_templates,
+                hidden=hidden,
+            )
+    return groups if groups else None
+
+
+def get_template_groups(
+    base_path: Path, all_: bool = False
+) -> dict[str, t.CookieploneTemplateGroup] | None:
+    """Return template groups from the repository config, or ``None``.
+
+    :param base_path: Root directory of the template repository.
+    :param all_: When ``True`` include hidden groups and templates.
+    :returns: Ordered dict of groups, or ``None`` when no groups are defined.
+    """
+    base_path = base_path.resolve()
+    config = get_repository_config(base_path)
+    return _parse_template_groups(base_path, config, all_)
 
 
 def _repository_has_config(repo_directory: Path):
@@ -333,6 +426,15 @@ def get_repository(
 
     base_repo_dir = Path(base_repo_dir)
 
+    # Extract global versions from the repository-level config (if present).
+    global_versions: dict[str, str] = {}
+    if _repository_has_config(root_repo_dir):
+        try:
+            repo_config = get_repository_config(root_repo_dir)
+            global_versions = repo_config.get("config", {}).get("versions", {})
+        except RuntimeError:
+            pass
+
     repo_dir = _run_pre_hook(base_repo_dir, repo_dir, accept_hooks)
 
     # Prepare cleanup_paths
@@ -351,5 +453,6 @@ def get_repository(
         template_name=template_name,
         accept_hooks=accept_hooks,
         config_dict=config_dict,
+        global_versions=global_versions,
         cleanup_paths=cleanup_paths,
     )

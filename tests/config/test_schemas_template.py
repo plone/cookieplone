@@ -1,4 +1,4 @@
-"""Tests for cookieplone.config.schemas."""
+"""Tests for cookieplone.config.schemas.template."""
 
 import pytest
 
