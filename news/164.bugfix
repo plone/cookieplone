@@ -1,0 +1,1 @@
+Fixed `Cookies.bake()` helper to load `global_versions` from `cookieplone-config.json` so templates tested via pytest can resolve `{{ versions.<key> }}` the same way the CLI does. @ericof
