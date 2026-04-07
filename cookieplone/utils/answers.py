@@ -53,7 +53,10 @@ def write_answers(
     user_answers = wizard_answers.user_answers
     initial_answers = wizard_answers.initial_answers
     persisted_answers = deepcopy(initial_answers if no_input else user_answers)
+    # Record the template name on the persisted copy so that the file can be
+    # replayed (or fed to ``--answers-file``) without having to specify the
+    # template again on the CLI.
+    persisted_answers["__template__"] = template_name
     file_name = answers.get("_folder_name", template_name)
     path = Path(f".cookieplone_answers_{file_name}.json")
-    user_answers["__template__"] = template_name
     return files.save_json(path, persisted_answers)

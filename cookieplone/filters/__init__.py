@@ -70,14 +70,14 @@ def use_prerelease_versions(_: str) -> str:
 
 
 @simple_filter
-def latest_volto(use_prerelease_versions: str) -> str:
+def latest_volto(use_prerelease_versions: str | bool) -> str:
     """Return the latest released version of Volto."""
     allow_prerelease = parse_boolean(use_prerelease_versions)
     return versions.latest_volto(allow_prerelease=allow_prerelease) or ""
 
 
 @simple_filter
-def latest_plone(use_prerelease_versions: str) -> str:
+def latest_plone(use_prerelease_versions: str | bool) -> str:
     """Return the latest released version of Plone."""
     allow_prerelease = parse_boolean(use_prerelease_versions)
     return versions.latest_plone(allow_prerelease=allow_prerelease) or ""

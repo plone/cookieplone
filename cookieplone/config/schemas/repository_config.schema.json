@@ -46,6 +46,10 @@
         "versions": {
           "type": "object",
           "additionalProperties": {"type": "string"}
+        },
+        "renderer": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "additionalProperties": false
