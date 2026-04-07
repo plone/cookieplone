@@ -1,14 +1,16 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
+from cookieplone.logger import logger
 from dataclasses import dataclass
+from git import Commit
+from git import Git
+from git import GitConfigParser
+from git import Repo
+from git.exc import GitCommandError
+from git.exc import InvalidGitRepositoryError
 from pathlib import Path
 from typing import cast
-
-from git import Commit, Git, GitConfigParser, Repo
-from git.exc import GitCommandError, InvalidGitRepositoryError
-
-from cookieplone.logger import logger
 
 
 @dataclass

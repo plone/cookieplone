@@ -1,21 +1,18 @@
 """Tests for cookieplone.utils.cookiecutter."""
 
-import json
-import sys
-
-import pytest
 from cookiecutter.exceptions import OutputDirExistsException
+from cookieplone.utils.cookiecutter import create_jinja_env
+from cookieplone.utils.cookiecutter import dump_replay
+from cookieplone.utils.cookiecutter import import_patch
+from cookieplone.utils.cookiecutter import load_replay
+from cookieplone.utils.cookiecutter import parse_output_dir_exception
+from cookieplone.utils.cookiecutter import parse_undefined_error
 from jinja2 import Environment
 from jinja2.exceptions import UndefinedError
 
-from cookieplone.utils.cookiecutter import (
-    create_jinja_env,
-    dump_replay,
-    import_patch,
-    load_replay,
-    parse_output_dir_exception,
-    parse_undefined_error,
-)
+import json
+import pytest
+import sys
 
 
 class TestParseOutputDirException:

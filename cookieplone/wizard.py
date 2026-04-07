@@ -3,14 +3,19 @@
 # SPDX-License-Identifier: MIT
 """Implement the form wizard logic."""
 
-import os
+from cookieplone.config import Answers
+from cookieplone.config import CookieploneState
+from cookieplone.exceptions import InvalidConfiguration
+from cookieplone.settings import DEFAULT_EXTENSIONS
+from cookieplone.settings import DEFAULT_RENDERER
+from cookieplone.settings import RENDERER_VAR
+from tui_forms import available_renderers
+from tui_forms import create_form
+from tui_forms import get_renderer
 from typing import Any
 
-from tui_forms import available_renderers, create_form, get_renderer
+import os
 
-from cookieplone.config import Answers, CookieploneState
-from cookieplone.exceptions import InvalidConfiguration
-from cookieplone.settings import DEFAULT_EXTENSIONS, DEFAULT_RENDERER, RENDERER_VAR
 
 NOINPUT_RENDERER = "noinput"
 

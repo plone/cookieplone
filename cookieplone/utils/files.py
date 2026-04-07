@@ -1,14 +1,13 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
-import json
 from collections import OrderedDict
+from cookiecutter.utils import rmtree
+from cookieplone import exceptions as exc
 from pathlib import Path
 from typing import Any
 
-from cookiecutter.utils import rmtree
-
-from cookieplone import exceptions as exc
+import json
 
 
 def resolve_path(path: Path | str) -> Path:

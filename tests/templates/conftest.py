@@ -1,6 +1,5 @@
-import shutil
-
 import pytest
+import shutil
 
 
 @pytest.fixture

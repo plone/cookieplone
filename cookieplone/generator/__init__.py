@@ -2,26 +2,28 @@
 #
 # SPDX-License-Identifier: MIT
 
-import os
-import warnings
 from collections import OrderedDict
-from pathlib import Path
-
 from cookiecutter import exceptions as exc
-
 from cookieplone._types import GenerateConfig
-from cookieplone.config import Answers, CookieploneState, generate_state
-from cookieplone.exceptions import (
-    FailedHookException,
-    GeneratorException,
-    RepositoryException,
-)
+from cookieplone.config import Answers
+from cookieplone.config import CookieploneState
+from cookieplone.config import generate_state
+from cookieplone.exceptions import FailedHookException
+from cookieplone.exceptions import GeneratorException
+from cookieplone.exceptions import RepositoryException
 from cookieplone.generator.main import cookieplone
 from cookieplone.repository import get_repository
-from cookieplone.settings import COOKIEPLONE_ANSWERS_FILE, QUIET_MODE_VAR
-from cookieplone.utils import answers, cookiecutter, files
+from cookieplone.settings import COOKIEPLONE_ANSWERS_FILE
+from cookieplone.settings import QUIET_MODE_VAR
+from cookieplone.utils import answers
+from cookieplone.utils import cookiecutter
+from cookieplone.utils import files
 from cookieplone.utils.console import quiet_mode
 from cookieplone.utils.cookiecutter import load_replay
+from pathlib import Path
+
+import os
+import warnings
 
 
 def _dump_answers(answers_: Answers, template_name: str, no_input: bool = False):

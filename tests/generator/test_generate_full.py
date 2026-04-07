@@ -1,12 +1,11 @@
 """Tests for the generate() happy path and exception handling in __init__.py."""
 
-from dataclasses import replace
-
-import pytest
-
 from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate
 from cookieplone.settings import COOKIEPLONE_ANSWERS_FILE
+from dataclasses import replace
+
+import pytest
 
 
 def test_happy_path_returns_path(
@@ -183,7 +182,8 @@ def test_failed_hook_reraised_as_repository_exception(
     generate_config,
 ):
     """FailedHookException from get_repository is wrapped in RepositoryException."""
-    from cookieplone.exceptions import FailedHookException, RepositoryException
+    from cookieplone.exceptions import FailedHookException
+    from cookieplone.exceptions import RepositoryException
 
     mock_get_repository.side_effect = FailedHookException("hook fail")
     with pytest.raises(RepositoryException, match="hook fail"):

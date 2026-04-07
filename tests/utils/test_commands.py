@@ -1,8 +1,7 @@
-import sys
+from cookieplone.utils import commands
 
 import pytest
-
-from cookieplone.utils import commands
+import sys
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
-import subprocess
+from cookieplone.logger import logger
 from pathlib import Path
 
-from cookieplone.logger import logger
+import subprocess
 
 
 def _uvx(tool: str, args: list[str], base_path: Path) -> None:

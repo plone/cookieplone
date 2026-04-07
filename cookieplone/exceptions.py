@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
+from cookiecutter import exceptions as exc
 from typing import TYPE_CHECKING
 
-from cookiecutter import exceptions as exc
 
 if TYPE_CHECKING:
     from cookieplone.config.state import CookieploneState

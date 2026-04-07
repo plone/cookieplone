@@ -1,10 +1,11 @@
 """Tests for the cookieplone exception-wrapping entry point."""
 
-import pytest
 from cookiecutter import exceptions as cc_exc
-
-from cookieplone.exceptions import GeneratorException, OutputDirExistsException
+from cookieplone.exceptions import GeneratorException
+from cookieplone.exceptions import OutputDirExistsException
 from cookieplone.generator.main import cookieplone
+
+import pytest
 
 
 def test_returns_path_on_success(

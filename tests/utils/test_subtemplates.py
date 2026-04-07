@@ -1,18 +1,16 @@
 """Tests for cookieplone.utils.subtemplates."""
 
-import os
 from collections import OrderedDict
-from unittest.mock import MagicMock, patch
-
-import pytest
-
 from cookieplone.config import CookieploneState
 from cookieplone.settings import QUIET_MODE_VAR
-from cookieplone.utils.subtemplates import (
-    _parse_subtemplate_entry,
-    process_subtemplates,
-    run_subtemplates,
-)
+from cookieplone.utils.subtemplates import _parse_subtemplate_entry
+from cookieplone.utils.subtemplates import process_subtemplates
+from cookieplone.utils.subtemplates import run_subtemplates
+from unittest.mock import MagicMock
+from unittest.mock import patch
+
+import os
+import pytest
 
 
 @pytest.fixture

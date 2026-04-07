@@ -1,16 +1,19 @@
-import warnings
-from dataclasses import dataclass, field
+from cookiecutter import exceptions as exc
+from cookieplone.config.schemas import SubTemplate
+from cookieplone.config.v1 import parse_v1
+from cookieplone.config.v2 import ParsedConfig
+from cookieplone.config.v2 import parse_v2
+from cookieplone.logger import logger
+from cookieplone.settings import DEFAULT_DATA_KEY
+from cookieplone.settings import DEFAULT_VALIDATORS
+from cookieplone.utils import files as f
+from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
 from typing import Any
 
-from cookiecutter import exceptions as exc
+import warnings
 
-from cookieplone.config.schemas import SubTemplate
-from cookieplone.config.v1 import parse_v1
-from cookieplone.config.v2 import ParsedConfig, parse_v2
-from cookieplone.logger import logger
-from cookieplone.settings import DEFAULT_DATA_KEY, DEFAULT_VALIDATORS
-from cookieplone.utils import files as f
 
 _NO_VALUE = object()
 

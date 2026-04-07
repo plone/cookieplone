@@ -1,14 +1,12 @@
+from cookieplone._types import RunConfig
+from cookieplone.config import CookieploneState
+from cookieplone.config import generate_state
+from cookieplone.generator.main import cookieplone
+from cookieplone.repository import REPO_CONFIG_FILENAME
+from cookieplone.repository import get_repository
+from cookieplone.repository import get_repository_config
 from dataclasses import dataclass
 from pathlib import Path
-
-from cookieplone._types import RunConfig
-from cookieplone.config import CookieploneState, generate_state
-from cookieplone.generator.main import cookieplone
-from cookieplone.repository import (
-    REPO_CONFIG_FILENAME,
-    get_repository,
-    get_repository_config,
-)
 
 
 def _discover_global_versions(template_path: Path) -> dict[str, str]:

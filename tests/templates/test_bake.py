@@ -1,8 +1,7 @@
 """Regression tests for :mod:`cookieplone.templates.bake`."""
 
-from pathlib import Path
-
 from cookieplone.templates.bake import _discover_global_versions
+from pathlib import Path
 
 
 class TestDiscoverGlobalVersions:

@@ -1,0 +1,1 @@
+Aligned ruff isort configuration with the rest of the Plone ecosystem: single-line, no-sections, `from`-first imports with two blank lines after the import block. Reformatted the entire codebase in one sweep. @ericof

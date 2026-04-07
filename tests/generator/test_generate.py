@@ -1,12 +1,12 @@
 """Tests for generate."""
 
+from cookiecutter import exceptions as cc_exc
+from cookieplone.exceptions import PreFlightException
+from cookieplone.exceptions import RepositoryException
+from cookieplone.generator import generate
 from dataclasses import replace
 
 import pytest
-from cookiecutter import exceptions as cc_exc
-
-from cookieplone.exceptions import PreFlightException, RepositoryException
-from cookieplone.generator import generate
 
 
 def test_replay_with_no_input_raises(generate_config):

@@ -1,12 +1,13 @@
+from collections.abc import Generator
+from git import Repo
+from pathlib import Path
+from pytest import MonkeyPatch
+
 import json
+import pytest
 import random
 import string
-from collections.abc import Generator
-from pathlib import Path
 
-import pytest
-from git import Repo
-from pytest import MonkeyPatch
 
 pytest_plugins = "pytester"
 

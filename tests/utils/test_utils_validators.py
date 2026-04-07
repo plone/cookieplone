@@ -1,6 +1,6 @@
-import pytest
-
 from cookieplone.utils import validators
+
+import pytest
 
 
 @pytest.mark.parametrize(

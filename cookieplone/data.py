@@ -4,7 +4,10 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, TypeAlias
+from typing import Any
+from typing import Literal
+from typing import TypeAlias
+
 
 OptionalPath: TypeAlias = Path | None
 OptionalListStr: TypeAlias = list[str] | None

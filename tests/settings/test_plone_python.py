@@ -1,8 +1,8 @@
 """Tests for PLONE_PYTHON mapping."""
 
-import pytest
-
 from cookieplone import settings
+
+import pytest
 
 
 def test_plone_60_exists():

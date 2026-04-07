@@ -1,13 +1,14 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
-import re
+from cookieplone import data
+from cookieplone import settings
+from packaging.version import InvalidVersion
+from packaging.version import Version
 from typing import Any
 from urllib.parse import urlparse
 
-from packaging.version import InvalidVersion, Version
-
-from cookieplone import data, settings
+import re
 
 
 def _version_from_str(value: str) -> Version | None:

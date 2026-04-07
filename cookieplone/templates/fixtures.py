@@ -1,14 +1,13 @@
-import json
-import re
+from .bake import Cookies
+from binaryornot.check import is_binary
+from cookieplone.templates import types
 from pathlib import Path
 
+import json
 import pytest
+import re
 import yaml
-from binaryornot.check import is_binary
 
-from cookieplone.templates import types
-
-from .bake import Cookies
 
 IGNORED_KEYS = (
     "_extensions",

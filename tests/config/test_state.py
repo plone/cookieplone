@@ -1,7 +1,8 @@
-import pytest
-
 from cookieplone.config import CookieploneState
 from cookieplone.config import state as config
+
+import pytest
+
 
 CONFIG_FILES = [
     "config/v1-agents_instructions.json",

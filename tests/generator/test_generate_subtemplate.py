@@ -1,14 +1,13 @@
 """Tests for generate_subtemplate."""
 
-import warnings
 from collections import OrderedDict
-
-import pytest
-
 from cookieplone.config.state import CookieploneState
 from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate_subtemplate
 from cookieplone.settings import QUIET_MODE_VAR
+
+import pytest
+import warnings
 
 
 def test_uses_quiet_mode(

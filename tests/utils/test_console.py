@@ -1,14 +1,14 @@
+from cookieplone._types import CookieploneTemplate
+from cookieplone._types import CookieploneTemplateGroup
+from cookieplone.settings import QUIET_MODE_VAR
+from cookieplone.utils import console
 from pathlib import Path
-from unittest.mock import patch
-
-import pytest
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
+from unittest.mock import patch
 
-from cookieplone._types import CookieploneTemplate, CookieploneTemplateGroup
-from cookieplone.settings import QUIET_MODE_VAR
-from cookieplone.utils import console
+import pytest
 
 
 @pytest.fixture

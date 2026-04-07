@@ -1,24 +1,25 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
-import os
+from .internal import cookieplone_info
+from .internal import version_info
 from collections.abc import Sequence
 from contextlib import contextmanager
+from cookieplone import _types as t
+from cookieplone.settings import QUIET_MODE_VAR
 from pathlib import Path
-from textwrap import dedent
-
 from rich import print as base_print
 from rich.align import Align
-from rich.console import Console, Group
+from rich.console import Console
+from rich.console import Group
 from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
+from textwrap import dedent
 
-from cookieplone import _types as t
-from cookieplone.settings import QUIET_MODE_VAR
+import os
 
-from .internal import cookieplone_info, version_info
 
 _console = Console()
 

@@ -1,13 +1,13 @@
 """Tests for the wizard function."""
 
-from unittest.mock import MagicMock
-
-import pytest
-
 from cookieplone.config.state import Answers
 from cookieplone.exceptions import InvalidConfiguration
 from cookieplone.settings import RENDERER_VAR
-from cookieplone.wizard import _resolve_renderer, wizard
+from cookieplone.wizard import _resolve_renderer
+from cookieplone.wizard import wizard
+from unittest.mock import MagicMock
+
+import pytest
 
 
 def test_returns_answers(mock_create_form, mock_get_renderer, state):

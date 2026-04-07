@@ -1,15 +1,12 @@
 """Tests for cookieplone.exceptions."""
 
+from cookieplone.exceptions import CookieploneException
+from cookieplone.exceptions import GeneratorException
+from cookieplone.exceptions import OutputDirExistsException
+from cookieplone.exceptions import PreFlightException
 from unittest.mock import MagicMock
 
 import pytest
-
-from cookieplone.exceptions import (
-    CookieploneException,
-    GeneratorException,
-    OutputDirExistsException,
-    PreFlightException,
-)
 
 
 class TestCookieploneException:

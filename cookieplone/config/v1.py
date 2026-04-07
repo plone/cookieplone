@@ -23,10 +23,9 @@
 ```
 """
 
-from typing import Any
-
 from cookieplone.config.v2 import ParsedConfig
 from cookieplone.utils.config import convert_v1_to_v2
+from typing import Any
 
 
 def parse_v1(context: dict[str, Any]) -> ParsedConfig:
