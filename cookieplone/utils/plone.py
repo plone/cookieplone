@@ -1,10 +1,9 @@
-import shutil
-from pathlib import Path
-
-import xmltodict
-
 from cookieplone.logger import logger
 from cookieplone.utils import formatters
+from pathlib import Path
+
+import shutil
+import xmltodict
 
 
 def add_dependency_profile_to_metadata(profile: str, raw_xml: str) -> str:

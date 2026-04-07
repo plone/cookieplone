@@ -1,7 +1,7 @@
-import pytest
-
 from cookieplone.settings import PythonVersionSupport
 from cookieplone.utils import versions
+
+import pytest
 
 
 @pytest.fixture

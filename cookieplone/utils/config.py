@@ -61,11 +61,11 @@ Version 2 (cookieplone.json) configuration format.
 """
 
 from collections import OrderedDict
-from dataclasses import dataclass, field
+from cookieplone.utils import files
+from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
 from typing import Any
-
-from cookieplone.utils import files
 
 
 @dataclass

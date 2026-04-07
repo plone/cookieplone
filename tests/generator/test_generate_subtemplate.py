@@ -1,12 +1,13 @@
 """Tests for generate_subtemplate."""
 
 from collections import OrderedDict
-
-import pytest
-
 from cookieplone.config.state import CookieploneState
 from cookieplone.exceptions import GeneratorException
 from cookieplone.generator import generate_subtemplate
+from cookieplone.settings import QUIET_MODE_VAR
+
+import pytest
+import warnings
 
 
 def test_uses_quiet_mode(
@@ -154,3 +155,56 @@ def test_returns_path(
         context=context,
     )
     assert result == expected
+
+
+def test_warns_when_not_in_quiet_mode(
+    mock_remove_internal_keys,
+    mock_get_repository_root,
+    mock_quiet_mode,
+    mock_generate,
+    tmp_path,
+    monkeypatch,
+):
+    """generate_subtemplate emits a DeprecationWarning by default."""
+    monkeypatch.delenv(QUIET_MODE_VAR, raising=False)
+    mock_remove_internal_keys.return_value = {"title": "Test"}
+    mock_get_repository_root.return_value = str(tmp_path / "repo")
+    mock_generate.return_value = tmp_path / "output"
+    context = OrderedDict({"title": "Test", "_template": "/some/path"})
+
+    with pytest.warns(DeprecationWarning, match="generate_subtemplate.*deprecated"):
+        generate_subtemplate(
+            template_path="sub",
+            output_dir=tmp_path,
+            folder_name="my_folder",
+            context=context,
+        )
+
+
+def test_does_not_warn_when_in_quiet_mode(
+    mock_remove_internal_keys,
+    mock_get_repository_root,
+    mock_quiet_mode,
+    mock_generate,
+    tmp_path,
+    monkeypatch,
+):
+    """DeprecationWarning is suppressed when quiet mode is active."""
+    monkeypatch.setenv(QUIET_MODE_VAR, "1")
+    mock_remove_internal_keys.return_value = {"title": "Test"}
+    mock_get_repository_root.return_value = str(tmp_path / "repo")
+    mock_generate.return_value = tmp_path / "output"
+    context = OrderedDict({"title": "Test", "_template": "/some/path"})
+
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+        generate_subtemplate(
+            template_path="sub",
+            output_dir=tmp_path,
+            folder_name="my_folder",
+            context=context,
+        )
+    deprecation_warnings = [
+        w for w in captured if issubclass(w.category, DeprecationWarning)
+    ]
+    assert deprecation_warnings == []

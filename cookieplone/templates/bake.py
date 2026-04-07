@@ -1,10 +1,31 @@
+from cookieplone._types import RunConfig
+from cookieplone.config import CookieploneState
+from cookieplone.config import generate_state
+from cookieplone.generator.main import cookieplone
+from cookieplone.repository import REPO_CONFIG_FILENAME
+from cookieplone.repository import get_repository
+from cookieplone.repository import get_repository_config
 from dataclasses import dataclass
 from pathlib import Path
 
-from cookieplone._types import RunConfig
-from cookieplone.config import CookieploneState, generate_state
-from cookieplone.generator.main import cookieplone
-from cookieplone.repository import get_repository
+
+def _discover_global_versions(template_path: Path) -> dict[str, str]:
+    """Walk upward from *template_path* looking for ``cookieplone-config.json``.
+
+    When found, return its ``config.versions`` mapping so templates tested via
+    :class:`Cookies` can resolve ``{{ versions.<key> }}`` the same way the CLI
+    does.  Returns an empty dict when no repository config is present or when
+    it fails validation.
+    """
+    candidate = template_path.resolve()
+    for parent in (candidate, *candidate.parents):
+        if (parent / REPO_CONFIG_FILENAME).is_file():
+            try:
+                repo_config = get_repository_config(parent)
+            except RuntimeError:
+                return {}
+            return repo_config.get("config", {}).get("versions", {})
+    return {}
 
 
 @dataclass
@@ -70,8 +91,11 @@ class Cookies:
             str(self._config_file),
             False,
         )
+        global_versions = _discover_global_versions(template_path)
         state: CookieploneState = generate_state(
-            template_path=template_path, extra_context=extra_context
+            template_path=template_path,
+            extra_context=extra_context,
+            global_versions=global_versions,
         )
         run_config = RunConfig(
             output_dir=self._new_output_dir(),

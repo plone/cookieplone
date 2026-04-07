@@ -1,25 +1,23 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
-from pathlib import Path
-from typing import Any
-
 from cookiecutter import exceptions as exc
 from cookiecutter.generate import generate_files
-from jinja2.exceptions import UndefinedError
-
-from cookieplone._types import RepositoryInfo, RunConfig
+from cookieplone._types import RepositoryInfo
+from cookieplone._types import RunConfig
 from cookieplone.config import CookieploneState
-from cookieplone.exceptions import GeneratorException, OutputDirExistsException
+from cookieplone.exceptions import GeneratorException
+from cookieplone.exceptions import OutputDirExistsException
 from cookieplone.utils import files as f
 from cookieplone.utils.answers import remove_internal_keys
-from cookieplone.utils.cookiecutter import (
-    import_patch,
-    parse_output_dir_exception,
-    parse_undefined_error,
-)
+from cookieplone.utils.cookiecutter import import_patch
+from cookieplone.utils.cookiecutter import parse_output_dir_exception
+from cookieplone.utils.cookiecutter import parse_undefined_error
 from cookieplone.utils.subtemplates import process_subtemplates
 from cookieplone.wizard import wizard
+from jinja2.exceptions import UndefinedError
+from pathlib import Path
+from typing import Any
 
 
 def _annotate_data(
@@ -88,7 +86,11 @@ def _cookieplone(
     # except when 'no-input' flag is set
     with import_patch(repository_info.repo_dir):
         wizard_answers = wizard(
-            state, internal_data, run_config.no_input, root_key=default_key
+            state,
+            internal_data,
+            run_config.no_input,
+            root_key=default_key,
+            renderer=repository_info.renderer,
         )
         internal_data.update(wizard_answers.answers)
 

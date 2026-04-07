@@ -1,6 +1,6 @@
-import pytest
-
 from cookieplone.utils import containers
+
+import pytest
 
 
 @pytest.mark.parametrize(

@@ -1,9 +1,8 @@
+from cookieplone import data
+from cookieplone.utils import sanity
 from typing import Any
 
 import pytest
-
-from cookieplone import data
-from cookieplone.utils import sanity
 
 
 def check_instance(value: Any, type_: type) -> str:

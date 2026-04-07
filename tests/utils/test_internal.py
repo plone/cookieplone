@@ -1,12 +1,12 @@
-import re
-import sys
+from cookiecutter import __version__ as __cookiecutter_version__
+from cookieplone import __version__
+from cookieplone import settings
+from cookieplone.utils import internal
 from pathlib import Path
 
 import pytest
-from cookiecutter import __version__ as __cookiecutter_version__
-
-from cookieplone import __version__, settings
-from cookieplone.utils import internal
+import re
+import sys
 
 
 def test_version_info():

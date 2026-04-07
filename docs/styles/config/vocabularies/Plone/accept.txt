@@ -28,6 +28,7 @@ JavaScript
 jQuery
 libxslt
 Mockup
+monorepo
 npm
 nvm
 Pastanaga
@@ -42,7 +43,7 @@ traceback(s)?
 walkthrough
 [Qq]uerystring
 Razzle
-[Rr]enderer
+[Rr]enderer(s)?
 RichText
 Sass
 Schuko

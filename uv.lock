@@ -462,6 +462,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "towncrier" },
+    { name = "tui-forms", extra = ["test"] },
     { name = "zest-releaser", extra = ["recommended"] },
     { name = "zestreleaser-towncrier" },
 ]
@@ -496,7 +497,7 @@ requires-dist = [
     { name = "gitpython", specifier = "==3.1.46" },
     { name = "packaging", specifier = "==26.0" },
     { name = "semver", specifier = "==3.0.4" },
-    { name = "tui-forms", specifier = ">=1.0.0a2" },
+    { name = "tui-forms", specifier = ">=1.0.0a4" },
     { name = "typer", specifier = "==0.24.1" },
     { name = "xmltodict", specifier = "==1.0.4" },
 ]
@@ -509,6 +510,7 @@ dev = [
     { name = "pytest", specifier = "==8.1.1" },
     { name = "pytest-cov", specifier = "==5.0.0" },
     { name = "towncrier", specifier = ">=23.11.0" },
+    { name = "tui-forms", extras = ["test"], specifier = ">=1.0.0a4" },
     { name = "zest-releaser", extras = ["recommended"], specifier = ">=9.1.3" },
     { name = "zestreleaser-towncrier", specifier = ">=1.3.0" },
 ]
@@ -2316,15 +2318,20 @@ wheels = [
 
 [[package]]
 name = "tui-forms"
-version = "1.0.0a2"
+version = "1.0.0a4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jinja2" },
     { name = "jsonschema" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7d/16/e205eeede7028fadf0d76beb774a7e37563420fcdcdaac18eef043608c58/tui_forms-1.0.0a2.tar.gz", hash = "sha256:478e4a26ba2da6db97f04e085e337256c175e6880b18f0b514fdf2e704410bb0", size = 27823, upload-time = "2026-03-30T17:42:16.136Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/43/8a95ae4b08d4109702df4cb29d51de6c623625ffb73fdbc93e0bdf693047/tui_forms-1.0.0a4.tar.gz", hash = "sha256:8c7cb0ceb5c60a3f83e693088be25de37f27cd930270f6a6a08936b7f302b0c8", size = 30320, upload-time = "2026-04-02T14:15:24.03Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/69/41e050aaf8a58475410c754d783a0640fd375c635a703226709b7a1b8b49/tui_forms-1.0.0a2-py3-none-any.whl", hash = "sha256:f0f203a9cc0eaa3f5246f2f1fda1939b246aa9369618a666011cd54e139931c5", size = 37248, upload-time = "2026-03-30T17:42:13.847Z" },
+    { url = "https://files.pythonhosted.org/packages/40/b5/c7dc9108d172467d4f1f9590994a627a7b90f36f34485fb9d87e448951aa/tui_forms-1.0.0a4-py3-none-any.whl", hash = "sha256:a8274fbfd754fb18ba9d149a2f881447986aa4bc70ab558e7ef131b94ebbe7df", size = 41049, upload-time = "2026-04-02T14:15:25.369Z" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
 ]
 
 [[package]]

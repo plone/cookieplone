@@ -1,0 +1,216 @@
+{
+  "version": "1.0",
+  "title": "Plone Community Templates",
+  "description": "Official Cookieplone templates for the Plone community",
+  "extends": "",
+  "groups": {
+    "projects": {
+      "title": "Projects",
+      "description": "Generators that create a new Plone project",
+      "templates": [
+        "project",
+        "classic_project"
+      ],
+      "hidden": false
+    },
+    "add-ons": {
+      "title": "Add-ons",
+      "description": "Extend Plone with add-ons",
+      "templates": [
+        "monorepo_addon",
+        "backend_addon",
+        "frontend_addon",
+        "seven_addon"
+      ],
+      "hidden": false
+    },
+    "documentation": {
+      "title": "Documentation",
+      "description": "Documentation templates for Plone projects",
+      "templates": [
+        "documentation_starter"
+      ],
+      "hidden": false
+    },
+    "devops": {
+      "title": "DevOps",
+      "description": "DevOps templates for Plone projects",
+      "templates": [
+        "devops_ansible"
+      ],
+      "hidden": false
+    },
+    "ci": {
+      "title": "CI / CD",
+      "description": "Continuous Integration and Continuous Deployment templates for Plone projects",
+      "templates": [
+        "ci_gh_backend_addon",
+        "ci_gh_frontend_addon",
+        "ci_gh_monorepo_addon",
+        "ci_gh_project",
+        "ci_gh_classic_project"
+      ],
+      "hidden": true
+    },
+    "other": {
+      "title": "Other",
+      "description": "Other templates used by our community",
+      "templates": [
+        "agents_instructions",
+        "ide_vscode"
+      ],
+      "hidden": true
+    },
+    "sub": {
+      "title": "Sub-Templates",
+      "description": "Templates used only for internal purposes",
+      "templates": [
+        "sub/cache",
+        "sub/frontend_project",
+        "sub/project_settings",
+        "sub/addon_settings",
+        "sub/classic_project_settings"
+      ],
+      "hidden": true
+    }
+  },
+  "templates": {
+    "project": {
+      "path": "./templates/projects/monorepo",
+      "title": "Volto Project",
+      "description": "Create a new Plone project that uses the Volto frontend",
+      "hidden": false
+    },
+    "classic_project": {
+      "path": "./templates/projects/classic",
+      "title": "Classic UI Project",
+      "description": "Create a new Plone project that uses Classic UI",
+      "hidden": false
+    },
+    "backend_addon": {
+      "path": "./templates/add-ons/backend",
+      "title": "Backend Add-on for Plone",
+      "description": "Create a new Python package to be used with Plone",
+      "hidden": false
+    },
+    "frontend_addon": {
+      "path": "./templates/add-ons/frontend",
+      "title": "Frontend Add-on for Plone",
+      "description": "Create a new Node package to be used with Volto",
+      "hidden": false
+    },
+    "monorepo_addon": {
+      "path": "./templates/add-ons/monorepo",
+      "title": "Add-on for Plone (Backend + Volto)",
+      "description": "Create a new codebase for a Plone add-on that includes both backend and Volto frontend",
+      "hidden": false
+    },
+    "seven_addon": {
+      "path": "./templates/add-ons/seven_addon",
+      "title": "Seven Frontend Add-on for Plone",
+      "description": "Create a new Node package to be used with Seven",
+      "hidden": false
+    },
+    "sub/cache": {
+      "path": "./templates/sub/cache",
+      "title": "Cache settings for a monorepo Plone project",
+      "description": "Subtemplate with cache settings to be applied to a project.",
+      "hidden": true
+    },
+    "sub/frontend_project": {
+      "path": "./templates/sub/frontend_project",
+      "title": "A frontend project (used in Container images)",
+      "description": "Subtemplate with configuration used in container images for frontend project.",
+      "hidden": true
+    },
+    "sub/project_settings": {
+      "path": "./templates/sub/project_settings",
+      "title": "Project settings to be applied on top of a mono repo project",
+      "description": "Subtemplate with configuration and settings for a mono repo project.",
+      "hidden": true
+    },
+    "sub/addon_settings": {
+      "path": "./templates/sub/addon_settings",
+      "title": "Add-on settings to be applied on top of a mono repo project",
+      "description": "Subtemplate with configuration and settings for a mono repo add-on.",
+      "hidden": true
+    },
+    "sub/classic_project_settings": {
+      "path": "./templates/sub/classic_project_settings",
+      "title": "Project settings to be applied on top of a Classic UI project",
+      "description": "Subtemplate with configuration and settings for a Classic UI project.",
+      "hidden": true
+    },
+    "documentation_starter": {
+      "path": "./templates/docs/starter",
+      "title": "Documentation scaffold for Plone projects",
+      "description": "Create a new documentation scaffold for Plone projects",
+      "hidden": false
+    },
+    "devops_ansible": {
+      "path": "./templates/devops/ansible",
+      "title": "Ansible Playbooks for Plone",
+      "description": "Ansible setup to manage a Docker Swarm cluster for Plone hosting.",
+      "hidden": true
+    },
+    "ci_gh_backend_addon": {
+      "path": "./templates/ci/gh_backend_addon",
+      "title": "CI: GitHub Actions for Backend Add-on",
+      "description": "GitHub Actions configuration for CI of a Plone Backend Add-on",
+      "hidden": true
+    },
+    "ci_gh_frontend_addon": {
+      "path": "./templates/ci/gh_frontend_addon",
+      "title": "CI: GitHub Actions for Frontend Add-on",
+      "description": "GitHub Actions configuration for CI of a Volto Frontend Add-on",
+      "hidden": true
+    },
+    "ci_gh_monorepo_addon": {
+      "path": "./templates/ci/gh_monorepo_addon",
+      "title": "CI: GitHub Actions for Monorepo Add-on",
+      "description": "GitHub Actions configuration for CI of a Plone Monorepo Add-on",
+      "hidden": true
+    },
+    "ci_gh_project": {
+      "path": "./templates/ci/gh_project",
+      "title": "CI: GitHub Actions for Project",
+      "description": "GitHub Actions configuration for CI of a Plone Project",
+      "hidden": true
+    },
+    "ci_gh_classic_project": {
+      "path": "./templates/ci/gh_classic_project",
+      "title": "CI: GitHub Actions for a Classic Project",
+      "description": "GitHub Actions configuration for CI of a Plone Classic Project",
+      "hidden": true
+    },
+    "agents_instructions": {
+      "path": "./templates/agents/instructions",
+      "title": "Agents / LLM: Instructions",
+      "description": "Instructions for Agents / LLM used in Plone projects",
+      "hidden": true
+    },
+    "ide_vscode": {
+      "path": "./templates/ide/vscode",
+      "title": "VSCode IDE Configuration",
+      "description": "Configuration files for Visual Studio Code IDE used in Plone projects",
+      "hidden": true
+    }
+  },
+  "config": {
+    "versions": {
+      "devops_traefik_version": "v2.11",
+      "devops_zeo_version": "6.0.0",
+      "frontend_mrs_developer": "^2.2.0",
+      "frontend_pnpm": "10.20.0",
+      "frontend_release_it": "^19.0.5",
+      "tools_pre_commit": "3.7.1",
+      "gha_version_node": "22.x",
+      "gha_version_checkout": "v6",
+      "gha_version_setup_node": "v4",
+      "gha_version_cache": "v4",
+      "gha_version_background_action": "v1",
+      "gha_version_upload_artifact": "v4",
+      "gha_version_pages_deploy": "v4"
+    }
+  }
+}

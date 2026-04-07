@@ -1,4 +1,5 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,17 @@ class CookieploneTemplate:
     name: str
     title: str
     description: str
+    hidden: bool = False
+
+
+@dataclass
+class CookieploneTemplateGroup:
+    """A named group of related templates in a cookieplone repository."""
+
+    name: str
+    title: str
+    description: str
+    templates: dict[str, "CookieploneTemplate"]
     hidden: bool = False
 
 
@@ -32,6 +44,8 @@ class RepositoryInfo:
     checkout: str
     accept_hooks: bool
     config_dict: dict[str, Any]
+    global_versions: dict[str, str] = field(default_factory=dict)
+    renderer: str = ""
     cleanup_paths: list[Path] = field(default_factory=list)
 
 

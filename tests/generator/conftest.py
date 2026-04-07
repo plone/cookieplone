@@ -1,11 +1,12 @@
 """Shared fixtures for generator tests."""
 
+from cookieplone._types import GenerateConfig
+from cookieplone._types import RepositoryInfo
+from cookieplone._types import RunConfig
+from cookieplone.config.state import CookieploneState
 from unittest.mock import MagicMock
 
 import pytest
-
-from cookieplone._types import GenerateConfig, RepositoryInfo, RunConfig
-from cookieplone.config.state import CookieploneState
 
 
 @pytest.fixture()

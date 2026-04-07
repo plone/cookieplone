@@ -1,15 +1,15 @@
-import os
-from copy import deepcopy
-from pathlib import Path
-from typing import Any
-
-import yaml
 from cookiecutter import config
-
 from cookieplone.exceptions import InvalidConfiguration
 from cookieplone.logger import logger
 from cookieplone.settings import DEFAULT_CONFIG
 from cookieplone.utils.git import get_user_info
+from copy import deepcopy
+from pathlib import Path
+from typing import Any
+
+import os
+import yaml
+
 
 USER_CONFIG_ENVS = ["COOKIEPLONE_CONFIG", "COOKIECUTTER_CONFIG"]
 

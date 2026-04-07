@@ -1,7 +1,8 @@
-import pytest
-from git import Commit, Repo
-
 from cookieplone.utils import git
+from git import Commit
+from git import Repo
+
+import pytest
 
 
 def test_repo_from_path(tmp_repo):

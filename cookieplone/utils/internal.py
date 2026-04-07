@@ -1,14 +1,15 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
-import sys
+from cookiecutter import __version__ as __cookiecutter_version__
+from cookieplone import __version__
+from cookieplone import settings
+from cookieplone.utils import git
 from datetime import datetime
 from pathlib import Path
 
-from cookiecutter import __version__ as __cookiecutter_version__
+import sys
 
-from cookieplone import __version__, settings
-from cookieplone.utils import git
 
 SIGNATURE = (
     "Made with [bold][red]❤️[/red][/bold] by the"

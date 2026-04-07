@@ -1,6 +1,5 @@
-from tui_forms.form.question import ValidationError
-
 from cookieplone.utils import validators
+from tui_forms.form.question import ValidationError
 
 
 def not_empty(value: str) -> bool:
