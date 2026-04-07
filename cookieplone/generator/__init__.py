@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+import os
+import warnings
 from collections import OrderedDict
 from pathlib import Path
 
@@ -16,7 +18,7 @@ from cookieplone.exceptions import (
 )
 from cookieplone.generator.main import cookieplone
 from cookieplone.repository import get_repository
-from cookieplone.settings import COOKIEPLONE_ANSWERS_FILE
+from cookieplone.settings import COOKIEPLONE_ANSWERS_FILE, QUIET_MODE_VAR
 from cookieplone.utils import answers, cookiecutter, files
 from cookieplone.utils.console import quiet_mode
 from cookieplone.utils.cookiecutter import load_replay
@@ -144,6 +146,11 @@ def generate_subtemplate(
     nested template.  Quiet mode is enabled for the duration so that the
     sub-template's output does not clutter the parent run's UI.
 
+    .. deprecated:: 2.0.0
+        Use :func:`~cookieplone.utils.subtemplates.run_subtemplates` instead,
+        which handles the full subtemplates loop with automatic fallback for
+        subtemplates that don't need custom handlers.
+
     :param template_path: Relative path (within the repository) to the
         sub-template directory.
     :param output_dir: Directory where the sub-template output should be
@@ -156,6 +163,16 @@ def generate_subtemplate(
     :returns: Path to the generated sub-template directory.
     :raises GeneratorException: If generation of the sub-template fails.
     """
+    # Suppress the deprecation warning while quiet mode is active, so that
+    # subtemplate runs driven by run_subtemplates() do not flood the parent
+    # run's UI with repeated warnings for each dispatched subtemplate.
+    if not os.environ.get(QUIET_MODE_VAR):
+        warnings.warn(
+            "generate_subtemplate() is deprecated. "
+            "Use cookieplone.utils.subtemplates.run_subtemplates() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     # Extract path to repository
     repository = files.get_repository_root(context, template_path)
     # Cleanup context
