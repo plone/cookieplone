@@ -72,6 +72,9 @@ TEMPLATES_REPO = "https://github.com/plone/cookieplone-templates"
 REPO_DEFAULT = "gh:plone/cookieplone-templates"
 REPO_DEFAULT_TAG = "next"  # Default branch of cookieplone-templates
 
+# Subtemplates
+TEMPLATES_FOLDER = "templates"
+
 # Config
 QUIET_MODE_VAR = "COOKIEPLONE_QUIET_MODE_SWITCH"
 REPO_LOCATION = "COOKIEPLONE_REPOSITORY"

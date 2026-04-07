@@ -28,6 +28,7 @@ JavaScript
 jQuery
 libxslt
 Mockup
+monorepo
 npm
 nvm
 Pastanaga
