@@ -1,22 +1,25 @@
 from __future__ import annotations
 
-import os
-import sys
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
+from contextlib import suppress
 from copy import copy
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+import os
+import sys
+
 
 if TYPE_CHECKING:
     from jinja2 import Environment
 
 from cookiecutter.exceptions import OutputDirExistsException
-from cookiecutter.replay import dump, load
+from cookiecutter.replay import dump
+from cookiecutter.replay import load
 from cookiecutter.utils import create_env_with_context
-from jinja2.exceptions import UndefinedError
-
 from cookieplone.config import Answers
 from cookieplone.settings import DEFAULT_DATA_KEY
+from jinja2.exceptions import UndefinedError
 
 
 @contextmanager

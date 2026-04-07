@@ -1,0 +1,74 @@
+{
+  "version": "1.0",
+  "title": "Test Templates",
+  "description": "Templates used for testing cookieplone",
+  "groups": {
+    "projects": {
+      "title": "Projects",
+      "description": "Project templates",
+      "templates": ["project", "project_classic"],
+      "hidden": false
+    },
+    "addons": {
+      "title": "Add-ons",
+      "description": "Add-on templates",
+      "templates": ["backend_addon", "frontend_addon"],
+      "hidden": false
+    },
+    "distributions": {
+      "title": "Distributions",
+      "description": "Distribution templates",
+      "templates": ["distribution"],
+      "hidden": false
+    },
+    "sub": {
+      "title": "Sub-Templates",
+      "description": "Internal sub-templates",
+      "templates": ["sub/cache"],
+      "hidden": true
+    }
+  },
+  "templates": {
+    "project": {
+      "path": "./templates/projects/monorepo",
+      "title": "A Plone Project",
+      "description": "Create a new Plone project with backend and frontend components",
+      "hidden": false
+    },
+    "project_classic": {
+      "path": "./templates/projects/classic",
+      "title": "A Plone Classic Project",
+      "description": "Create a new Plone Classic project",
+      "hidden": false
+    },
+    "backend_addon": {
+      "path": "./templates/addons/backend",
+      "title": "Backend Add-on for Plone",
+      "description": "Create a new Python package to be used with Plone",
+      "hidden": false
+    },
+    "frontend_addon": {
+      "path": "./templates/addons/frontend",
+      "title": "Frontend Add-on for Plone",
+      "description": "Create a new Node package to be used with Volto",
+      "hidden": false
+    },
+    "distribution": {
+      "path": "./templates/distributions/monorepo",
+      "title": "A Plone and Volto distribution",
+      "description": "Create a new Distribution with Plone and Volto",
+      "hidden": false
+    },
+    "sub/cache": {
+      "path": "./templates/sub/cache",
+      "title": "A subtemplate to handle cache settings",
+      "description": "Update cache settings for a project",
+      "hidden": true
+    }
+  },
+  "config": {
+    "versions": {
+      "gha_version_checkout": "v6"
+    }
+  }
+}

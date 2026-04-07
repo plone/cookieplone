@@ -1,7 +1,7 @@
-import pytest
 from click.exceptions import BadParameter
-
 from cookieplone import cli
+
+import pytest
 
 
 @pytest.mark.parametrize(

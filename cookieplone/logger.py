@@ -1,8 +1,10 @@
+from cookiecutter.log import LOG_FORMATS
+from cookiecutter.log import LOG_LEVELS
+from cookiecutter.log import configure_logger as cookicutter_logger
+
 import logging
 import sys
 
-from cookiecutter.log import LOG_FORMATS, LOG_LEVELS
-from cookiecutter.log import configure_logger as cookicutter_logger
 
 logger = logging.getLogger("cookieplone")
 

@@ -1,0 +1,1 @@
+Fixed `latest_volto` and `latest_plone` filters so they accept either a string or a boolean value, allowing them to be used in v2 schemas where `use_prerelease_versions` is declared as a `boolean` property. `parse_boolean` now handles `str`, `bool`, and `int` inputs. @ericof

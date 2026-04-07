@@ -1,10 +1,9 @@
-import json
+from cookiecutter.generate import generate_context
+from cookieplone.utils.cookiecutter import create_jinja_env
 from pathlib import Path
 
+import json
 import pytest
-from cookiecutter.generate import generate_context
-
-from cookieplone.utils.cookiecutter import create_jinja_env
 
 
 @pytest.fixture
@@ -104,3 +103,46 @@ def test_filters(generate_context_file, filter_: str, raw: str, expected: str):
     context = generate_context(path)
     env = create_jinja_env(context)
     assert env.from_string(raw).render() == expected
+
+
+@pytest.mark.parametrize(
+    "filter_name,template,value,expected_arg",
+    [
+        ("latest_plone", "{{ true | latest_plone }}", True, True),
+        ("latest_plone", "{{ false | latest_plone }}", False, False),
+        ("latest_plone", "{{ 'yes' | latest_plone }}", "yes", True),
+        ("latest_plone", "{{ 'no' | latest_plone }}", "no", False),
+        ("latest_volto", "{{ true | latest_volto }}", True, True),
+        ("latest_volto", "{{ false | latest_volto }}", False, False),
+        ("latest_volto", "{{ 'yes' | latest_volto }}", "yes", True),
+        ("latest_volto", "{{ 'no' | latest_volto }}", "no", False),
+    ],
+    ids=[
+        "latest_plone-bool-true",
+        "latest_plone-bool-false",
+        "latest_plone-str-yes",
+        "latest_plone-str-no",
+        "latest_volto-bool-true",
+        "latest_volto-bool-false",
+        "latest_volto-str-yes",
+        "latest_volto-str-no",
+    ],
+)
+def test_version_filters_accept_bool_or_str(
+    monkeypatch, generate_context_file, filter_name, template, value, expected_arg
+):
+    """latest_plone/latest_volto pass the correct bool to the resolver."""
+    captured: dict[str, bool] = {}
+
+    def fake_resolver(*, allow_prerelease):
+        captured["allow_prerelease"] = allow_prerelease
+        return "9.9.9"
+
+    monkeypatch.setattr(f"cookieplone.filters.versions.{filter_name}", fake_resolver)
+
+    path = generate_context_file(filter_name)
+    context = generate_context(path)
+    env = create_jinja_env(context)
+    rendered = env.from_string(template).render()
+    assert rendered == "9.9.9"
+    assert captured["allow_prerelease"] is expected_arg

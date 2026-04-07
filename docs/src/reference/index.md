@@ -16,6 +16,7 @@ Use these pages to look up exact behaviour, accepted values, and defaults.
 :maxdepth: 1
 
 cli
+repository-config
 schema-v2
 schema-v1
 filters

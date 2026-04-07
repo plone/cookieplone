@@ -1,9 +1,8 @@
 """Tests for cookieplone.config.v1."""
 
-from typing import Any
-
 from cookieplone.config.v1 import parse_v1
 from cookieplone.config.v2 import ParsedConfig
+from typing import Any
 
 
 def test_returns_parsed_config():

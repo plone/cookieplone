@@ -3,25 +3,29 @@
 # SPDX-License-Identifier: MIT
 """Main `cookieplone` CLI."""
 
-import os
+from cookieplone import _types as t
+from cookieplone import data
+from cookieplone import settings
+from cookieplone._types import GenerateConfig
+from cookieplone.exceptions import GeneratorException
+from cookieplone.exceptions import PreFlightException
+from cookieplone.generator import generate
+from cookieplone.logger import configure_logger
+from cookieplone.logger import logger
+from cookieplone.repository import get_base_repository
+from cookieplone.repository import get_template_groups
+from cookieplone.repository import get_template_options
+from cookieplone.utils import console
+from cookieplone.utils import files
+from cookieplone.utils import internal
 from copy import deepcopy
 from pathlib import Path
-from typing import Annotated, Any
-
-import typer
 from rich.prompt import Prompt
+from typing import Annotated
+from typing import Any
 
-from cookieplone import _types as t
-from cookieplone import data, settings
-from cookieplone._types import GenerateConfig
-from cookieplone.exceptions import GeneratorException, PreFlightException
-from cookieplone.generator import generate
-from cookieplone.logger import configure_logger, logger
-from cookieplone.repository import (
-    get_base_repository,
-    get_template_options,
-)
-from cookieplone.utils import console, files, internal
+import os
+import typer
 
 
 def validate_extra_context(value: list[str] | None = None) -> list[str]:
@@ -100,12 +104,34 @@ def annotate_context(context: dict, repo_path: Path, template: str) -> dict:
     return context
 
 
+def prompt_for_group(
+    groups: dict[str, t.CookieploneTemplateGroup],
+) -> t.CookieploneTemplateGroup:
+    """Display template groups and prompt user to choose one."""
+    choices = {f"{idx}": name for idx, name in enumerate(groups, 1)}
+    console.welcome_screen(groups=groups)
+    answer = Prompt.ask("Select a category", choices=list(choices.keys()), default="1")
+    return groups[choices[answer]]
+
+
 def prompt_for_template(base_path: Path, all_: bool = False) -> t.CookieploneTemplate:
-    """Parse cookiecutter.json in base_path and prompt user to choose."""
-    templates = get_template_options(base_path, all_)
+    """Parse config in base_path and prompt user to choose a template.
+
+    When the repository defines groups, a two-step selection is presented:
+    first the user picks a category, then a template within that category.
+    Otherwise the flat template list is shown directly.
+    """
+    groups = get_template_groups(base_path, all_)
+    if groups:
+        group = prompt_for_group(groups)
+        console.clear_screen()
+        templates = group.templates
+    else:
+        templates = get_template_options(base_path, all_)
     choices = {f"{idx}": name for idx, name in enumerate(templates, 1)}
-    console.welcome_screen(templates)
+    console.welcome_screen(templates=templates)
     answer = Prompt.ask("Select a template", choices=list(choices.keys()), default="1")
+    console.clear_screen()
     return templates[choices[answer]]
 
 
@@ -139,7 +165,9 @@ def cli(
         data.OptionalPath,
         typer.Option("--output-dir", "-o", help="Where to generate the code."),
     ] = None,
-    tag: Annotated[str, typer.Option("--tag", "--branch", help="Tag.")] = "main",
+    tag: Annotated[
+        str, typer.Option("--tag", "--branch", help="Tag.")
+    ] = settings.REPO_DEFAULT_TAG,
     info: Annotated[
         bool,
         typer.Option(

@@ -1,9 +1,8 @@
+from cookieplone import validators
+from tui_forms.form.question import ValidationError
 from typing import Any
 
 import pytest
-from tui_forms.form.question import ValidationError
-
-from cookieplone import validators
 
 
 @pytest.mark.parametrize(

@@ -35,6 +35,7 @@ add-validators-to-your-template
 add-computed-fields
 use-built-in-filters
 create-a-hidden-template
+call-subtemplates-from-a-hook
 write-a-pre-prompt-hook
 ```
 

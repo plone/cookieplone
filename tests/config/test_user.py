@@ -1,9 +1,9 @@
+from cookieplone.config import user as config
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from cookieplone.config import user as config
 
 CONFIG_FILES: dict[str, dict] = {
     "badconfig.yml": {"src": "badconfig", "contents": {}},

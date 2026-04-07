@@ -1,6 +1,7 @@
+from cookieplone.utils import config
+
 import pytest
 
-from cookieplone.utils import config
 
 CONFIG_FILES = [
     "config/v1-agents_instructions.json",

@@ -32,7 +32,7 @@ dependencies = [
   "packaging==26.0",
   "gitpython==3.1.46",
   "xmltodict==1.0.4",
-  "tui-forms>=1.0.0a2",
+  "tui-forms>=1.0.0a4",
 ]
 
 [project.entry-points.pytest11]
@@ -67,6 +67,7 @@ dev = [
   "towncrier>=23.11.0",
   "zest-releaser[recommended]>=9.1.3",
   "zestreleaser-towncrier>=1.3.0",
+  "tui-forms[test]>=1.0.0a4",
 ]
 
 docs = [
@@ -92,6 +93,8 @@ docs = [
 
 [tool.uv]
 default-groups = ["dev", "docs"]
+
+[tool.uv.sources]
 
 [tool.coverage.run]
 source_pkgs = ["cookieplone"]
@@ -154,6 +157,14 @@ lint.ignore = [
 
 [tool.ruff.format]
 preview = true
+
+[tool.ruff.lint.isort]
+case-sensitive = false
+no-sections = true
+force-single-line = true
+from-first = true
+lines-after-imports = 2
+lines-between-types = 1
 
 [tool.ruff.lint.per-file-ignores]
 "cookieplone/utils/commands/__init__.py" = ["S603"]
