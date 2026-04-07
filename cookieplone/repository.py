@@ -426,12 +426,16 @@ def get_repository(
 
     base_repo_dir = Path(base_repo_dir)
 
-    # Extract global versions from the repository-level config (if present).
+    # Extract global versions and renderer preference from the
+    # repository-level config (if present).
     global_versions: dict[str, str] = {}
+    renderer: str = ""
     if _repository_has_config(root_repo_dir):
         try:
             repo_config = get_repository_config(root_repo_dir)
-            global_versions = repo_config.get("config", {}).get("versions", {})
+            repo_config_section = repo_config.get("config", {})
+            global_versions = repo_config_section.get("versions", {})
+            renderer = repo_config_section.get("renderer", "")
         except RuntimeError:
             pass
 
@@ -454,5 +458,6 @@ def get_repository(
         accept_hooks=accept_hooks,
         config_dict=config_dict,
         global_versions=global_versions,
+        renderer=renderer,
         cleanup_paths=cleanup_paths,
     )

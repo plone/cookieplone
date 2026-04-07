@@ -88,7 +88,11 @@ def _cookieplone(
     # except when 'no-input' flag is set
     with import_patch(repository_info.repo_dir):
         wizard_answers = wizard(
-            state, internal_data, run_config.no_input, root_key=default_key
+            state,
+            internal_data,
+            run_config.no_input,
+            root_key=default_key,
+            renderer=repository_info.renderer,
         )
         internal_data.update(wizard_answers.answers)
 

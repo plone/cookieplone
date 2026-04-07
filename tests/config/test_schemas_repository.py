@@ -70,6 +70,33 @@ class TestValidateRepositoryConfig:
         valid, _errors = validate_repository_config(data)
         assert valid is True
 
+    def test_with_config_renderer(self):
+        data = _minimal_repo()
+        data["config"] = {"renderer": "rich"}
+        valid, _errors = validate_repository_config(data)
+        assert valid is True
+
+    def test_with_config_versions_and_renderer(self):
+        data = _minimal_repo()
+        data["config"] = {
+            "versions": {"gha_checkout": "v6"},
+            "renderer": "stdlib",
+        }
+        valid, _errors = validate_repository_config(data)
+        assert valid is True
+
+    def test_renderer_must_be_string(self):
+        data = _minimal_repo()
+        data["config"] = {"renderer": 42}
+        valid, _errors = validate_repository_config(data)
+        assert valid is False
+
+    def test_renderer_must_not_be_empty_string(self):
+        data = _minimal_repo()
+        data["config"] = {"renderer": ""}
+        valid, _errors = validate_repository_config(data)
+        assert valid is False
+
     def test_multiple_groups(self):
         data = _minimal_repo()
         data["groups"]["addons"] = {

@@ -48,6 +48,22 @@ Also checked under the name `COOKIECUTTER_REPO_PASSWORD` for compatibility.
 
 Set this variable rather than embedding credentials in the repository URL.
 
+## `COOKIEPLONE_RENDERER`
+
+- **Type**: string (one of `cookiecutter`, `noinput`, `rich`, `stdlib`)
+- **Default**: `cookiecutter`
+
+Selects which `tui_forms` renderer the wizard uses for interactive runs.
+Overrides the `config.renderer` value in the repository's `cookieplone-config.json`.
+The `--no-input` flag always forces the `noinput` renderer regardless of this variable.
+
+```console
+export COOKIEPLONE_RENDERER=rich
+cookieplone
+```
+
+If the renderer name is not registered with `tui_forms`, Cookieplone aborts with an `InvalidConfiguration` error listing the available renderers.
+
 ## `COOKIEPLONE_QUIET_MODE_SWITCH`
 
 - **Type**: string

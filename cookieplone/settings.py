@@ -80,6 +80,11 @@ QUIET_MODE_VAR = "COOKIEPLONE_QUIET_MODE_SWITCH"
 REPO_LOCATION = "COOKIEPLONE_REPOSITORY"
 REPO_TAG = "COOKIEPLONE_REPOSITORY_TAG"
 REPO_PASSWORD = "COOKIEPLONE_REPO_PASSWORD"  # noQA:S105
+RENDERER_VAR = "COOKIEPLONE_RENDERER"
+
+# Default tui_forms renderer used by the wizard for interactive runs.
+# ``no_input`` runs always force the ``noinput`` renderer.
+DEFAULT_RENDERER = "cookiecutter"
 
 # Connectivity
 REQUESTS_TIMEOUT = 10

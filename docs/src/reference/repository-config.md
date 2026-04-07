@@ -134,7 +134,8 @@ Global configuration shared across all templates in the repository.
       "gha_version_checkout": "v6",
       "gha_version_setup_node": "v4",
       "frontend_pnpm": "10.20.0"
-    }
+    },
+    "renderer": "rich"
   }
 }
 ```
@@ -152,6 +153,26 @@ Individual templates can override specific version values through their own `con
 Template-level values take precedence over repository-level values for the same key.
 
 See {doc}`/reference/schema-v2` for details on the per-template `config.versions`.
+
+### `config.renderer`
+
+Selects which `tui_forms` renderer is used by the wizard for interactive runs in this repository.
+Valid values are the renderer names registered with `tui_forms`: `cookiecutter` (default), `rich`, and `stdlib`.
+
+```json
+{
+  "config": {
+    "renderer": "rich"
+  }
+}
+```
+
+The `COOKIEPLONE_RENDERER` environment variable takes precedence over this field, so end-users can override the repository preference on a per-run basis.
+The `--no-input` flag always forces the `noinput` renderer regardless of either setting.
+
+If the configured renderer name is not registered with `tui_forms`, Cookieplone aborts with an `InvalidConfiguration` error listing the available renderers.
+
+See {doc}`/reference/environment-variables` for the corresponding environment variable.
 
 (repo-extends)=
 ## `extends`
