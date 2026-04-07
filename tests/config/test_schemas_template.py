@@ -1,8 +1,8 @@
 """Tests for cookieplone.config.schemas.template."""
 
-import pytest
-
 from cookieplone.config.schemas import validate_cookieplone_config
+
+import pytest
 
 
 def _minimal_v2():

@@ -1,9 +1,10 @@
 """Tests for cookieplone.config.schemas.repository."""
 
-import json
+from cookieplone.config.schemas import validate_repository_config
 from pathlib import Path
 
-from cookieplone.config.schemas import validate_repository_config
+import json
+
 
 RESOURCES = Path(__file__).parent.parent / "_resources" / "config"
 

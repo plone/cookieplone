@@ -3,12 +3,13 @@
 # SPDX-License-Identifier: MIT
 """Converter CLI."""
 
+from cookieplone.utils import config
+from cookieplone.utils import console
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
-from cookieplone.utils import config, console
 
 app = typer.Typer()
 

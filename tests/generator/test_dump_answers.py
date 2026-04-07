@@ -1,9 +1,8 @@
 """Tests for _dump_answers."""
 
-from unittest.mock import MagicMock
-
 from cookieplone.config.state import Answers
 from cookieplone.generator import _dump_answers
+from unittest.mock import MagicMock
 
 
 def test_calls_write_answers(mock_write_answers, tmp_path):

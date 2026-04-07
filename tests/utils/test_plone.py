@@ -1,6 +1,7 @@
+from cookieplone.utils import plone
+
 import pytest
 
-from cookieplone.utils import plone
 
 CONTENT = {
     "packagename": {

@@ -1,6 +1,6 @@
-import pytest
-
 from cookieplone.utils.parsers import parse_boolean
+
+import pytest
 
 
 class TestParseBoolean:

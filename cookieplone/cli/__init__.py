@@ -3,26 +3,29 @@
 # SPDX-License-Identifier: MIT
 """Main `cookieplone` CLI."""
 
-import os
+from cookieplone import _types as t
+from cookieplone import data
+from cookieplone import settings
+from cookieplone._types import GenerateConfig
+from cookieplone.exceptions import GeneratorException
+from cookieplone.exceptions import PreFlightException
+from cookieplone.generator import generate
+from cookieplone.logger import configure_logger
+from cookieplone.logger import logger
+from cookieplone.repository import get_base_repository
+from cookieplone.repository import get_template_groups
+from cookieplone.repository import get_template_options
+from cookieplone.utils import console
+from cookieplone.utils import files
+from cookieplone.utils import internal
 from copy import deepcopy
 from pathlib import Path
-from typing import Annotated, Any
-
-import typer
 from rich.prompt import Prompt
+from typing import Annotated
+from typing import Any
 
-from cookieplone import _types as t
-from cookieplone import data, settings
-from cookieplone._types import GenerateConfig
-from cookieplone.exceptions import GeneratorException, PreFlightException
-from cookieplone.generator import generate
-from cookieplone.logger import configure_logger, logger
-from cookieplone.repository import (
-    get_base_repository,
-    get_template_groups,
-    get_template_options,
-)
-from cookieplone.utils import console, files, internal
+import os
+import typer
 
 
 def validate_extra_context(value: list[str] | None = None) -> list[str]:

@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
-import os
-
 from cookiecutter.utils import simple_filter
-
-from cookieplone.utils import containers, npm, versions
+from cookieplone.utils import containers
+from cookieplone.utils import npm
+from cookieplone.utils import versions
 from cookieplone.utils.parsers import parse_boolean
+
+import os
 
 
 @simple_filter

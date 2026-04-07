@@ -1,9 +1,8 @@
+from cookieplone.exceptions import RepositoryNotFound
+from cookieplone.utils import files
 from pathlib import Path
 
 import pytest
-
-from cookieplone.exceptions import RepositoryNotFound
-from cookieplone.utils import files
 
 
 @pytest.fixture

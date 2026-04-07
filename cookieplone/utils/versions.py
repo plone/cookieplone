@@ -1,13 +1,13 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
-import re
-
-import requests
-import semver
+from cookieplone import settings
 from packaging.version import Version
 
-from cookieplone import settings
+import re
+import requests
+import semver
+
 
 VERSION_PATTERNS = (
     (r"^(a)(\d{1,2})", r"alpha.\2"),

@@ -1,10 +1,10 @@
-import json
-from pathlib import Path
-
-import pytest
-
 from cookieplone import _types as t
 from cookieplone import repository
+from pathlib import Path
+
+import json
+import pytest
+
 
 TEMPLATE_PARAMS = [
     (

@@ -1,9 +1,8 @@
-import subprocess
+from cookieplone.utils import formatters
 from unittest.mock import patch
 
 import pytest
-
-from cookieplone.utils import formatters
+import subprocess
 
 
 class TestUvx:

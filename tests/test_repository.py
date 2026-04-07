@@ -1,11 +1,10 @@
-import json
-from pathlib import Path
-
-import pytest
 from cookiecutter.exceptions import FailedHookException
-
 from cookieplone import repository
 from cookieplone.exceptions import PreFlightException
+from pathlib import Path
+
+import json
+import pytest
 
 
 @pytest.fixture

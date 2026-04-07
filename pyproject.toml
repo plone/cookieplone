@@ -158,6 +158,14 @@ lint.ignore = [
 [tool.ruff.format]
 preview = true
 
+[tool.ruff.lint.isort]
+case-sensitive = false
+no-sections = true
+force-single-line = true
+from-first = true
+lines-after-imports = 2
+lines-between-types = 1
+
 [tool.ruff.lint.per-file-ignores]
 "cookieplone/utils/commands/__init__.py" = ["S603"]
 "tests/*" = ["S101"]

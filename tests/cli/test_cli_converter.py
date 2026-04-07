@@ -1,9 +1,9 @@
+from cookieplone.cli.converter import app
 from pathlib import Path
-
-import pytest
 from typer.testing import CliRunner
 
-from cookieplone.cli.converter import app
+import pytest
+
 
 runner = CliRunner()
 

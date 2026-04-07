@@ -1,9 +1,9 @@
 """Tests for version merging in cookieplone.config.state."""
 
-import pytest
-
 from cookieplone.config import state as config
 from cookieplone.config.v2 import ParsedConfig
+
+import pytest
 
 
 @pytest.mark.parametrize(

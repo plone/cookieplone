@@ -1,11 +1,10 @@
 from collections import OrderedDict
-from copy import deepcopy
-from pathlib import Path
-from typing import Any
-
 from cookieplone.config import Answers
 from cookieplone.settings import CONFIG_COMPUTED_KEYS
 from cookieplone.utils import files
+from copy import deepcopy
+from pathlib import Path
+from typing import Any
 
 
 def remove_internal_keys(raw_answers: OrderedDict[str, Any] | dict[str, Any]) -> dict:

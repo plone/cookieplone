@@ -1,21 +1,19 @@
 # SPDX-FileCopyrightText: 2024-present Plone Foundation <board@plone.org>
 #
 # SPDX-License-Identifier: MIT
-import json
-from pathlib import Path
-from typing import Any
-
 from cookiecutter import exceptions as exc
 from cookiecutter import repository as base
-
 from cookieplone import _types as t
 from cookieplone import data
 from cookieplone.config import get_user_config
-from cookieplone.exceptions import (
-    PreFlightException,
-    RepositoryException,
-    RepositoryNotFound,
-)
+from cookieplone.exceptions import PreFlightException
+from cookieplone.exceptions import RepositoryException
+from cookieplone.exceptions import RepositoryNotFound
+from pathlib import Path
+from typing import Any
+
+import json
+
 
 REPO_CONFIG_FILENAME = "cookieplone-config.json"
 

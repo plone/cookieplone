@@ -1,9 +1,8 @@
-import json
-
-import pytest
-
 from cookieplone.config.state import Answers
 from cookieplone.utils import answers
+
+import json
+import pytest
 
 
 @pytest.mark.parametrize(

@@ -1,11 +1,12 @@
 """Validation for the repository-level ``cookieplone-config.json`` format."""
 
-import json
+from jsonschema.exceptions import ValidationError
 from pathlib import Path
 from typing import Any
 
+import json
 import jsonschema
-from jsonschema.exceptions import ValidationError
+
 
 _SCHEMA_PATH = Path(__file__).parent / "repository_config.schema.json"
 REPOSITORY_CONFIG_SCHEMA: dict[str, Any] = json.loads(_SCHEMA_PATH.read_text())

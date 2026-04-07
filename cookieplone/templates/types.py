@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Protocol
 
+
 StrPath = str | Path
 DataStructure = dict | list
 

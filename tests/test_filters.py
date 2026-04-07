@@ -1,10 +1,9 @@
-import json
+from cookiecutter.generate import generate_context
+from cookieplone.utils.cookiecutter import create_jinja_env
 from pathlib import Path
 
+import json
 import pytest
-from cookiecutter.generate import generate_context
-
-from cookieplone.utils.cookiecutter import create_jinja_env
 
 
 @pytest.fixture
