@@ -1,0 +1,8 @@
+# Revisions to ignore when running `git blame`.
+#
+# Configure your local git to use this file automatically:
+#
+#     git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Align ruff isort configuration with other Plone projects (#171, #172)
+86472e98f8cfe79a8df14378597ca5daf8687370
