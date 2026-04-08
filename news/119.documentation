@@ -1,1 +1,0 @@
-Documented how to drive sub-template generation from a post-generation hook with `run_subtemplates()` and a dictionary of custom handlers, using the `monorepo` project template as a reference. @ericof

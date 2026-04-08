@@ -1,1 +1,0 @@
-Fixed ``RepositoryException`` losing its error message and removed dead exception handlers in the generator module. @ericof

@@ -1,1 +1,0 @@
-Documented how to run a prerelease version of Cookieplone with `uvx` in both the README and the how-to guides, covering exact version pinning, `--prerelease=allow`, and persistent `uv tool install` workflows. @ericof

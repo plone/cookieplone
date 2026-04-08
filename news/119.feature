@@ -1,1 +1,0 @@
-Added `cookieplone.utils.subtemplates.run_subtemplates()`, a helper that post-generation hooks can use to drive sub-template generation via an explicit `{template_id: handler}` dispatch dict, with a default fallback for sub-templates that do not need custom handling. The legacy `cookieplone.generator.generate_subtemplate()` entry point is now deprecated. @ericof

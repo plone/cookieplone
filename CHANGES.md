@@ -9,6 +9,67 @@
 
 <!-- towncrier release notes start -->
 
+## 2.0.0a1 (2026-04-08)
+
+
+### New features:
+
+- Get default values for author and email from git config. @ericof [#51](https://github.com/plone/cookieplone/issues/51)
+- Support grouped template selection in the CLI when ``cookieplone-config.json`` defines ``groups``. Users first pick a category, then a template within that category. @ericof [#118](https://github.com/plone/cookieplone/issues/118)
+- Added `cookieplone.utils.subtemplates.run_subtemplates()`, a helper that post-generation hooks can use to drive sub-template generation via an explicit `{template_id: handler}` dispatch dict, with a default fallback for sub-templates that do not need custom handling. The legacy `cookieplone.generator.generate_subtemplate()` entry point is now deprecated. @ericof [#119](https://github.com/plone/cookieplone/issues/119)
+- Dump user answers to a .cookieplone.json file. inside the newly created codebase. @ericof [#121](https://github.com/plone/cookieplone/issues/121)
+- Support global version pinning from repository-level ``cookieplone-config.json``. Templates access shared versions via ``{{ versions.<key> }}`` with per-template overrides taking precedence. @ericof [#128](https://github.com/plone/cookieplone/issues/128)
+- Added support for tui-forms to ask user for answers. @ericof [#134](https://github.com/plone/cookieplone/issues/134)
+- Handle pre-prompt-hook fails without raising Typer errors. @ericof [#137](https://github.com/plone/cookieplone/issues/137)
+- Implemented `cookieplone-config.json` repository configuration format with JSON Schema validation, grouped templates, global version pinning, and backward-compatible fallback to `cookiecutter.json`. @ericof [#141](https://github.com/plone/cookieplone/issues/141)
+- Updated tui-forms to 1.0.0a2 with confirmation page, back-navigation, specific validation error messages, and JSONSchema constraint keywords support. @ericof [#142](https://github.com/plone/cookieplone/issues/142)
+- Refactored v2 config format to separate schema from generator configuration, with `SubTemplate` TypedDict, `config.versions` as a top-level context namespace, and Jinja2 rendering for subtemplate `enabled` fields. @ericof [#156](https://github.com/plone/cookieplone/issues/156)
+- Added support for selecting the `tui_forms` renderer used by the wizard. The renderer can be set via the `config.renderer` field in `cookieplone-config.json` or via the `COOKIEPLONE_RENDERER` environment variable, which takes precedence. The `--no-input` flag still forces the `noinput` renderer. Invalid renderer names are reported with a clear error listing the available options. @ericof [#165](https://github.com/plone/cookieplone/issues/165)
+- Implement cutter2plone command line utility to convert cookiecutter.json files to cookieplone.json. @ericof 
+- Implement generator logic to work with the new form wizard. @ericof 
+- Implement validators for plone_version, volto_version, python_package_name, hostname, language_code. @ericof 
+- Support loading answers from a json file by passing --answers or --answers-file. @ericof 
+- Tag option of the cli can be passed with `--branch` or `--tag`. @ericof 
+
+
+### Bug fixes:
+
+- Fixed `create_namespace_packages` to handle re-runs gracefully — existing namespace directories and destination packages are no longer raised as errors when running with the `-f` flag. @ericof [#139](https://github.com/plone/cookieplone/issues/139)
+- Fixed ``OutputDirExistsException`` not properly handled — added a dedicated ``OutputDirExistsException`` subclass with a user-friendly error message, fixed ``CookieploneException`` hierarchy to call ``super().__init__()``, and added a ``parse_output_dir_exception`` helper to extract the directory path from cookiecutter errors. @ericof [#140](https://github.com/plone/cookieplone/issues/140)
+- v1→v2 config converter now produces JSONSchema-compliant ``oneOf`` with ``const``/``title`` instead of the non-standard ``options`` keyword for choice fields. @ericof [#143](https://github.com/plone/cookieplone/issues/143)
+- Fixed ``RepositoryException`` losing its error message and removed dead exception handlers in the generator module. @ericof [#147](https://github.com/plone/cookieplone/issues/147)
+- Fixed `Cookies.bake()` helper to load `global_versions` from `cookieplone-config.json` so templates tested via pytest can resolve `{{ versions.<key> }}` the same way the CLI does. @ericof [#164](https://github.com/plone/cookieplone/issues/164)
+- Fixed `write_answers()` so that the `__template__` key is actually persisted to the generated `.cookieplone_answers_*.json` file. The key is now written to the persisted copy in both interactive and `--no-input` modes, and `write_answers()` no longer mutates the live wizard state. @ericof [#168](https://github.com/plone/cookieplone/issues/168)
+- Fixed `latest_volto` and `latest_plone` filters so they accept either a string or a boolean value, allowing them to be used in v2 schemas where `use_prerelease_versions` is declared as a `boolean` property. `parse_boolean` now handles `str`, `bool`, and `int` inputs. @ericof [#169](https://github.com/plone/cookieplone/issues/169)
+- Use the `--all` option to list all templates, including hidden ones. @ericof 
+
+
+### Internal:
+
+- Implement get_user_config to load user configuration from files. @ericof [#51](https://github.com/plone/cookieplone/issues/51)
+- Added VSCode recommended extensions and settings. @ericof [#123](https://github.com/plone/cookieplone/issues/123)
+- Added GHA to deploy documentation to GitHub pages. @ericof [#132](https://github.com/plone/cookieplone/issues/132)
+- Refactored `generate()` API: consolidated 15 positional parameters into a `GenerateConfig` dataclass. @ericof [#146](https://github.com/plone/cookieplone/issues/146)
+- Code health: moved ``parse_boolean`` to ``utils.parsers``, fixed ``import_patch`` exception safety, added ``quiet_mode()`` context manager, and resolved stale TODO comments. @ericof [#148](https://github.com/plone/cookieplone/issues/148)
+- Replaced formatter library imports (``black``, ``isort``, ``zpretty``, ``ruff``) with ``uvx`` subprocess calls, removing them from runtime dependencies. @ericof [#154](https://github.com/plone/cookieplone/issues/154)
+- Aligned ruff isort configuration with the rest of the Plone ecosystem: single-line, no-sections, `from`-first imports with two blank lines after the import block. Reformatted the entire codebase in one sweep. @ericof [#171](https://github.com/plone/cookieplone/issues/171)
+- Add a CODEOWNERS configuration to the repository. @ericof 
+- Added a `.git-blame-ignore-revs` file so the codebase-wide isort reformat (#171) can be skipped when running `git blame`. @ericof 
+- Update `make coverage` command to use `coverage run -m pytest` instead of `pytest --cov` . @ericof 
+
+
+### Documentation:
+
+- Documented how to drive sub-template generation from a post-generation hook with `run_subtemplates()` and a dictionary of custom handlers, using the `monorepo` project template as a reference. @ericof [#119](https://github.com/plone/cookieplone/issues/119)
+- Added comprehensive documentation about cookieplone and how to create new templates. @ericof [#132](https://github.com/plone/cookieplone/issues/132)
+- Documented how to run a prerelease version of Cookieplone with `uvx` in both the README and the how-to guides, covering exact version pinning, `--prerelease=allow`, and persistent `uv tool install` workflows. @ericof 
+
+
+### Tests
+
+- Added tests for config loaders (v1, v2), settings, wizard, and generator modules. @ericof [#145](https://github.com/plone/cookieplone/issues/145)
+- Reimplement the fixtures from pytest-cookies to use the new cookieplone and schemas. @ericof 
+
 ## 1.0.0 (2026-03-13)
 
 

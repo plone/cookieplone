@@ -1,1 +1,0 @@
-Added a `.git-blame-ignore-revs` file so the codebase-wide isort reformat (#171) can be skipped when running `git blame`. @ericof

@@ -1,1 +1,0 @@
-Fixed `write_answers()` so that the `__template__` key is actually persisted to the generated `.cookieplone_answers_*.json` file. The key is now written to the persisted copy in both interactive and `--no-input` modes, and `write_answers()` no longer mutates the live wizard state. @ericof

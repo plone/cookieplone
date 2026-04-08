@@ -1,1 +1,0 @@
-Replaced formatter library imports (``black``, ``isort``, ``zpretty``, ``ruff``) with ``uvx`` subprocess calls, removing them from runtime dependencies. @ericof
