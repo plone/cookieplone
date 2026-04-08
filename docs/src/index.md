@@ -19,6 +19,8 @@ uvx cookieplone
 
 Cookieplone downloads the latest templates and guides you through the setup.
 
+Looking for the upcoming 2.x line? See {doc}`how-to-guides/use-a-prerelease-version` to opt in to a prerelease such as `2.0.0a1`.
+
 ## Where to start
 
 Choose the section that matches your goal:

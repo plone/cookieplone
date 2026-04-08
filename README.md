@@ -67,6 +67,34 @@ uvx cookieplone@1.0.0
 
 Cookieplone will walk you through the necessary steps, using sensible defaults and offering customization options where needed.
 
+### Try a prerelease version
+
+Plain `uvx cookieplone` (and `uvx cookieplone@latest`) always picks the latest **stable** release — prerelease versions (`aN`, `bN`, `rcN`, `.devN`) are excluded by default, following [PEP 440](https://peps.python.org/pep-0440/) and the `uv` resolver defaults.
+
+To opt in to a prerelease — for example, `2.0.0a1` — pin the exact version:
+
+```shell
+uvx cookieplone@2.0.0a1
+```
+
+Or allow the resolver to consider any prerelease:
+
+```shell
+uvx --prerelease=allow cookieplone
+```
+
+If you previously installed Cookieplone with `uv tool install`, upgrade the tool explicitly so the cached stable install is replaced:
+
+```shell
+uv tool install --reinstall --prerelease=allow cookieplone
+```
+
+You can confirm which version is active with:
+
+```shell
+uvx cookieplone --version
+```
+
 ### Use options to avoid prompts
 
 Cookieplone will ask a lot of questions.

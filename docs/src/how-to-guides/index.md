@@ -22,6 +22,7 @@ automate-with-ci
 update-existing-project
 recover-from-mistakes
 use-a-custom-template-repository
+use-a-prerelease-version
 configure-cookieplone
 debug-a-failed-generation
 ```
