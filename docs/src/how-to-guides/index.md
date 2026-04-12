@@ -37,6 +37,7 @@ add-computed-fields
 use-built-in-filters
 create-a-hidden-template
 call-subtemplates-from-a-hook
+run-post-gen-actions
 write-a-pre-prompt-hook
 ```
 
