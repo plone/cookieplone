@@ -208,3 +208,51 @@ def test_does_not_warn_when_in_quiet_mode(
         w for w in captured if issubclass(w.category, DeprecationWarning)
     ]
     assert deprecation_warnings == []
+
+
+def test_propagates_global_versions(
+    mock_remove_internal_keys,
+    mock_get_repository_root,
+    mock_quiet_mode,
+    mock_generate,
+    tmp_path,
+):
+    """generate_subtemplate passes global_versions to GenerateConfig."""
+    mock_remove_internal_keys.return_value = {"title": "Test"}
+    mock_get_repository_root.return_value = str(tmp_path / "repo")
+    mock_generate.return_value = tmp_path / "output"
+    context = OrderedDict({"title": "Test", "_template": "/some/path"})
+    versions = {"plone.api": "2.1.0", "plone.restapi": "9.0.0"}
+
+    generate_subtemplate(
+        template_path="sub",
+        output_dir=tmp_path,
+        folder_name="my_folder",
+        context=context,
+        global_versions=versions,
+    )
+    config = mock_generate.call_args[0][0]
+    assert config.global_versions == versions
+
+
+def test_global_versions_defaults_to_none(
+    mock_remove_internal_keys,
+    mock_get_repository_root,
+    mock_quiet_mode,
+    mock_generate,
+    tmp_path,
+):
+    """generate_subtemplate defaults global_versions to None."""
+    mock_remove_internal_keys.return_value = {"title": "Test"}
+    mock_get_repository_root.return_value = str(tmp_path / "repo")
+    mock_generate.return_value = tmp_path / "output"
+    context = OrderedDict({"title": "Test", "_template": "/some/path"})
+
+    generate_subtemplate(
+        template_path="sub",
+        output_dir=tmp_path,
+        folder_name="my_folder",
+        context=context,
+    )
+    config = mock_generate.call_args[0][0]
+    assert config.global_versions is None

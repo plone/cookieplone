@@ -78,6 +78,7 @@ def run_subtemplates(
     context: OrderedDict,
     output_dir: Path,
     handlers: dict[str, SubtemplateHandler] | None = None,
+    global_versions: dict[str, str] | None = None,
 ) -> dict[str, Path]:
     """Process and generate all subtemplates defined in the context.
 
@@ -101,6 +102,10 @@ def run_subtemplates(
     :param handlers: Optional mapping of ``template_id`` →
         :data:`SubtemplateHandler` for subtemplates that need custom
         context manipulation.
+    :param global_versions: Version pins from the parent template's
+        ``cookieplone-config.json``.  Forwarded to each
+        :func:`~cookieplone.generator.generate_subtemplate` call so
+        that ``{{ versions.X }}`` works in child template files.
     :returns: Dict mapping ``template_id`` → generated ``Path`` for
         each subtemplate that was processed.
     """
@@ -151,6 +156,7 @@ def run_subtemplates(
                     output_dir=gen_output_dir,
                     folder_name=gen_folder_name,
                     context=deepcopy(context),
+                    global_versions=global_versions,
                 )
 
         results[template_id] = path

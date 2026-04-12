@@ -1,0 +1,1 @@
+Propagated versions dict to child templates in `generate_subtemplate()` and `run_subtemplates()` via explicit `global_versions` parameter, fixing `{{ versions.X }}` in subtemplates. @ericof

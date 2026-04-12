@@ -463,3 +463,42 @@ class TestRunSubtemplates:
         ]
         run_subtemplates(context, output_dir, handlers={"add-ons/backend": handler})
         assert QUIET_MODE_VAR not in os.environ
+
+    @patch("cookieplone.generator.generate_subtemplate")
+    @patch("cookieplone.utils.subtemplates.console_print")
+    def test_forwards_global_versions(
+        self, mock_print, mock_generate, context, output_dir
+    ):
+        """global_versions is forwarded to generate_subtemplate calls."""
+        mock_generate.return_value = output_dir / "backend"
+        context["__cookieplone_subtemplates"] = [
+            {
+                "id": "add-ons/backend",
+                "title": "Backend",
+                "enabled": "1",
+                "folder_name": "backend",
+            },
+        ]
+        versions = {"plone.api": "2.1.0", "plone.restapi": "9.0.0"}
+        run_subtemplates(context, output_dir, global_versions=versions)
+        call_kwargs = mock_generate.call_args
+        assert call_kwargs.kwargs["global_versions"] == versions
+
+    @patch("cookieplone.generator.generate_subtemplate")
+    @patch("cookieplone.utils.subtemplates.console_print")
+    def test_global_versions_defaults_to_none(
+        self, mock_print, mock_generate, context, output_dir
+    ):
+        """global_versions defaults to None when not provided."""
+        mock_generate.return_value = output_dir / "backend"
+        context["__cookieplone_subtemplates"] = [
+            {
+                "id": "add-ons/backend",
+                "title": "Backend",
+                "enabled": "1",
+                "folder_name": "backend",
+            },
+        ]
+        run_subtemplates(context, output_dir)
+        call_kwargs = mock_generate.call_args
+        assert call_kwargs.kwargs["global_versions"] is None
