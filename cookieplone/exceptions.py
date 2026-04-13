@@ -88,3 +88,8 @@ class FailedHookException(exc.FailedHookException):
 
 class InvalidConfiguration(exc.InvalidConfiguration):
     """Raised when a configuration is invalid."""
+
+
+class VersionTooOldException(CookieploneException):
+    """Raised when the installed cookieplone version is older than the
+    repository's ``config.min_version`` requirement."""

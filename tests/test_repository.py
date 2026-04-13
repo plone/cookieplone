@@ -1,6 +1,8 @@
 from cookiecutter.exceptions import FailedHookException
 from cookieplone import repository
 from cookieplone.exceptions import PreFlightException
+from cookieplone.exceptions import VersionTooOldException
+from cookieplone.repository import _check_min_version
 from pathlib import Path
 
 import json
@@ -127,3 +129,85 @@ class TestGetRepositoryConfigExtraction:
             template_path="",
         )
         assert info.renderer == ""
+
+
+class TestCheckMinVersion:
+    """Tests for _check_min_version."""
+
+    def test_no_min_version_key(self):
+        """No-op when min_version is absent."""
+        _check_min_version({})
+
+    def test_empty_min_version(self):
+        """No-op when min_version is an empty string."""
+        _check_min_version({"min_version": ""})
+
+    def test_version_satisfied(self, monkeypatch):
+        """No error when installed version meets the requirement."""
+        monkeypatch.setattr("cookieplone.__version__", "2.1.0")
+        _check_min_version({"min_version": "2.0.0"})
+
+    def test_version_exact_match(self, monkeypatch):
+        """No error when installed version equals min_version."""
+        monkeypatch.setattr("cookieplone.__version__", "2.0.0")
+        _check_min_version({"min_version": "2.0.0"})
+
+    def test_version_too_old(self, monkeypatch):
+        """Raises VersionTooOldException when installed version is older."""
+        monkeypatch.setattr("cookieplone.__version__", "1.3.0")
+        with pytest.raises(VersionTooOldException, match=r"cookieplone >= 2\.0\.0"):
+            _check_min_version({"min_version": "2.0.0"})
+
+    def test_error_message_includes_versions(self, monkeypatch):
+        """Error message includes both the required and installed versions."""
+        monkeypatch.setattr("cookieplone.__version__", "1.5.0")
+        with pytest.raises(VersionTooOldException, match=r"1\.5\.0") as exc_info:
+            _check_min_version({"min_version": "2.0.0"})
+        assert "uvx --no-cache cookieplone@2.0.0" in exc_info.value.message
+
+    def test_prerelease_satisfied(self, monkeypatch):
+        """Pre-release installed version satisfies a pre-release requirement."""
+        monkeypatch.setattr("cookieplone.__version__", "2.0.0a2")
+        _check_min_version({"min_version": "2.0.0a1"})
+
+    def test_prerelease_too_old(self, monkeypatch):
+        """Pre-release installed version fails against a newer pre-release."""
+        monkeypatch.setattr("cookieplone.__version__", "2.0.0a1")
+        with pytest.raises(VersionTooOldException):
+            _check_min_version({"min_version": "2.0.0a2"})
+
+    def test_dev_version_satisfies_prerelease(self, monkeypatch):
+        """Dev version (e.g. 2.0.0a2.dev0) satisfies an older pre-release."""
+        monkeypatch.setattr("cookieplone.__version__", "2.0.0a2.dev0")
+        _check_min_version({"min_version": "2.0.0a1"})
+
+    def test_get_repository_raises_on_min_version(self, tmp_path, monkeypatch):
+        """get_repository raises VersionTooOldException when min_version fails."""
+        repo_dir = tmp_path / "repo"
+        repo_dir.mkdir()
+        _write_repo_config(repo_dir, {"min_version": "99.0.0"})
+        monkeypatch.setattr(
+            repository,
+            "get_user_config",
+            lambda **_: {
+                "abbreviations": {},
+                "cookiecutters_dir": str(repo_dir.parent),
+                "replay_dir": str(repo_dir.parent),
+            },
+        )
+        monkeypatch.setattr(
+            repository,
+            "determine_repo_dir",
+            lambda **_: (repo_dir, False),
+        )
+        monkeypatch.setattr(
+            repository,
+            "_run_pre_hook",
+            lambda base, repo, accept_hooks: repo,
+        )
+        with pytest.raises(VersionTooOldException, match=r"cookieplone >= 99\.0\.0"):
+            repository.get_repository(
+                repository=str(repo_dir),
+                template_name="project",
+                template_path="",
+            )

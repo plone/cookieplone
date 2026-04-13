@@ -130,6 +130,7 @@ Global configuration shared across all templates in the repository.
 ```json
 {
   "config": {
+    "min_version": "2.0.0a2",
     "versions": {
       "gha_version_checkout": "v6",
       "gha_version_setup_node": "v4",
@@ -173,6 +174,29 @@ The `--no-input` flag always forces the `noinput` renderer regardless of either 
 If the configured renderer name is not registered with `tui_forms`, Cookieplone aborts with an `InvalidConfiguration` error listing the available renderers.
 
 See {doc}`/reference/environment-variables` for the corresponding environment variable.
+
+### `config.min_version`
+
+Declares the minimum Cookieplone version required by the templates in this repository.
+The value must be a valid [PEP 440](https://peps.python.org/pep-0440/) version string, including pre-release versions such as `2.0.0a1`.
+
+```json
+{
+  "config": {
+    "min_version": "2.0.0a2"
+  }
+}
+```
+
+When present, Cookieplone compares the installed version against this value before any generation begins.
+If the installed version is older, generation stops with an actionable error message:
+
+```text
+This template requires cookieplone >= 2.0.0a2, but you have 1.3.0 installed.
+Please upgrade:  uvx --no-cache cookieplone@2.0.0a2
+```
+
+When the key is absent or empty, no version check is performed (backwards compatible with existing repositories).
 
 (repo-extends)=
 ## `extends`
@@ -261,6 +285,7 @@ Cookieplone checks for `cookieplone-config.json` first, then falls back to `cook
     }
   },
   "config": {
+    "min_version": "2.0.0a2",
     "versions": {
       "gha_version_checkout": "v6",
       "frontend_pnpm": "10.20.0"
