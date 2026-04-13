@@ -177,7 +177,12 @@ def main():
     output_dir = Path.cwd()
 
     # {{ cookiecutter.__cookieplone_subtemplates }}
-    run_subtemplates(context, output_dir, handlers=SUBTEMPLATE_HANDLERS)
+    run_subtemplates(
+        context,
+        output_dir,
+        handlers=SUBTEMPLATE_HANDLERS,
+        global_versions=versions,
+    )
 
     # Continue with other post-generation tasks (namespace packages,
     # code formatting, git initialization, ...).
@@ -190,6 +195,33 @@ def main():
 
 if __name__ == "__main__":
     main()
+```
+
+### Propagating version pins
+
+The `global_versions` parameter passes the parent template's version pins (from {ref}`config.versions <repo-config>`) to each child sub-template.
+Without it, child templates cannot use `{{ versions.X }}` expressions because the `versions` dict would be empty when the sub-template renders.
+
+Pass the `versions` variable that Cookiecutter renders from the repository's `cookieplone-config.json`:
+
+```python
+versions: dict | OrderedDict = {{versions}}
+
+# later, in main():
+run_subtemplates(context, output_dir, handlers=SUBTEMPLATE_HANDLERS, global_versions=versions)
+```
+
+If your handlers call {py:func}`cookieplone.generator.generate_subtemplate` directly, pass `global_versions` there too:
+
+```python
+def generate_addons_backend(context: OrderedDict, output_dir: Path) -> Path:
+    return generator.generate_subtemplate(
+        f"{TEMPLATES_FOLDER}/add-ons/backend",
+        output_dir,
+        "backend",
+        context,
+        global_versions=versions,
+    )
 ```
 
 The trailing `# {{ cookiecutter.__cookieplone_subtemplates }}` comment is **important**: it ensures Cookiecutter treats the sub-templates list as a rendered context value, which is what `run_subtemplates()` then reads at runtime.

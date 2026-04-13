@@ -89,6 +89,7 @@ class GenerateConfig:
     skip_if_file_exists: bool = False
     keep_project_on_failure: bool = False
     dump_answers: bool = True
+    global_versions: dict[str, str] | None = None
 
     def to_run_config(self) -> RunConfig:
         """Build a :class:`RunConfig` from this generation configuration."""

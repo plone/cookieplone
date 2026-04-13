@@ -97,12 +97,20 @@ def generate(config: GenerateConfig) -> Path:
     )
 
     # Define cookieplone state
+    # When the caller supplies explicit global_versions (e.g. a parent
+    # template propagating versions to a subtemplate), use them as the
+    # base layer.  Versions discovered from the repository config are
+    # merged on top so that repository-level overrides still take effect.
+    effective_versions = {
+        **(config.global_versions or {}),
+        **repository_info.global_versions,
+    }
     state: CookieploneState = generate_state(
         template_path=repo_dir,
         default_context=repository_info.config_dict["default_context"],
         extra_context=config.extra_context,
         replay_context=context_from_replayfile if config.replay else None,
-        global_versions=repository_info.global_versions,
+        global_versions=effective_versions,
     )
 
     run_config = config.to_run_config()
@@ -141,6 +149,7 @@ def generate_subtemplate(
     folder_name: str,
     context: OrderedDict,
     remove_files: list[str] | None = None,
+    global_versions: dict[str, str] | None = None,
 ) -> Path:
     """Generate a sub-template as part of a larger cookieplone run.
 
@@ -162,6 +171,10 @@ def generate_subtemplate(
         repository root and to pass answers through to the sub-template.
     :param remove_files: Optional list of paths relative to the generated
         folder that should be deleted after generation.
+    :param global_versions: Version pins from the parent template's
+        ``cookieplone-config.json``.  Passed through to the child
+        :func:`generate` call so that ``{{ versions.X }}`` works in child
+        template files.
     :returns: Path to the generated sub-template directory.
     :raises GeneratorException: If generation of the sub-template fails.
     """
@@ -194,6 +207,7 @@ def generate_subtemplate(
         overwrite_if_exists=True,
         template_path=template_path,
         dump_answers=False,
+        global_versions=global_versions,
     )
     with quiet_mode():
         result = generate(config)
