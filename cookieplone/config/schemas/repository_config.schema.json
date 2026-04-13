@@ -50,6 +50,10 @@
         "renderer": {
           "type": "string",
           "minLength": 1
+        },
+        "min_version": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "additionalProperties": false

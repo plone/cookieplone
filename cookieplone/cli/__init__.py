@@ -9,6 +9,7 @@ from cookieplone import settings
 from cookieplone._types import GenerateConfig
 from cookieplone.exceptions import GeneratorException
 from cookieplone.exceptions import PreFlightException
+from cookieplone.exceptions import VersionTooOldException
 from cookieplone.generator import generate
 from cookieplone.logger import configure_logger
 from cookieplone.logger import logger
@@ -124,7 +125,6 @@ def prompt_for_template(base_path: Path, all_: bool = False) -> t.CookieploneTem
     groups = get_template_groups(base_path, all_)
     if groups:
         group = prompt_for_group(groups)
-        console.clear_screen()
         templates = group.templates
     else:
         templates = get_template_options(base_path, all_)
@@ -303,10 +303,7 @@ def cli(
     )
     try:
         generate(gen_config)
-    except GeneratorException as exc:
-        console.error(exc.message)
-        raise typer.Exit(1)  # noQA:B904
-    except PreFlightException as exc:
+    except (GeneratorException, PreFlightException, VersionTooOldException) as exc:
         console.error(exc.message)
         raise typer.Exit(1)  # noQA:B904
     except Exception as exc:

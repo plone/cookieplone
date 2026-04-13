@@ -9,6 +9,8 @@ from cookieplone.config import get_user_config
 from cookieplone.exceptions import PreFlightException
 from cookieplone.exceptions import RepositoryException
 from cookieplone.exceptions import RepositoryNotFound
+from cookieplone.exceptions import VersionTooOldException
+from packaging.version import Version
 from pathlib import Path
 from typing import Any
 
@@ -359,6 +361,28 @@ def _run_pre_hook(
     return repo_dir
 
 
+def _check_min_version(config_section: dict[str, Any]) -> None:
+    """Raise if the installed cookieplone is older than ``config.min_version``.
+
+    :param config_section: The ``config`` dict from ``cookieplone-config.json``.
+    :raises VersionTooOldException: When the installed version is too old.
+    """
+    min_version_str = config_section.get("min_version", "")
+    if not min_version_str:
+        return
+    from cookieplone import __version__
+
+    installed = Version(__version__)
+    required = Version(min_version_str)
+    if installed < required:
+        msg = (
+            f"This template requires cookieplone >= {required}, "
+            f"but you have {installed} installed.\n"
+            f"Please upgrade:  uvx --no-cache cookieplone@{required}"
+        )
+        raise VersionTooOldException(msg)
+
+
 def get_repository(
     repository: str | Path,
     template_name: str,
@@ -434,6 +458,7 @@ def get_repository(
             repo_config_section = repo_config.get("config", {})
             global_versions = repo_config_section.get("versions", {})
             renderer = repo_config_section.get("renderer", "")
+            _check_min_version(repo_config_section)
         except RuntimeError:
             pass
 

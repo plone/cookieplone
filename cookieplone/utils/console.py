@@ -5,6 +5,7 @@ from .internal import cookieplone_info
 from .internal import version_info
 from collections.abc import Sequence
 from contextlib import contextmanager
+from cookieplone import __version__ as cookieplone_version
 from cookieplone import _types as t
 from cookieplone.settings import QUIET_MODE_VAR
 from pathlib import Path
@@ -17,6 +18,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 from textwrap import dedent
+from typing import Any
 
 import os
 
@@ -95,7 +97,7 @@ def print(msg: str, style: str = "", color: str = ""):  # noQA:A001
     _print(f"{tag_open}{escape(msg)}{tag_close}")
 
 
-def print_plone_banner():
+def print_plone_banner() -> None:
     """Print Plone banner."""
     style: str = "bold"
     color: str = "blue"
@@ -103,31 +105,36 @@ def print_plone_banner():
     print(banner, style, color)
 
 
-def info(msg: str):
+def info(msg: str) -> None:
+    """Print an informational message in bold white."""
     style: str = "bold"
     color: str = "white"
     print(msg, style, color)
 
 
-def success(msg: str):
+def success(msg: str) -> None:
+    """Print a success message in bold green."""
     style: str = "bold"
     color: str = "green"
     print(msg, style, color)
 
 
-def error(msg: str):
+def error(msg: str) -> None:
+    """Print an error message in bold red."""
     style: str = "bold"
     color: str = "red"
     print(msg, style, color)
 
 
-def warning(msg: str):
+def warning(msg: str) -> None:
+    """Print a warning message in bold yellow."""
     style: str = "bold"
     color: str = "yellow"
     print(msg, style, color)
 
 
-def panel(title: str, msg: str = "", subtitle: str = "", url: str = ""):
+def panel(title: str, msg: str = "", subtitle: str = "", url: str = "") -> None:
+    """Print a Rich panel with an optional subtitle and clickable URL."""
     msg = dedent(msg)
     if url:
         msg = f"{msg}\n[link]{url}[/link]"
@@ -143,9 +150,16 @@ def panel(title: str, msg: str = "", subtitle: str = "", url: str = ""):
 def create_table(
     columns: list[dict] | None = None,
     rows: Sequence[Sequence[str]] | None = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> Table:
-    """Create table."""
+    """Create a Rich :class:`~rich.table.Table` from column definitions and row data.
+
+    :param columns: List of dicts, each containing a ``title`` key and any
+        extra keyword arguments accepted by :meth:`~rich.table.Table.add_column`.
+    :param rows: Sequence of row tuples passed to :meth:`~rich.table.Table.add_row`.
+    :param kwargs: Forwarded to the :class:`~rich.table.Table` constructor.
+    :returns: A fully populated :class:`~rich.table.Table`.
+    """
     table = Table(**kwargs)
     for column in columns:
         col_title = column.pop("title", "")
@@ -188,7 +202,19 @@ def list_available_groups(
 def welcome_screen(
     templates: dict[str, t.CookieploneTemplate] | None = None,
     groups: dict[str, t.CookieploneTemplateGroup] | None = None,
-):
+) -> None:
+    """Display the Cookieplone welcome screen with an optional template or group list.
+
+    Clears the terminal, renders the Plone banner, and — when provided —
+    appends a panel listing either template *groups* (category selection)
+    or individual *templates* (template selection).
+
+    :param templates: Templates to list.  Mutually exclusive with *groups*.
+    :param groups: Template groups to list.  Takes precedence over *templates*.
+    """
+    # Always clear the screen, even if we're not printing the banner,
+    # to ensure a clean start.
+    clear_screen()
     banner = choose_banner()
     items = [
         Align.center(f"[bold blue]{banner}[/bold blue]"),
@@ -205,19 +231,26 @@ def welcome_screen(
                 title_align="left",
             )
         )
+    panel_title = f"cookieplone ({cookieplone_version})"
     panel = Panel(
         Group(*items),
-        title="cookieplone",
+        title=panel_title,
     )
     base_print(panel)
 
 
-def version_screen():
+def version_screen() -> None:
     """Print version information."""
     base_print(version_info())
 
 
-def info_screen(repository: str | Path, passwd: str, tag: str):
+def info_screen(repository: str | Path, passwd: str, tag: str) -> None:
+    """Print a detailed information panel about the current Cookieplone installation.
+
+    :param repository: Template repository URL or local path.
+    :param passwd: Repository password (may be empty).
+    :param tag: Git tag or branch used for the repository.
+    """
     info = cookieplone_info(repository, passwd, tag)
     title = info["title"]
     subtitle = info["subtitle"]
