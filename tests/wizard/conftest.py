@@ -1,11 +1,22 @@
 """Shared fixtures for wizard tests."""
 
 from cookieplone.config.state import CookieploneState
+from cookieplone.settings import RENDERER_VAR
 from tui_forms.renderer.base import BaseRenderer
 from tui_forms.renderer.cookiecutter import CookiecutterRenderer
 from unittest.mock import MagicMock
 
+import os
 import pytest
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _clean_renderer_env():
+    """Ensure COOKIEPLONE_RENDERER is unset for all wizard tests."""
+    old = os.environ.pop(RENDERER_VAR, None)
+    yield
+    if old is not None:
+        os.environ[RENDERER_VAR] = old
 
 
 @pytest.fixture()

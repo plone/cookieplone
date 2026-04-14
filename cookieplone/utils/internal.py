@@ -11,12 +11,6 @@ from pathlib import Path
 import sys
 
 
-SIGNATURE = (
-    "Made with [bold][red]❤️[/red][/bold] by the"
-    " [bold][blue]Plone Community[/blue][/bold]"
-)
-
-
 def __cookiecutter_location__() -> Path:
     """Return the cookiecutter location."""
     import cookiecutter
@@ -37,15 +31,13 @@ def version_info() -> str:
         f"Cookieplone {__version__} from {__location__()} "
         f"(Cookiecutter {__cookiecutter_version__}, "
         f"Python {python_version})\n\n"
-        f"{SIGNATURE}"
+        f"{settings.SIGNATURE}"
     )
 
 
 def cookieplone_info(repository: str | Path, passwd: str = "", tag: str = "") -> dict:
     """Print information about current configuration."""
     return {
-        "title": "cookieplone",
-        "subtitle": SIGNATURE,
         "panels": {
             "cookieplone": {
                 "title": "Installation :zap:",

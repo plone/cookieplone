@@ -1,0 +1,1 @@
+Moved `min_version` check into `get_base_repository()` so version gating runs before the welcome screen. Added `sanity_screen()` for branded pre-flight error display and refactored console screens to share a `_render_screen()` helper. @ericof

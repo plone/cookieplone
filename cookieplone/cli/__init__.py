@@ -263,7 +263,11 @@ def cli(
     if answers_data := parse_answers_file(answers_file):
         template = answers_data.pop("__template__", template)
 
-    repo_path = get_base_repository(repository, tag)
+    try:
+        repo_path = get_base_repository(repository, tag)
+    except VersionTooOldException as exc:
+        console.sanity_screen(exc.message)
+        raise typer.Exit(1) from exc
 
     # Template info
     cookieplone_template = get_template(template, repo_path, all_)

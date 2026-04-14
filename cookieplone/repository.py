@@ -67,6 +67,9 @@ def get_base_repository(
         directory="",
     )
     base_repo_dir = Path(base_repo_dir).resolve()
+    if _repository_has_config(base_repo_dir):
+        repo_config = get_repository_config(base_repo_dir)
+        _check_min_version(repo_config.get("config", {}))
     return base_repo_dir
 
 
@@ -376,7 +379,7 @@ def _check_min_version(config_section: dict[str, Any]) -> None:
     required = Version(min_version_str)
     if installed < required:
         msg = (
-            f"This template requires cookieplone >= {required}, "
+            f"This repository requires cookieplone >= {required}, "
             f"but you have {installed} installed.\n"
             f"Please upgrade:  uvx --no-cache cookieplone@{required}"
         )
