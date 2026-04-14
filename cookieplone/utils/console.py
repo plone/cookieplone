@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from contextlib import contextmanager
 from cookieplone import __version__ as cookieplone_version
 from cookieplone import _types as t
-from cookieplone.settings import QUIET_MODE_VAR
+from cookieplone import settings
 from pathlib import Path
 from rich import print as base_print
 from rich.align import Align
@@ -79,7 +79,7 @@ def choose_banner() -> str:
 
 def _print(msg: str):
     """Wrapper around rich.print."""
-    if not os.environ.get(QUIET_MODE_VAR):
+    if not os.environ.get(settings.QUIET_MODE_VAR):
         base_print(msg)
 
 
@@ -199,6 +199,47 @@ def list_available_groups(
     return styled_list(items)
 
 
+def _render_screen(items: Sequence[Panel | Align], display_banner: bool = True) -> None:
+    """Clear the terminal and render a branded cookieplone screen.
+
+    Wraps the provided *items* inside a titled :class:`~rich.panel.Panel`
+    with the cookieplone version header and community signature.  When
+    *display_banner* is ``True`` the Plone logo is prepended.
+
+    :param items: Rich renderables (typically :class:`~rich.panel.Panel`
+        instances) to display inside the outer chrome.
+    :param display_banner: When ``True`` (default) prepend the Plone ASCII
+        banner above *items*.
+    """
+    clear_screen()
+    if display_banner:
+        banner = choose_banner()
+        items = [Align.center(f"[bold blue]{banner}[/bold blue]"), *items]
+    panel_title = f"cookieplone ({cookieplone_version})"
+    panel = Panel(
+        Group(*items),
+        title=panel_title,
+        subtitle=settings.SIGNATURE,
+    )
+    base_print(panel)
+
+
+def sanity_screen(msg: str) -> None:
+    """Display a full-screen error panel with the Plone banner.
+
+    Used for fatal pre-flight errors (e.g. version gating) that should be
+    shown *instead of* the welcome screen.
+
+    :param msg: Plain-text error message.  Rich markup characters are escaped
+        automatically.
+    """
+    styled_msg = f"\n[red]{escape(msg)}[/red]\n"
+    items = [
+        Panel(styled_msg, title="Error", title_align="left"),
+    ]
+    _render_screen(items, display_banner=True)
+
+
 def welcome_screen(
     templates: dict[str, t.CookieploneTemplate] | None = None,
     groups: dict[str, t.CookieploneTemplateGroup] | None = None,
@@ -214,11 +255,7 @@ def welcome_screen(
     """
     # Always clear the screen, even if we're not printing the banner,
     # to ensure a clean start.
-    clear_screen()
-    banner = choose_banner()
-    items = [
-        Align.center(f"[bold blue]{banner}[/bold blue]"),
-    ]
+    items = []
     if groups:
         items.append(
             Panel(list_available_groups(groups), title="Categories", title_align="left")
@@ -231,12 +268,7 @@ def welcome_screen(
                 title_align="left",
             )
         )
-    panel_title = f"cookieplone ({cookieplone_version})"
-    panel = Panel(
-        Group(*items),
-        title=panel_title,
-    )
-    base_print(panel)
+    _render_screen(items, display_banner=True)
 
 
 def version_screen() -> None:
@@ -252,8 +284,6 @@ def info_screen(repository: str | Path, passwd: str, tag: str) -> None:
     :param tag: Git tag or branch used for the repository.
     """
     info = cookieplone_info(repository, passwd, tag)
-    title = info["title"]
-    subtitle = info["subtitle"]
     panels = info["panels"]
     columns = [
         {"title": "", "justify": "left", "style": "cyan", "no_wrap": True, "ratio": 1},
@@ -273,22 +303,17 @@ def info_screen(repository: str | Path, passwd: str, tag: str) -> None:
                     title_align="left",
                 )
             )
-    panel = Panel(
-        Group(*items),
-        title=title,
-        subtitle=subtitle,
-    )
-    base_print(panel)
+    _render_screen(items, display_banner=False)
 
 
 def enable_quiet_mode():
     """Enable quiet mode."""
-    os.environ[QUIET_MODE_VAR] = "1"
+    os.environ[settings.QUIET_MODE_VAR] = "1"
 
 
 def disable_quiet_mode():
     """Disable quiet mode."""
-    os.environ.pop(QUIET_MODE_VAR, "")
+    os.environ.pop(settings.QUIET_MODE_VAR, "")
 
 
 @contextmanager

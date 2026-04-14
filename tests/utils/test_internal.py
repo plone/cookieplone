@@ -33,8 +33,6 @@ def test_version_info():
 def test_cookieplone_info(panel_id: str, panel_title: str):
     result = internal.cookieplone_info(settings.REPO_DEFAULT)
     assert isinstance(result, dict)
-    assert result["title"] == "cookieplone"
-    assert result["subtitle"] == internal.SIGNATURE
     panels = result["panels"]
     assert isinstance(panels, dict)
     panel = panels[panel_id]

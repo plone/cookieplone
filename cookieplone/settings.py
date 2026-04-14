@@ -136,3 +136,8 @@ DEFAULT_EXTENSIONS = [
     "cookiecutter.extensions.TimeExtension",
     "cookiecutter.extensions.UUIDExtension",
 ]
+
+SIGNATURE = (
+    "Made with [bold][red]❤️[/red][/bold] by the"
+    " [bold][blue]Plone Community[/blue][/bold]"
+)
