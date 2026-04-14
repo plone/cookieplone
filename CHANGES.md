@@ -9,6 +9,21 @@
 
 <!-- towncrier release notes start -->
 
+## 2.0.0a2 (2026-04-14)
+
+
+### New features:
+
+- Added `run_post_gen_actions()` helper and built-in post-generation handlers (`initialize_git_repository`, `create_namespace_packages`, `remove_files_by_key`, `move_files`, `run_make_format`) in `cookieplone.utils.post_gen`. @ericof [#177](https://github.com/plone/cookieplone/issues/177)
+- Added `config.min_version` to `cookieplone-config.json` so template repositories can declare the minimum Cookieplone version they require. @ericof [#180](https://github.com/plone/cookieplone/issues/180)
+- Moved `min_version` check into `get_base_repository()` so version gating runs before the welcome screen. Added `sanity_screen()` for branded pre-flight error display and refactored console screens to share a `_render_screen()` helper. @ericof 
+
+
+### Bug fixes:
+
+- Propagated versions dict to child templates in `generate_subtemplate()` and `run_subtemplates()` via explicit `global_versions` parameter, fixing `{{ versions.X }}` in subtemplates. @ericof [#178](https://github.com/plone/cookieplone/issues/178)
+- Fixed wizard tests leaking `COOKIEPLONE_RENDERER` from the user's shell by adding a session-scoped fixture that clears the env var. @ericof 
+
 ## 2.0.0a1 (2026-04-08)
 
 

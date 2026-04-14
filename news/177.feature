@@ -1,1 +1,0 @@
-Added `run_post_gen_actions()` helper and built-in post-generation handlers (`initialize_git_repository`, `create_namespace_packages`, `remove_files_by_key`, `move_files`, `run_make_format`) in `cookieplone.utils.post_gen`. @ericof

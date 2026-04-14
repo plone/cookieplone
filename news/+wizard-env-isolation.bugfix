@@ -1,1 +1,0 @@
-Fixed wizard tests leaking `COOKIEPLONE_RENDERER` from the user's shell by adding a session-scoped fixture that clears the env var. @ericof
