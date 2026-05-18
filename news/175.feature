@@ -1,0 +1,1 @@
+Implemented the repository `extends` mechanism so a downstream `cookieplone-config.json` can declare an upstream and inherit, override, add, or hide its templates with downstream-wins merge semantics, with support for tag pinning, transitive chains, cycle detection, and a depth limit. @ericof
