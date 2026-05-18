@@ -6,13 +6,26 @@ from typing import Any
 
 @dataclass
 class CookieploneTemplate:
-    """A template available in a cookieplone repository."""
+    """A template available in a cookieplone repository.
+
+    :param path: Template path relative to ``origin``.
+    :param name: Logical template identifier.
+    :param title: Display title.
+    :param description: Display description.
+    :param hidden: Whether the template is hidden from the default menu.
+    :param origin: Local path to the repository the template lives in.
+        For inherited templates this points at an upstream clone; for
+        local templates it is the downstream repository root.  Defaults
+        to ``None`` for backwards compatibility with code that constructs
+        :class:`CookieploneTemplate` without an explicit origin.
+    """
 
     path: Path
     name: str
     title: str
     description: str
     hidden: bool = False
+    origin: Path | None = None
 
 
 @dataclass
@@ -47,6 +60,7 @@ class RepositoryInfo:
     global_versions: dict[str, str] = field(default_factory=dict)
     renderer: str = ""
     cleanup_paths: list[Path] = field(default_factory=list)
+    upstream_repos: list[Path] = field(default_factory=list)
 
 
 @dataclass

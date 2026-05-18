@@ -6,6 +6,7 @@ from cookiecutter import repository as base
 from cookieplone import _types as t
 from cookieplone import data
 from cookieplone.config import get_user_config
+from cookieplone.config.merge import ORIGINS_KEY
 from cookieplone.config.merge import merge_repo_configs
 from cookieplone.config.merge import normalize_extends
 from cookieplone.exceptions import InvalidConfiguration
@@ -31,6 +32,23 @@ CONFIG_FILENAMES = [
 ]
 
 MAX_EXTENDS_DEPTH = 5
+
+# Cache keyed by the resolved string form of a repository's base path.
+# Each entry holds ``(merged_config, cleanup_paths, upstream_repos)`` —
+# populated by ``get_repository_config`` the first time it resolves a config
+# with an ``extends`` field, then returned verbatim on subsequent calls so
+# the upstream is not re-cloned per lookup.
+_RESOLUTION_CACHE: dict[str, tuple[dict[str, Any], list[Path], list[Path]]] = {}
+
+
+def _clear_resolution_cache() -> None:
+    """Reset the in-process extends resolution cache.
+
+    Intended for test setup/teardown.  Does not delete any filesystem state;
+    cleanup of cloned upstream directories is the responsibility of the
+    :class:`~cookieplone._types.RepositoryInfo` that captured them.
+    """
+    _RESOLUTION_CACHE.clear()
 
 
 def get_base_repository(
@@ -78,18 +96,16 @@ def get_base_repository(
     return base_repo_dir
 
 
-def get_repository_config(base_path: Path) -> dict[str, Any]:
-    """Open and parse the repository configuration file.
+def _load_raw_repository_config(base_path: Path) -> dict[str, Any]:
+    """Load and validate the repo config file at *base_path* without resolving
+    ``extends``.
 
-    Looks for ``cookieplone-config.json`` first.  When found, the file is
-    validated against :data:`~cookieplone.config.schemas.REPOSITORY_CONFIG_SCHEMA`
-    and the ``templates`` mapping is returned directly.
-
-    Falls back to the legacy ``cookiecutter.json`` when the new format is
-    not present.
+    Used by :func:`_resolve_extends` so the recursive resolver retains full
+    control of cycle and depth tracking; the public
+    :func:`get_repository_config` wraps this with caching and extends merging.
 
     :param base_path: Root directory of the template repository.
-    :returns: Parsed configuration dict containing at least a ``templates`` key.
+    :returns: Raw parsed configuration dict.
     :raises RuntimeError: When no configuration file is found or when
         ``cookieplone-config.json`` fails validation.
     """
@@ -116,6 +132,116 @@ def get_repository_config(base_path: Path) -> dict[str, Any]:
     )
 
 
+def get_repository_config(base_path: Path) -> dict[str, Any]:
+    """Load the repository config file and resolve any ``extends`` chain.
+
+    The configuration is loaded via :func:`_load_raw_repository_config` and,
+    when the config declares an ``extends`` field, the upstream repository
+    (and any transitive ones) is resolved and merged on top.  The returned
+    dict is the merged result and carries a top-level ``_template_origins``
+    mapping used by :func:`_parse_template_options` to resolve each template's
+    path against its origin repository.
+
+    Resolution results are cached in :data:`_RESOLUTION_CACHE` keyed by the
+    resolved *base_path* so subsequent lookups during the same run do not
+    re-clone the upstream.  Cleanup paths and ``upstream_repos`` recorded at
+    resolution time are picked up by :func:`get_repository` and propagated to
+    the resulting :class:`~cookieplone._types.RepositoryInfo`.
+
+    :param base_path: Root directory of the template repository.
+    :returns: Parsed configuration dict, possibly merged with one or more
+        upstream configs.
+    :raises RuntimeError: When no configuration file is found or when the
+        loaded or merged ``cookieplone-config.json`` fails validation.
+    :raises InvalidConfiguration: On cycle or depth-limit violations during
+        ``extends`` resolution.
+    :raises RepositoryException: When an upstream cannot be resolved.
+    """
+    cache_key = str(Path(base_path).resolve())
+    if cache_key in _RESOLUTION_CACHE:
+        return _RESOLUTION_CACHE[cache_key][0]
+
+    data = _load_raw_repository_config(base_path)
+    extends = data.get("extends") if isinstance(data, dict) else None
+    if extends:
+        merged, cleanup_paths, upstream_repos = _resolve_and_merge_extends(
+            downstream_config=data,
+            downstream_repo_dir=Path(base_path).resolve(),
+            extends=extends,
+        )
+        _RESOLUTION_CACHE[cache_key] = (merged, cleanup_paths, upstream_repos)
+        return merged
+
+    _RESOLUTION_CACHE[cache_key] = (data, [], [])
+    return data
+
+
+def _resolve_and_merge_extends(
+    downstream_config: dict[str, Any],
+    downstream_repo_dir: Path,
+    extends: Any,
+) -> tuple[dict[str, Any], list[Path], list[Path]]:
+    """Resolve a downstream's ``extends`` and merge it on top.
+
+    Loads the current user config (for abbreviations and clone directory),
+    delegates resolution and recursion to :func:`_resolve_extends`, then
+    folds the resolved upstream stack underneath *downstream_config* via
+    :func:`merge_repo_configs`.  Cross-referential checks on the merged
+    result are re-run because the merged dict no longer carries ``extends``.
+
+    :param downstream_config: Raw downstream config (already structurally
+        validated).
+    :param downstream_repo_dir: Resolved local path of the downstream repo.
+    :param extends: The downstream's ``extends`` value (string or object).
+    :returns: ``(merged_config, cleanup_paths, upstream_repos)`` — the merged
+        dict (with ``_template_origins``), the list of clone directories the
+        caller must delete after the run, and the list of upstream repo
+        directories (closest-to-downstream first) for
+        :attr:`~cookieplone._types.RepositoryInfo.upstream_repos`.
+    :raises RuntimeError: When the merged config fails cross-referential
+        validation.
+    """
+    user_config = get_user_config()
+    upstream_config, upstream_repo_dir, cleanup_paths = _resolve_extends(
+        extends,
+        abbreviations=user_config["abbreviations"],
+        clone_to_dir=Path(user_config["cookiecutters_dir"]),
+    )
+    merged = merge_repo_configs(
+        upstream_config,
+        downstream_config,
+        upstream_repo_dir=upstream_repo_dir,
+        downstream_repo_dir=downstream_repo_dir,
+    )
+    merged.pop("extends", None)
+
+    from cookieplone.config.schemas import validate_repository_config
+
+    # Strip the internal sidecar before structural revalidation.
+    sidecar = merged.pop(ORIGINS_KEY, None)
+    valid, errors = validate_repository_config(merged)
+    if sidecar is not None:
+        merged[ORIGINS_KEY] = sidecar
+    if not valid:
+        joined = "\n".join(f"  - {e}" for e in errors)
+        raise RuntimeError(
+            f"Invalid merged {REPO_CONFIG_FILENAME} after resolving 'extends':\n"
+            f"{joined}"
+        )
+
+    # Derive the list of distinct upstream repo dirs from the merged origins
+    # so transitively-inherited templates contribute their origins too.
+    seen: set[Path] = set()
+    upstream_repos: list[Path] = []
+    for origin_str in merged.get(ORIGINS_KEY, {}).values():
+        origin = Path(origin_str)
+        if origin == downstream_repo_dir or origin in seen:
+            continue
+        seen.add(origin)
+        upstream_repos.append(origin)
+    return merged, cleanup_paths, upstream_repos
+
+
 def _parse_template_options(
     base_path: Path, config: dict[str, Any], all_: bool
 ) -> dict[str, t.CookieploneTemplate]:
@@ -126,26 +252,39 @@ def _parse_template_options(
     ``description``, ``path``, and an optional ``hidden`` key.  Templates
     marked as hidden are excluded unless *all_* is ``True``.
 
+    When the config carries a top-level ``_template_origins`` mapping
+    (produced by :func:`cookieplone.config.merge.merge_repo_configs`), each
+    template's ``path`` is resolved against its recorded origin repository
+    and the resulting :class:`~cookieplone._types.CookieploneTemplate`
+    carries the origin so callers can target the correct repo at generation
+    time.  Templates without an entry in the sidecar fall back to
+    *base_path*.
+
     :param base_path: Resolved root directory of the template repository.
-        Template paths are resolved relative to this directory.
+        Used as the default origin when no ``_template_origins`` entry exists.
     :param config: Parsed ``cookiecutter.json`` / ``cookieplone.json`` dict.
     :param all_: When ``True`` include templates that are marked as hidden.
     :returns: Ordered dict mapping each template's ``name`` to its
         :class:`~cookieplone._types.CookieploneTemplate` instance.
     """
     available_templates = config.get("templates", {})
-    templates = {}
+    origins = config.get(ORIGINS_KEY, {})
+    templates: dict[str, t.CookieploneTemplate] = {}
     for name in available_templates:
         value = available_templates[name]
         hidden = value.get("hidden", False)
         if hidden and not all_:
-            # Do not list a hidden template
             continue
         title = value["title"]
         description = value["description"]
-        path: Path = (base_path / value["path"]).resolve()
+        origin = Path(origins[name]).resolve() if name in origins else base_path
+        absolute_path = (origin / value["path"]).resolve()
+        try:
+            relative_path = absolute_path.relative_to(origin)
+        except ValueError:
+            relative_path = absolute_path
         template = t.CookieploneTemplate(
-            path.relative_to(base_path), name, title, description, hidden
+            relative_path, name, title, description, hidden, origin=origin
         )
         templates[template.name] = template
     return templates
@@ -411,7 +550,7 @@ def _resolve_extends(
     repo_dir = Path(repo_dir).resolve()
     cleanup_paths: list[Path] = [repo_dir] if cleanup else []
 
-    config = get_repository_config(repo_dir)
+    config = _load_raw_repository_config(repo_dir)
 
     further = config.get("extends")
     if further:
@@ -559,9 +698,14 @@ def get_repository(
     base_repo_dir = Path(base_repo_dir)
 
     # Extract global versions and renderer preference from the
-    # repository-level config (if present).
+    # repository-level config (if present).  When the config declares
+    # ``extends`` this also resolves upstreams; the resolution cache
+    # entry exposes the cleanup paths and upstream repos for inclusion
+    # on the returned RepositoryInfo.
     global_versions: dict[str, str] = {}
     renderer: str = ""
+    extends_cleanup: list[Path] = []
+    upstream_repos: list[Path] = []
     if _repository_has_config(root_repo_dir):
         try:
             repo_config = get_repository_config(root_repo_dir)
@@ -569,6 +713,9 @@ def get_repository(
             global_versions = repo_config_section.get("versions", {})
             renderer = repo_config_section.get("renderer", "")
             _check_min_version(repo_config_section)
+            cache_entry = _RESOLUTION_CACHE.get(str(root_repo_dir.resolve()))
+            if cache_entry is not None:
+                _, extends_cleanup, upstream_repos = cache_entry
         except RuntimeError:
             pass
 
@@ -580,6 +727,7 @@ def get_repository(
         cleanup_paths.append(base_repo_dir)
     if cleanup_repo or (repo_dir != base_repo_dir):
         cleanup_paths.append(repo_dir)
+    cleanup_paths.extend(extends_cleanup)
     return t.RepositoryInfo(
         repository=str(repository),
         base_repo_dir=base_repo_dir,
@@ -593,4 +741,5 @@ def get_repository(
         global_versions=global_versions,
         renderer=renderer,
         cleanup_paths=cleanup_paths,
+        upstream_repos=upstream_repos,
     )

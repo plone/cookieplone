@@ -12,6 +12,21 @@ import string
 pytest_plugins = "pytester"
 
 
+@pytest.fixture(autouse=True)
+def _clear_extends_resolution_cache():
+    """Reset the repository extends resolution cache before each test.
+
+    The cache is module-level state in ``cookieplone.repository``; without
+    this fixture, fixture-built repos at recycled tmp_path locations would
+    return stale entries across tests.
+    """
+    from cookieplone import repository as _repository
+
+    _repository._clear_resolution_cache()
+    yield
+    _repository._clear_resolution_cache()
+
+
 @pytest.fixture(scope="session")
 def resources_folder():
     path = (Path(__file__).parent / "_resources").resolve()

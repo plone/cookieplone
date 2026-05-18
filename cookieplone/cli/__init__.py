@@ -288,9 +288,14 @@ def cli(
             template=cookieplone_template.name,
         )
 
-    # Run generator
+    # Run generator.  When the chosen template was resolved through an
+    # ``extends`` chain, its ``origin`` points at the upstream clone where
+    # the template files actually live; use that as the repository so
+    # generation targets the correct on-disk location rather than re-cloning
+    # the downstream.
+    gen_repository = cookieplone_template.origin or repository
     gen_config = GenerateConfig(
-        repository=repository,
+        repository=gen_repository,
         template_name=cookieplone_template.name,
         output_dir=output_dir,
         tag=tag,

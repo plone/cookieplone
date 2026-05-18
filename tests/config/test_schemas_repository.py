@@ -65,6 +65,39 @@ class TestValidateRepositoryConfig:
         valid, _errors = validate_repository_config(data)
         assert valid is True
 
+    def test_extends_object_form(self):
+        data = _minimal_repo()
+        data["extends"] = {"url": "gh:plone/cookieplone-templates", "tag": "2.1.0"}
+        valid, errors = validate_repository_config(data)
+        assert valid is True, errors
+
+    def test_extends_object_form_without_tag(self):
+        data = _minimal_repo()
+        data["extends"] = {"url": "gh:plone/cookieplone-templates"}
+        valid, _errors = validate_repository_config(data)
+        assert valid is True
+
+    def test_extends_object_form_requires_url(self):
+        data = _minimal_repo()
+        data["extends"] = {"tag": "2.1.0"}
+        valid, _errors = validate_repository_config(data)
+        assert valid is False
+
+    def test_pure_extension_no_templates(self):
+        """A downstream with only `extends` and no local templates validates."""
+        data = {
+            "version": "1.0",
+            "title": "Downstream",
+            "extends": "gh:plone/cookieplone-templates",
+        }
+        valid, errors = validate_repository_config(data)
+        assert valid is True, errors
+
+    def test_templates_still_required_without_extends(self):
+        data = {"version": "1.0", "title": "Downstream"}
+        valid, _errors = validate_repository_config(data)
+        assert valid is False
+
     def test_with_config_versions(self):
         data = _minimal_repo()
         data["config"] = {"versions": {"gha_checkout": "v6"}}
