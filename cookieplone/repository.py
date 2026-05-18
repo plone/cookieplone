@@ -6,6 +6,9 @@ from cookiecutter import repository as base
 from cookieplone import _types as t
 from cookieplone import data
 from cookieplone.config import get_user_config
+from cookieplone.config.merge import merge_repo_configs
+from cookieplone.config.merge import normalize_extends
+from cookieplone.exceptions import InvalidConfiguration
 from cookieplone.exceptions import PreFlightException
 from cookieplone.exceptions import RepositoryException
 from cookieplone.exceptions import RepositoryNotFound
@@ -26,6 +29,8 @@ CONFIG_FILENAMES = [
     "cookiecutter.json",
     "cookieplone.json",
 ]
+
+MAX_EXTENDS_DEPTH = 5
 
 
 def get_base_repository(
@@ -326,6 +331,108 @@ def determine_repo_dir(
         f'A valid repository for "{template}" could not be found in the following '
         f"locations:\n{locations}"
     )
+
+
+def _resolve_extends(
+    extends: Any,
+    abbreviations: dict[str, str],
+    clone_to_dir: Path,
+    no_input: bool = False,
+    password: str = "",
+    parent_chain: list[str] | None = None,
+    depth: int = 0,
+) -> tuple[dict[str, Any], Path, list[Path]]:
+    """Resolve a repository's ``extends`` reference recursively.
+
+    Clones (or locates) the upstream repository, loads and validates its
+    ``cookieplone-config.json``, and — if the upstream itself declares an
+    ``extends`` — recurses into that, merging each layer with downstream-wins
+    semantics via :func:`cookieplone.config.merge.merge_repo_configs`.
+
+    Cycles are detected through ``parent_chain`` (the list of normalised URLs
+    visited along the current resolution path).  The recursion is also bounded
+    by :data:`MAX_EXTENDS_DEPTH` to prevent runaway chains.
+
+    :param extends: Raw ``extends`` value as parsed from the downstream config —
+        either a string (URL) or an object with ``url`` and optional ``tag``.
+        Empty/``None`` is a usage error; this helper should only be called when
+        ``extends`` is actually set.
+    :param abbreviations: User-config abbreviation map for short URLs.
+    :param clone_to_dir: Parent directory where upstream clones are placed.
+    :param no_input: When ``True`` suppress interactive prompts during cloning.
+    :param password: Password for password-protected zip archives.
+    :param parent_chain: Internal — list of normalised URLs already on the
+        current resolution path.  Used for cycle detection.
+    :param depth: Internal — recursion depth, for the depth-limit check.
+    :returns: A ``(config, repo_dir, cleanup_paths)`` tuple where *config* is
+        the fully resolved (and recursively merged) upstream configuration with
+        ``_template_origins`` stamped, *repo_dir* is the directory of the
+        first-level upstream clone (for the caller's subsequent merge step),
+        and *cleanup_paths* lists every directory created during resolution
+        that the caller must delete after the run.
+    :raises InvalidConfiguration: When a cycle is detected, when the depth
+        limit is exceeded, or when ``extends`` is malformed.
+    :raises RepositoryException: When the upstream repository cannot be
+        resolved (unreachable URL, invalid zip, missing config, etc.).
+    """
+    parent_chain = list(parent_chain or [])
+    normalized = normalize_extends(extends)
+    if normalized is None:
+        raise InvalidConfiguration(
+            "_resolve_extends called with an empty 'extends' value."
+        )
+    url = normalized["url"]
+    tag = normalized["tag"] or ""
+
+    if url in parent_chain:
+        cycle = " -> ".join([*parent_chain, url])
+        raise InvalidConfiguration(f"Circular 'extends' detected: {cycle}")
+    if depth >= MAX_EXTENDS_DEPTH:
+        chain = " -> ".join([*parent_chain, url])
+        raise InvalidConfiguration(
+            f"'extends' depth limit ({MAX_EXTENDS_DEPTH}) exceeded: {chain}"
+        )
+
+    try:
+        repo_dir, cleanup = determine_repo_dir(
+            template=url,
+            abbreviations=abbreviations,
+            clone_to_dir=clone_to_dir,
+            checkout=tag,
+            no_input=no_input,
+            password=password,
+            directory="",
+        )
+    except (RepositoryException, RepositoryNotFound) as e:
+        raise RepositoryException(
+            f"Could not resolve 'extends' upstream {url!r}: {e}"
+        ) from e
+
+    repo_dir = Path(repo_dir).resolve()
+    cleanup_paths: list[Path] = [repo_dir] if cleanup else []
+
+    config = get_repository_config(repo_dir)
+
+    further = config.get("extends")
+    if further:
+        nested_config, nested_repo_dir, nested_cleanup = _resolve_extends(
+            further,
+            abbreviations=abbreviations,
+            clone_to_dir=clone_to_dir,
+            no_input=no_input,
+            password=password,
+            parent_chain=[*parent_chain, url],
+            depth=depth + 1,
+        )
+        config = merge_repo_configs(
+            nested_config,
+            config,
+            upstream_repo_dir=nested_repo_dir,
+            downstream_repo_dir=repo_dir,
+        )
+        cleanup_paths.extend(nested_cleanup)
+
+    return config, repo_dir, cleanup_paths
 
 
 def _run_pre_hook(
