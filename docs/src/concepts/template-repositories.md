@@ -92,6 +92,30 @@ Hidden templates are useful for:
 
 See {doc}`/how-to-guides/create-a-hidden-template` for an example.
 
+## Inheritance via `extends`
+
+A repository can declare an `extends` field in its `cookieplone-config.json` to **inherit templates from another repository** instead of forking it.
+The upstream repository is cloned at runtime, its configuration is merged underneath the downstream, and the combined template list is shown to the user.
+
+The merge follows **downstream-wins** semantics:
+
+- A template `id` that appears in both repositories resolves to the downstream definition.
+- A template `id` that only appears upstream is visible as if it were local.
+- A template `id` that only appears downstream is added on top.
+- A downstream can hide an upstream template by redeclaring it with `"hidden": true`.
+
+`config.versions` is shallow-merged per key, `config.renderer` follows downstream-first-with-upstream-fallback, and `config.min_version` is strictest-wins via PEP 440 ordering.
+
+Chains are supported: `A` may extend `B`, which may extend `C`.
+The resolution is bounded by a depth limit, and cycles are detected.
+
+For the complete merge-rules table and error semantics, see {ref}`repo-extends`.
+For a worked walkthrough, see {doc}`/how-to-guides/extend-an-upstream-template-repository`.
+
+```{note}
+Group-level merging is currently replace-or-nothing: a downstream that redeclares a group inherits no entries from the upstream group. An opt-in append mode is tracked in [issue #185](https://github.com/plone/cookieplone/issues/185).
+```
+
 ## Template discovery
 
 When Cookieplone starts, it:
@@ -106,6 +130,7 @@ When Cookieplone starts, it:
 
 - {doc}`/concepts/subtemplates`: how multiple templates within one repository compose.
 - {doc}`/how-to-guides/create-a-hidden-template`: mark a template as hidden.
+- {doc}`/how-to-guides/extend-an-upstream-template-repository`: build a downstream repository on top of an upstream one.
 - {doc}`/how-to-guides/use-a-custom-template-repository`: use a repository other than the default.
 - {doc}`/reference/schema-v2`: the per-template `cookieplone.json` schema.
 - {doc}`/reference/environment-variables`: `COOKIEPLONE_REPOSITORY` and `COOKIEPLONE_REPOSITORY_TAG`.
