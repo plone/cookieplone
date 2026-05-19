@@ -781,7 +781,14 @@ def get_repository(
         overlay_cleanup.append(overlay_dir)
         base_repo_dir = overlay_dir
         cleanup_base_repo_dir = bool(cleanup_origin)
-        root_repo_dir = origin_root
+        # ``config_root`` is the downstream — where the merged
+        # cookieplone-config.json (and the resolution cache entry) lives.
+        # ``root_repo_dir`` is the upstream the template's files / hooks
+        # actually came from: the closest underlay layer.  This is the
+        # value that flows into ``__cookieplone_repository_path`` and
+        # thus drives upstream hooks' sibling-template lookups.
+        config_root = origin_root
+        root_repo_dir = Path(template_underlay[-1][0]).resolve()
     else:
         base_repo_dir, cleanup_base_repo_dir = determine_repo_dir(
             template=repository,
@@ -799,6 +806,7 @@ def get_repository(
             if template_path
             else base_repo_dir
         ).resolve()
+        config_root = root_repo_dir
 
     repo_dir, cleanup_repo = base_repo_dir, cleanup_base_repo_dir
     base_repo_dir = Path(base_repo_dir)
@@ -812,14 +820,14 @@ def get_repository(
     renderer: str = ""
     extends_cleanup: list[Path] = []
     upstream_repos: list[Path] = []
-    if _repository_has_config(root_repo_dir):
+    if _repository_has_config(config_root):
         try:
-            repo_config = get_repository_config(root_repo_dir)
+            repo_config = get_repository_config(config_root)
             repo_config_section = repo_config.get("config", {})
             global_versions = repo_config_section.get("versions", {})
             renderer = repo_config_section.get("renderer", "")
             _check_min_version(repo_config_section)
-            cache_entry = _RESOLUTION_CACHE.get(str(root_repo_dir.resolve()))
+            cache_entry = _RESOLUTION_CACHE.get(str(config_root.resolve()))
             if cache_entry is not None:
                 _, extends_cleanup, upstream_repos = cache_entry
         except RuntimeError:

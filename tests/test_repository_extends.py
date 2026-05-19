@@ -527,6 +527,66 @@ class TestPartialOverrides:
         assert templates["up_t1"].origin == upstream.resolve()
         assert templates["up_t1"].underlay == []
 
+    def test_overlay_root_repo_dir_points_at_closest_upstream(
+        self, tmp_path: Path, patch_user_config
+    ):
+        """For an overlay template, RepositoryInfo.root_repo_dir is the closest
+        upstream layer (where the template files + hooks live), not the
+        downstream — so __cookieplone_repository_path drives upstream hook
+        sibling-template lookups correctly."""
+        upstream = _write_repo(
+            tmp_path / "upstream",
+            title="Upstream",
+            templates={
+                "up_t1": {
+                    "path": "./templates/up_t1",
+                    "title": "up t1",
+                    "description": "up template",
+                    "hidden": False,
+                },
+            },
+            groups={
+                "main": {
+                    "title": "Main",
+                    "description": "Main",
+                    "templates": ["up_t1"],
+                    "hidden": False,
+                },
+            },
+        )
+        upstream_template = upstream / "templates" / "up_t1"
+        upstream_template.mkdir(parents=True)
+        (upstream_template / "cookieplone.json").write_text('{"upstream": true}')
+
+        downstream = _write_repo(
+            tmp_path / "downstream",
+            title="Downstream",
+            extends=str(upstream),
+            templates={"up_t1": {"path": "./templates/up_t1"}},
+        )
+        ds_template = downstream / "templates" / "up_t1"
+        ds_template.mkdir(parents=True)
+
+        r.get_repository_config(downstream)
+        chosen = r.get_template_options(downstream)["up_t1"]
+
+        info = r.get_repository(
+            repository=chosen.origin,
+            template_name=chosen.name,
+            template_path=str(chosen.path),
+            accept_hooks=False,
+            template_underlay=chosen.underlay,
+        )
+
+        try:
+            assert info.root_repo_dir == upstream.resolve()
+            # upstream_repos also tracked (excludes downstream).
+            assert upstream.resolve() in info.upstream_repos
+        finally:
+            from cookieplone.utils import files as f_utils
+
+            f_utils.remove_paths(info.cleanup_paths)
+
     def test_overlay_serves_upstream_cookieplone_json(
         self, tmp_path: Path, patch_user_config, monkeypatch
     ):
