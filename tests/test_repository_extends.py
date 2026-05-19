@@ -419,6 +419,196 @@ class TestGetTemplateOptionsWithExtends:
         assert templates["local"].origin == downstream.resolve()
 
 
+class TestPartialOverrides:
+    """End-to-end coverage of per-field merge + template-file overlay."""
+
+    def test_pure_hide_inherits_upstream_path(self, tmp_path: Path, patch_user_config):
+        """Downstream `{hidden: true}` inherits path/title from upstream."""
+        upstream = _write_repo(
+            tmp_path / "upstream",
+            title="Upstream",
+            templates=_default_templates("up"),
+            groups=_default_groups("up"),
+        )
+        downstream = _write_repo(
+            tmp_path / "downstream",
+            title="Downstream",
+            extends=str(upstream),
+            templates={"up_t1": {"hidden": True}},
+        )
+
+        config = r.get_repository_config(downstream)
+
+        # Per-field merge: path/title/description fall back to upstream
+        assert config["templates"]["up_t1"]["hidden"] is True
+        assert config["templates"]["up_t1"]["path"] == "./templates/up_t1"
+        # Origin stays upstream (downstream didn't supply path)
+        assert config["_template_origins"]["up_t1"] == str(upstream.resolve())
+
+    def test_partial_title_override(self, tmp_path: Path, patch_user_config):
+        """Downstream supplies only title; description comes from upstream."""
+        upstream = _write_repo(
+            tmp_path / "upstream",
+            title="Upstream",
+            templates=_default_templates("up"),
+            groups=_default_groups("up"),
+        )
+        downstream = _write_repo(
+            tmp_path / "downstream",
+            title="Downstream",
+            extends=str(upstream),
+            templates={"up_t1": {"title": "Renamed"}},
+        )
+
+        config = r.get_repository_config(downstream)
+        assert config["templates"]["up_t1"]["title"] == "Renamed"
+        assert config["templates"]["up_t1"]["description"] == "up template 1"
+
+    def test_underlay_populated_when_downstream_supplies_path(
+        self, tmp_path: Path, patch_user_config
+    ):
+        """When downstream supplies path, the parsed template carries an underlay."""
+        upstream = _write_repo(
+            tmp_path / "upstream",
+            title="Upstream",
+            templates={
+                "up_t1": {
+                    "path": "./templates/up_t1",
+                    "title": "up t1",
+                    "description": "up template",
+                    "hidden": False,
+                },
+            },
+            groups={
+                "main": {
+                    "title": "Main",
+                    "description": "Main",
+                    "templates": ["up_t1"],
+                    "hidden": False,
+                },
+            },
+        )
+        (upstream / "templates" / "up_t1").mkdir(parents=True)
+
+        downstream = _write_repo(
+            tmp_path / "downstream",
+            title="Downstream",
+            extends=str(upstream),
+            templates={"up_t1": {"path": "./templates/up_t1"}},
+        )
+        (downstream / "templates" / "up_t1").mkdir(parents=True)
+
+        templates = r.get_template_options(downstream)
+        assert templates["up_t1"].origin == downstream.resolve()
+        assert templates["up_t1"].underlay == [
+            (upstream.resolve(), "./templates/up_t1"),
+        ]
+
+    def test_no_underlay_for_pure_metadata_redeclare(
+        self, tmp_path: Path, patch_user_config
+    ):
+        """A pure metadata redeclare leaves the underlay empty (origin=upstream)."""
+        upstream = _write_repo(
+            tmp_path / "upstream",
+            title="Upstream",
+            templates=_default_templates("up"),
+            groups=_default_groups("up"),
+        )
+        (upstream / "templates" / "up_t1").mkdir(parents=True)
+
+        downstream = _write_repo(
+            tmp_path / "downstream",
+            title="Downstream",
+            extends=str(upstream),
+            templates={"up_t1": {"title": "Renamed"}},
+        )
+
+        templates = r.get_template_options(downstream)
+        assert templates["up_t1"].origin == upstream.resolve()
+        assert templates["up_t1"].underlay == []
+
+    def test_overlay_serves_upstream_cookieplone_json(
+        self, tmp_path: Path, patch_user_config, monkeypatch
+    ):
+        """get_repository with underlay builds an overlay that serves the
+        upstream cookieplone.json when downstream doesn't supply one."""
+        upstream = _write_repo(
+            tmp_path / "upstream",
+            title="Upstream",
+            templates={
+                "up_t1": {
+                    "path": "./templates/up_t1",
+                    "title": "up t1",
+                    "description": "up template",
+                    "hidden": False,
+                },
+            },
+            groups={
+                "main": {
+                    "title": "Main",
+                    "description": "Main",
+                    "templates": ["up_t1"],
+                    "hidden": False,
+                },
+            },
+        )
+        upstream_template = upstream / "templates" / "up_t1"
+        upstream_template.mkdir(parents=True)
+        (upstream_template / "cookieplone.json").write_text('{"upstream": true}')
+        (upstream_template / "{{ cookiecutter.__folder_name }}").mkdir()
+        (
+            upstream_template / "{{ cookiecutter.__folder_name }}" / "README.md"
+        ).write_text("upstream README")
+        (
+            upstream_template / "{{ cookiecutter.__folder_name }}" / "other.txt"
+        ).write_text("untouched")
+
+        downstream = _write_repo(
+            tmp_path / "downstream",
+            title="Downstream",
+            extends=str(upstream),
+            templates={"up_t1": {"path": "./templates/up_t1"}},
+        )
+        # Downstream local template: only the README, no cookieplone.json
+        ds_template = downstream / "templates" / "up_t1"
+        (ds_template / "{{ cookiecutter.__folder_name }}").mkdir(parents=True)
+        (ds_template / "{{ cookiecutter.__folder_name }}" / "README.md").write_text(
+            "downstream README"
+        )
+
+        # Populate the resolution cache the same way the CLI flow does
+        r.get_repository_config(downstream)
+        templates = r.get_template_options(downstream)
+        chosen = templates["up_t1"]
+
+        info = r.get_repository(
+            repository=chosen.origin,
+            template_name=chosen.name,
+            template_path=str(chosen.path),
+            accept_hooks=False,
+            template_underlay=chosen.underlay,
+        )
+
+        overlay = info.base_repo_dir
+        try:
+            # cookieplone.json from upstream is now available in the overlay
+            assert (overlay / "cookieplone.json").read_text() == '{"upstream": true}'
+            # README from downstream
+            assert (
+                overlay / "{{ cookiecutter.__folder_name }}" / "README.md"
+            ).read_text() == "downstream README"
+            # other.txt from upstream, untouched
+            assert (
+                overlay / "{{ cookiecutter.__folder_name }}" / "other.txt"
+            ).read_text() == "untouched"
+            # Overlay dir is tracked for cleanup
+            assert overlay in info.cleanup_paths
+        finally:
+            from cookieplone.utils import files as f_utils
+
+            f_utils.remove_paths(info.cleanup_paths)
+
+
 class TestMergedConfigValidation:
     """The merged result is re-validated; bad merges raise."""
 
