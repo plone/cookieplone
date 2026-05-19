@@ -120,6 +120,70 @@ When a user runs Cookieplone against the preceding downstream, the resolver:
 
 The upstream clone lives in a temporary directory for the duration of the run and is cleaned up afterwards.
 
+## Override a single file from an upstream template
+
+You don't have to copy the whole upstream template directory to override one file. A downstream entry that supplies a `path` is treated as an **overlay** on top of upstream: the upstream template directory is walked first, then your downstream directory is copied on top.
+
+Suppose you want to ship a custom `README.md` for upstream's `project` template but keep everything else (the `cookieplone.json` form, all the rendered files, the hooks). Your downstream:
+
+```
+templates-myorg/
+├── cookieplone-config.json
+└── templates/
+    └── project/
+        └── {{ cookiecutter.__folder_name }}/
+            └── README.md      # the only file we want to change
+```
+
+```json
+{
+  "extends": "gh:plone/cookieplone-templates",
+  "templates": {
+    "project": {
+      "path": "./templates/project",
+      "title": "My Org Project"
+    }
+  }
+}
+```
+
+At generation time Cookieplone:
+
+1. Walks the upstream `templates/project/` and copies every file into a fresh temp directory.
+2. Walks your downstream `templates/project/` and copies its files on top.
+3. Hands the resulting overlay directory to the renderer.
+
+Your downstream `README.md` overwrites upstream's; the upstream `cookieplone.json`, any other rendered files, and the pre/post hooks all flow through unchanged.
+
+If you want to override the form fields as well, simply add a `cookieplone.json` next to your overridden files: your local version wins on conflict.
+
+## Hide an upstream template
+
+To hide an upstream template, declare a partial entry with `"hidden": true` and no `path`:
+
+```json
+{
+  "extends": "gh:plone/cookieplone-templates",
+  "templates": {
+    "plone7_nick_embedded": {"hidden": true}
+  }
+}
+```
+
+The missing `path` / `title` / `description` are filled from upstream. Since the merged group cross-reference check still requires every template to be in a group, you must include the hidden template in its group's `templates` list, either by leaving the upstream group alone (which inherits its full membership), or by redeclaring the group and re-listing the hidden id:
+
+```json
+"groups": {
+  "projects": {
+    "title": "Projects",
+    "description": "...",
+    "templates": ["project", "classic_project", "plone7_nick_embedded"]
+  }
+}
+```
+
+`get_template_options` filters hidden entries out of the default menu, so the user still doesn't see it.
+
 ## Versions and renderer
 
 `config.versions`, `config.renderer`, and `config.min_version` also follow the merge rules:

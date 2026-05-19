@@ -246,7 +246,7 @@ When a downstream declares `extends`, Cookieplone clones the upstream and merges
 | `version` | Downstream wins (the merged result must satisfy the downstream schema version). |
 | `title` / `description` | Downstream wins. |
 | `extends` | Stripped from the merged result. |
-| `templates` | Keyed union; a downstream entry replaces the upstream entry with the same `id`. |
+| `templates` | Keyed union; a downstream entry merges per-field with the upstream entry of the same `id`. Downstream wins per field; fields the downstream omits inherit from upstream. When the downstream entry supplies `path`, its template directory is overlaid on top of upstream's at render time. |
 | `groups` | Keyed union; a downstream group entry replaces the upstream entry with the same `id`. The `templates` list inside a group is **replaced** wholesale, not merged. |
 | `config.versions` | Shallow merge, downstream wins per key. |
 | `config.renderer` | Downstream wins if set; otherwise falls back to upstream. |
@@ -257,6 +257,37 @@ Group-level merging is currently **replace-or-nothing**: a downstream that redec
 
 An opt-in append mode is tracked in [issue #185](https://github.com/plone/cookieplone/issues/185).
 ```
+
+### Partial redeclares
+
+When a downstream redeclares a template that exists upstream, the entry is merged per field. The downstream may declare just the fields it wants to change:
+
+```json
+"templates": {
+  "project": {"hidden": true}
+}
+```
+
+This *hides* the upstream `project` template without supplying a local `path` / `title` / `description`: the missing fields are filled from upstream after merge.
+
+When the downstream supplies a `path`, the downstream entry's directory is **overlaid on top of upstream's** at render time. The generator walks the upstream template first, then copies the downstream template directory on top, so a downstream may override individual files (for example `README.md`) while inheriting the upstream `cookieplone.json`, hooks, and everything else:
+
+```json
+"templates": {
+  "project": {
+    "path": "./templates/project",
+    "title": "Override of upstream"
+  }
+}
+```
+
+```
+templates/project/
+└── {{ cookiecutter.__folder_name }}/
+    └── README.md       # overrides upstream's README
+```
+
+The overlay is materialised in a temporary directory and cleaned up after the run.
 
 ### Transitive inheritance
 
