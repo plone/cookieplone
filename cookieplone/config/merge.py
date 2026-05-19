@@ -8,24 +8,37 @@ with a downstream one, applying the merge rules documented in issue #175:
 
 - ``version`` / ``title`` / ``description``: downstream wins.
 - ``extends``: stripped from the merged result.
-- ``templates`` / ``groups``: keyed union, downstream entries replace upstream
-  entries that share an ``id``.  Group ``templates`` lists are replaced
-  wholesale (not appended) so downstream can re-order or drop entries.
+- ``templates``: keyed union; for an id present in both, entries are merged
+  **per field** with downstream winning per field.  A downstream entry that
+  omits ``path`` is a metadata-only redeclare (e.g. pure ``"hidden": true``)
+  and the template files still come from upstream.
+- ``groups``: keyed union, downstream entries replace upstream entries that
+  share an ``id``.  Group ``templates`` lists are replaced wholesale (not
+  appended) so downstream can re-order or drop entries.
 - ``config.versions``: shallow merge, downstream wins per key.
 - ``config.renderer``: downstream wins if set, otherwise upstream.
 - ``config.min_version``: ``max(upstream, downstream)`` via PEP 440 ordering.
 
-Template path resolution is supported via the top-level
-``_template_origins`` sidecar mapping ``template_id`` to the absolute repo
-directory the template's ``path`` is relative to.  Consumers
-(``_parse_template_options``) look up origins here instead of using a single
-``base_path``.
+Template path resolution and file-overlay are both supported via the
+top-level ``_template_layers`` sidecar.  For each merged template id it
+holds an ordered list of ``(origin_repo_dir, path)`` pairs — upstream-first,
+downstream-last.  The last entry is the *winning* origin (where the merged
+manifest entry's ``path`` resolves against); the prior entries form an
+underlay used by the generator at render time to overlay downstream files
+on top of an upstream template tree, so a downstream can override a single
+file (e.g. ``README.md``) without copying the entire upstream template.
 
-The sidecar key is prefixed with ``_`` to signal it is an internal annotation
-added after schema validation.  The merged result therefore should *not* be
-revalidated against the strict structural schema; only the cross-referential
-checks in :func:`cookieplone.config.schemas._collect_group_errors` are
-meaningful on a merged config.
+A second sidecar, ``_template_origins`` mapping ``template_id`` to the
+winning origin repo directory, is also written for the convenience of
+consumers that only need the winning origin.  It is derived from
+``_template_layers`` and kept consistent with it.
+
+The sidecar keys are prefixed with ``_`` to signal they are internal
+annotations added after schema validation.  The merged result should *not*
+be revalidated against the strict structural schema; only the
+cross-referential checks in
+:func:`cookieplone.config.schemas._collect_group_errors` are meaningful on
+a merged config.
 """
 
 from __future__ import annotations
@@ -37,6 +50,7 @@ from pathlib import Path
 from typing import Any
 
 
+LAYERS_KEY = "_template_layers"
 ORIGINS_KEY = "_template_origins"
 
 
@@ -102,6 +116,28 @@ def _merge_config_section(upstream: dict, downstream: dict) -> dict:
     return merged
 
 
+def _initial_layers(
+    upstream: dict[str, Any], upstream_repo_dir: Path
+) -> dict[str, list[list[str]]]:
+    """Return the upstream's ``_template_layers`` map, freshly stamped for any
+    upstream template that doesn't already carry one.
+
+    For a top-level upstream the sidecar is absent — every template's layers
+    list starts as ``[[upstream_repo_dir, path]]``.  For a transitive merge
+    where *upstream* is itself a merge result, the existing layers list is
+    preserved so origin information from deeper layers survives.
+    """
+    existing = upstream.get(LAYERS_KEY, {})
+    fallback_dir = str(upstream_repo_dir)
+    layers: dict[str, list[list[str]]] = {}
+    for tmpl_id, entry in upstream.get("templates", {}).items():
+        if existing.get(tmpl_id):
+            layers[tmpl_id] = [list(layer) for layer in existing[tmpl_id]]
+        else:
+            layers[tmpl_id] = [[fallback_dir, entry["path"]]]
+    return layers
+
+
 def merge_repo_configs(
     upstream: dict[str, Any],
     downstream: dict[str, Any],
@@ -111,14 +147,19 @@ def merge_repo_configs(
 ) -> dict[str, Any]:
     """Combine an upstream and downstream repository config.
 
-    See the module docstring for the full merge-rules table.  Template-path
-    resolution is preserved via the top-level :data:`ORIGINS_KEY` sidecar:
-    every template ID in the merged ``templates`` mapping has a matching
-    entry in ``result[ORIGINS_KEY]`` pointing at the repo directory its
-    relative ``path`` resolves against.
+    See the module docstring for the full merge-rules table.
+
+    Template entries are merged **per field** when an id exists in both
+    upstream and downstream — downstream wins per field, with upstream
+    filling fields the downstream omits.  This means a downstream may
+    declare ``{"id": {"hidden": true}}`` (no ``path`` / ``title`` /
+    ``description``) and inherit everything else from upstream.  The
+    downstream's layer is appended to ``_template_layers`` only when
+    downstream supplies ``path``; metadata-only redeclares leave the
+    underlying file source on upstream.
 
     For a transitive chain (``A extends B extends C``) the *upstream*
-    argument is the already-merged ``B+C`` result; its ``_template_origins``
+    argument is the already-merged ``B+C`` result; its layers and origins
     are preserved, so a template inherited from ``C`` keeps pointing at
     ``C``'s clone.
 
@@ -126,12 +167,12 @@ def merge_repo_configs(
         previously merged result).
     :param downstream: Downstream repository config dict.
     :param upstream_repo_dir: Filesystem path that *upstream*'s template
-        ``path`` values resolve against.  Only used to stamp origins for
+        ``path`` values resolve against.  Only used to stamp layers for
         entries that don't already carry one.
     :param downstream_repo_dir: Filesystem path that *downstream*'s template
         ``path`` values resolve against.
-    :returns: The merged repository config dict, with an internal
-        ``_template_origins`` mapping.
+    :returns: The merged repository config dict, with the
+        ``_template_layers`` and ``_template_origins`` sidecars.
     """
     merged: dict[str, Any] = {}
 
@@ -142,21 +183,37 @@ def merge_repo_configs(
     if description is not None:
         merged["description"] = description
 
-    upstream_origins: dict[str, str] = dict(upstream.get(ORIGINS_KEY, {}))
     upstream_templates = deepcopy(upstream.get("templates", {}))
     downstream_templates = deepcopy(downstream.get("templates", {}))
-
-    merged_templates: dict[str, Any] = {**upstream_templates, **downstream_templates}
-    merged_origins: dict[str, str] = {}
-    upstream_dir_str = str(upstream_repo_dir)
+    layers = _initial_layers(upstream, upstream_repo_dir)
     downstream_dir_str = str(downstream_repo_dir)
-    for tmpl_id in merged_templates:
-        if tmpl_id in downstream_templates:
-            merged_origins[tmpl_id] = downstream_dir_str
+
+    merged_templates: dict[str, Any] = {}
+    for tmpl_id, ups_entry in upstream_templates.items():
+        merged_templates[tmpl_id] = dict(ups_entry)
+
+    for tmpl_id, ds_entry in downstream_templates.items():
+        if tmpl_id in merged_templates:
+            # Per-field union: downstream wins per field, upstream fills gaps.
+            merged_templates[tmpl_id] = {**merged_templates[tmpl_id], **ds_entry}
+            # Only append a new layer when downstream actually supplies a path.
+            if "path" in ds_entry:
+                layers.setdefault(tmpl_id, []).append([
+                    downstream_dir_str,
+                    ds_entry["path"],
+                ])
         else:
-            merged_origins[tmpl_id] = upstream_origins.get(tmpl_id, upstream_dir_str)
+            merged_templates[tmpl_id] = dict(ds_entry)
+            if "path" in ds_entry:
+                layers[tmpl_id] = [[downstream_dir_str, ds_entry["path"]]]
+
     merged["templates"] = merged_templates
-    merged[ORIGINS_KEY] = merged_origins
+    merged[LAYERS_KEY] = layers
+    merged[ORIGINS_KEY] = {
+        tmpl_id: tmpl_layers[-1][0]
+        for tmpl_id, tmpl_layers in layers.items()
+        if tmpl_layers
+    }
 
     upstream_groups = deepcopy(upstream.get("groups", {}))
     downstream_groups = deepcopy(downstream.get("groups", {}))

@@ -18,6 +18,13 @@ class CookieploneTemplate:
         local templates it is the downstream repository root.  Defaults
         to ``None`` for backwards compatibility with code that constructs
         :class:`CookieploneTemplate` without an explicit origin.
+    :param underlay: For templates redeclared on top of an upstream version,
+        the list of prior layers as ``(origin_repo_dir, relative_path)``
+        pairs in upstream-first order.  Empty for templates without an
+        underlying upstream version.  Used by the generator to overlay the
+        downstream template directory on top of upstream files so a
+        downstream can override individual files (e.g. ``README.md``)
+        without copying the whole upstream tree.
     """
 
     path: Path
@@ -26,6 +33,7 @@ class CookieploneTemplate:
     description: str
     hidden: bool = False
     origin: Path | None = None
+    underlay: list[tuple[Path, str]] = field(default_factory=list)
 
 
 @dataclass

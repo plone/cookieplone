@@ -6,6 +6,7 @@ from cookiecutter import repository as base
 from cookieplone import _types as t
 from cookieplone import data
 from cookieplone.config import get_user_config
+from cookieplone.config.merge import LAYERS_KEY
 from cookieplone.config.merge import ORIGINS_KEY
 from cookieplone.config.merge import merge_repo_configs
 from cookieplone.config.merge import normalize_extends
@@ -217,11 +218,12 @@ def _resolve_and_merge_extends(
 
     from cookieplone.config.schemas import validate_repository_config
 
-    # Strip the internal sidecar before structural revalidation.
-    sidecar = merged.pop(ORIGINS_KEY, None)
+    # Strip internal sidecars before structural revalidation.
+    sidecars = {
+        key: merged.pop(key) for key in (ORIGINS_KEY, LAYERS_KEY) if key in merged
+    }
     valid, errors = validate_repository_config(merged)
-    if sidecar is not None:
-        merged[ORIGINS_KEY] = sidecar
+    merged.update(sidecars)
     if not valid:
         joined = "\n".join(f"  - {e}" for e in errors)
         raise RuntimeError(
@@ -229,16 +231,17 @@ def _resolve_and_merge_extends(
             f"{joined}"
         )
 
-    # Derive the list of distinct upstream repo dirs from the merged origins
-    # so transitively-inherited templates contribute their origins too.
+    # Derive the list of distinct upstream repo dirs from every layer so
+    # transitively-inherited templates and underlay layers all contribute.
     seen: set[Path] = set()
     upstream_repos: list[Path] = []
-    for origin_str in merged.get(ORIGINS_KEY, {}).values():
-        origin = Path(origin_str)
-        if origin == downstream_repo_dir or origin in seen:
-            continue
-        seen.add(origin)
-        upstream_repos.append(origin)
+    for tmpl_layers in merged.get(LAYERS_KEY, {}).values():
+        for layer in tmpl_layers:
+            origin = Path(layer[0])
+            if origin == downstream_repo_dir or origin in seen:
+                continue
+            seen.add(origin)
+            upstream_repos.append(origin)
     return merged, cleanup_paths, upstream_repos
 
 
@@ -269,6 +272,7 @@ def _parse_template_options(
     """
     available_templates = config.get("templates", {})
     origins = config.get(ORIGINS_KEY, {})
+    layers_map = config.get(LAYERS_KEY, {})
     templates: dict[str, t.CookieploneTemplate] = {}
     for name in available_templates:
         value = available_templates[name]
@@ -283,8 +287,21 @@ def _parse_template_options(
             relative_path = absolute_path.relative_to(origin)
         except ValueError:
             relative_path = absolute_path
+        # Underlay layers (all but the winning one) drive the generator's
+        # file-overlay at render time.  Empty when there's no upstream layer.
+        underlay: list[tuple[Path, str]] = []
+        if name in layers_map and len(layers_map[name]) > 1:
+            underlay = [
+                (Path(layer[0]).resolve(), layer[1]) for layer in layers_map[name][:-1]
+            ]
         template = t.CookieploneTemplate(
-            relative_path, name, title, description, hidden, origin=origin
+            relative_path,
+            name,
+            title,
+            description,
+            hidden,
+            origin=origin,
+            underlay=underlay,
         )
         templates[template.name] = template
     return templates

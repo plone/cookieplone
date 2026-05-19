@@ -1,5 +1,6 @@
 """Tests for cookieplone.config.merge."""
 
+from cookieplone.config.merge import LAYERS_KEY
 from cookieplone.config.merge import ORIGINS_KEY
 from cookieplone.config.merge import merge_repo_configs
 from cookieplone.config.merge import normalize_extends
@@ -289,6 +290,101 @@ class TestMergeRepoConfigs:
 
         assert "config" not in merged
 
+    def test_partial_redeclare_hide_only(self):
+        """Downstream omits path → merged entry inherits path from upstream."""
+        upstream = _base_config()
+        downstream = {
+            "version": "1.0",
+            "title": "Downstream",
+            "templates": {
+                "project": {"hidden": True},
+            },
+        }
+        merged = _merge(upstream, downstream)
+
+        assert merged["templates"]["project"]["hidden"] is True
+        # path/title/description fall back to upstream
+        assert merged["templates"]["project"]["path"] == "./templates/project"
+        assert merged["templates"]["project"]["title"] == "Project"
+        # No downstream layer recorded — origin stays upstream
+        assert merged[ORIGINS_KEY]["project"] == str(UPSTREAM_DIR)
+        assert merged[LAYERS_KEY]["project"] == [
+            [str(UPSTREAM_DIR), "./templates/project"]
+        ]
+
+    def test_partial_redeclare_title_only(self):
+        """Downstream overrides title only; path stays upstream."""
+        upstream = _base_config()
+        downstream = {
+            "version": "1.0",
+            "title": "Downstream",
+            "templates": {
+                "project": {"title": "Renamed locally"},
+            },
+        }
+        merged = _merge(upstream, downstream)
+
+        assert merged["templates"]["project"]["title"] == "Renamed locally"
+        assert merged["templates"]["project"]["path"] == "./templates/project"
+        assert merged[ORIGINS_KEY]["project"] == str(UPSTREAM_DIR)
+        # No downstream layer when path is not redeclared
+        assert merged[LAYERS_KEY]["project"] == [
+            [str(UPSTREAM_DIR), "./templates/project"]
+        ]
+
+    def test_full_redeclare_appends_layer(self):
+        """Downstream supplies path → new layer appended, origin flips."""
+        upstream = _base_config()
+        downstream = {
+            "version": "1.0",
+            "title": "Downstream",
+            "templates": {
+                "project": {
+                    "path": "./local/project",
+                    "title": "Local Project",
+                },
+            },
+        }
+        merged = _merge(upstream, downstream)
+
+        # Per-field merge filled `description` from upstream
+        assert merged["templates"]["project"]["description"] == "A project template"
+        # path/title come from downstream
+        assert merged["templates"]["project"]["title"] == "Local Project"
+        assert merged["templates"]["project"]["path"] == "./local/project"
+        # Origin flips to downstream because downstream supplied path
+        assert merged[ORIGINS_KEY]["project"] == str(DOWNSTREAM_DIR)
+        # Layers list now has both upstream and downstream
+        assert merged[LAYERS_KEY]["project"] == [
+            [str(UPSTREAM_DIR), "./templates/project"],
+            [str(DOWNSTREAM_DIR), "./local/project"],
+        ]
+
+    def test_downstream_only_template_single_layer(self):
+        """A template only in downstream gets a single (downstream) layer."""
+        upstream = _base_config()
+        downstream = {
+            "version": "1.0",
+            "title": "Downstream",
+            "templates": {
+                "addon": {
+                    "path": "./templates/addon",
+                    "title": "Addon",
+                    "description": "Local addon",
+                    "hidden": False,
+                },
+            },
+        }
+        merged = _merge(upstream, downstream)
+
+        assert merged[LAYERS_KEY]["addon"] == [
+            [str(DOWNSTREAM_DIR), "./templates/addon"]
+        ]
+        # Existing upstream-only template keeps its single upstream layer.
+        assert merged[LAYERS_KEY]["project"] == [
+            [str(UPSTREAM_DIR), "./templates/project"]
+        ]
+
     def test_transitive_origins_preserved(self):
         """When upstream is itself a merged result, its origins survive."""
         c_dir = Path("repo_c")
@@ -304,6 +400,7 @@ class TestMergeRepoConfigs:
                     "hidden": False,
                 },
             },
+            LAYERS_KEY: {"from_c": [[str(c_dir), "./templates/from_c"]]},
             ORIGINS_KEY: {"from_c": str(c_dir)},
         }
         downstream = {"version": "1.0", "title": "A"}
@@ -311,3 +408,5 @@ class TestMergeRepoConfigs:
 
         # from_c must still point at C, not at upstream (B).
         assert merged[ORIGINS_KEY]["from_c"] == str(c_dir)
+        # Layers also preserve C's origin.
+        assert merged[LAYERS_KEY]["from_c"] == [[str(c_dir), "./templates/from_c"]]
