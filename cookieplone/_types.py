@@ -112,6 +112,7 @@ class GenerateConfig:
     keep_project_on_failure: bool = False
     dump_answers: bool = True
     global_versions: dict[str, str] | None = None
+    template_underlay: list[tuple[Path, str]] | None = None
 
     def to_run_config(self) -> RunConfig:
         """Build a :class:`RunConfig` from this generation configuration."""

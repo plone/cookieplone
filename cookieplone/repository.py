@@ -20,6 +20,8 @@ from pathlib import Path
 from typing import Any
 
 import json
+import shutil
+import tempfile
 
 
 REPO_CONFIG_FILENAME = "cookieplone-config.json"
@@ -591,6 +593,56 @@ def _resolve_extends(
     return config, repo_dir, cleanup_paths
 
 
+def _overlay_copy(src: Path, dst: Path) -> None:
+    """Walk *src* and copy every file/dir into *dst*, overwriting on conflict.
+
+    Used to layer one template directory on top of another so a downstream may
+    override individual files (e.g. ``README.md``) without copying the upstream
+    tree wholesale.
+
+    :param src: Source directory to walk.
+    :param dst: Destination directory; must exist.
+    """
+    for entry in src.rglob("*"):
+        relative = entry.relative_to(src)
+        target = dst / relative
+        if entry.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(entry, target)
+
+
+def _build_template_overlay(
+    base_template_dir: Path,
+    underlay: list[tuple[Path, str]],
+) -> Path:
+    """Materialise a template directory composed of *underlay* layers + base.
+
+    Walks each underlay layer (upstream-first) and copies its files into a
+    fresh temp directory; then copies *base_template_dir* on top.  Later
+    layers overwrite earlier ones per file, so a downstream may override
+    individual files while inheriting everything else from upstream.
+
+    :param base_template_dir: The winning template directory (downstream's
+        local one).  May or may not exist on disk — a missing directory just
+        means downstream contributes no files of its own and the result is
+        the upstream layer(s) alone.
+    :param underlay: Ordered list of ``(repo_dir, relative_template_path)``
+        pairs, upstream-first.
+    :returns: Path to a freshly created temp directory.  The caller is
+        responsible for cleanup (typically via ``RepositoryInfo.cleanup_paths``).
+    """
+    overlay_dir = Path(tempfile.mkdtemp(prefix="cookieplone-overlay-"))
+    for repo_dir, rel_path in underlay:
+        src = (Path(repo_dir) / rel_path).resolve()
+        if src.is_dir():
+            _overlay_copy(src, overlay_dir)
+    if base_template_dir.is_dir():
+        _overlay_copy(base_template_dir, overlay_dir)
+    return overlay_dir
+
+
 def _run_pre_hook(
     base_repo_dir: Path,
     repo_dir: Path,
@@ -659,11 +711,19 @@ def get_repository(
     password: str = "",
     config_file: Path | str | None = None,
     default_config: dict[str, Any] | bool = False,
+    template_underlay: list[tuple[Path, str]] | None = None,
 ) -> t.RepositoryInfo:
     """Prepare and return a :class:`~cookieplone._types.RepositoryInfo` for a template.
 
     Resolves the template repository, runs the ``pre_prompt`` hook when
     requested, and collects the paths that should be removed after generation.
+
+    When *template_underlay* is provided, the template directory served to
+    the generator is a freshly materialised overlay: each underlay layer's
+    files are copied first (upstream-first), then the downstream
+    *template_path* directory is copied on top.  This is how a downstream
+    can override individual files (e.g. ``README.md``) while inheriting the
+    rest of an upstream template — including its ``cookieplone.json``.
 
     :param repository: Repository source — a local path, VCS URL, zip path, or
         registered abbreviation.
@@ -681,6 +741,11 @@ def get_repository(
         When ``None`` the default config-resolution chain is used.
     :param default_config: When ``True`` skip all config files and use
         built-in defaults; when a :class:`dict` merge it on top of the defaults.
+    :param template_underlay: Optional list of ``(repo_dir, relative_path)``
+        pairs (upstream-first) that should be overlaid underneath the
+        downstream template directory.  When provided, the returned
+        ``RepositoryInfo.base_repo_dir`` points at a fresh temp directory
+        containing the merged file tree.
     :returns: A fully populated :class:`~cookieplone._types.RepositoryInfo`
         instance ready for use by the generator.
     :raises PreFlightException: If the ``pre_prompt`` hook exits with a
@@ -693,25 +758,49 @@ def get_repository(
         default_config=default_config,
     )
     replay_dir = Path(config_dict["replay_dir"])
-    base_repo_dir, cleanup_base_repo_dir = determine_repo_dir(
-        template=repository,
-        abbreviations=config_dict["abbreviations"],
-        clone_to_dir=Path(config_dict["cookiecutters_dir"]),
-        checkout=checkout,
-        no_input=no_input,
-        password=password,
-        directory=template_path,
-    )
-    cleanup_base_repo_dir = bool(cleanup_base_repo_dir)
+
+    overlay_cleanup: list[Path] = []
+    if template_underlay:
+        # Two-step: resolve the origin first (no `directory` nav so a missing
+        # local cookieplone.json doesn't trip the candidate check), then
+        # build the overlay manually.
+        origin_root, cleanup_origin = determine_repo_dir(
+            template=repository,
+            abbreviations=config_dict["abbreviations"],
+            clone_to_dir=Path(config_dict["cookiecutters_dir"]),
+            checkout=checkout,
+            no_input=no_input,
+            password=password,
+            directory="",
+        )
+        origin_root = Path(origin_root).resolve()
+        downstream_template_dir = (origin_root / template_path).resolve()
+        overlay_dir = _build_template_overlay(
+            downstream_template_dir, template_underlay
+        )
+        overlay_cleanup.append(overlay_dir)
+        base_repo_dir = overlay_dir
+        cleanup_base_repo_dir = bool(cleanup_origin)
+        root_repo_dir = origin_root
+    else:
+        base_repo_dir, cleanup_base_repo_dir = determine_repo_dir(
+            template=repository,
+            abbreviations=config_dict["abbreviations"],
+            clone_to_dir=Path(config_dict["cookiecutters_dir"]),
+            checkout=checkout,
+            no_input=no_input,
+            password=password,
+            directory=template_path,
+        )
+        cleanup_base_repo_dir = bool(cleanup_base_repo_dir)
+        # Root of the local repository
+        root_repo_dir = Path(
+            str(base_repo_dir).replace(str(template_path), "")
+            if template_path
+            else base_repo_dir
+        ).resolve()
+
     repo_dir, cleanup_repo = base_repo_dir, cleanup_base_repo_dir
-
-    # Root of the local repository
-    root_repo_dir = Path(
-        str(base_repo_dir).replace(str(template_path), "")
-        if template_path
-        else base_repo_dir
-    ).resolve()
-
     base_repo_dir = Path(base_repo_dir)
 
     # Extract global versions and renderer preference from the
@@ -744,6 +833,7 @@ def get_repository(
         cleanup_paths.append(base_repo_dir)
     if cleanup_repo or (repo_dir != base_repo_dir):
         cleanup_paths.append(repo_dir)
+    cleanup_paths.extend(overlay_cleanup)
     cleanup_paths.extend(extends_cleanup)
     return t.RepositoryInfo(
         repository=str(repository),

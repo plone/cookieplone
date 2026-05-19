@@ -83,6 +83,7 @@ def generate(config: GenerateConfig) -> Path:
             config.passwd,
             config.config_file,
             config.default_config,
+            template_underlay=config.template_underlay,
         )
     except (RepositoryException, FailedHookException) as e:
         raise RepositoryException(str(e)) from e

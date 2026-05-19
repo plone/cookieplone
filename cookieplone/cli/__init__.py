@@ -292,7 +292,9 @@ def cli(
     # ``extends`` chain, its ``origin`` points at the upstream clone where
     # the template files actually live; use that as the repository so
     # generation targets the correct on-disk location rather than re-cloning
-    # the downstream.
+    # the downstream.  If the template has underlay layers (a downstream
+    # partial override on top of upstream), pass them through so the
+    # generator can overlay the downstream files on top of upstream files.
     gen_repository = cookieplone_template.origin or repository
     gen_config = GenerateConfig(
         repository=gen_repository,
@@ -309,6 +311,7 @@ def cli(
         template_path=str(cookieplone_template.path),
         skip_if_file_exists=skip_if_file_exists,
         keep_project_on_failure=keep_project_on_failure,
+        template_underlay=cookieplone_template.underlay or None,
     )
     try:
         generate(gen_config)
