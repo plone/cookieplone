@@ -98,6 +98,39 @@ class TestValidateRepositoryConfig:
         valid, _errors = validate_repository_config(data)
         assert valid is False
 
+    def test_partial_template_entry_allowed_when_extends_set(self):
+        """A partial entry (only `hidden`) validates when extends is set."""
+        data = {
+            "version": "1.0",
+            "title": "Downstream",
+            "extends": "gh:plone/cookieplone-templates",
+            "templates": {
+                "project": {"hidden": True},
+            },
+        }
+        valid, errors = validate_repository_config(data)
+        assert valid is True, errors
+
+    def test_partial_template_entry_rejected_without_extends(self):
+        """Without extends, the strict schema still requires path/title/description."""
+        data = _minimal_repo()
+        data["templates"]["project"] = {"hidden": True}
+        valid, _errors = validate_repository_config(data)
+        assert valid is False
+
+    def test_extra_template_entry_key_still_rejected_with_extends(self):
+        """additionalProperties: false on the entry holds in both modes."""
+        data = {
+            "version": "1.0",
+            "title": "Downstream",
+            "extends": "gh:plone/cookieplone-templates",
+            "templates": {
+                "project": {"hidden": True, "bogus": "no"},
+            },
+        }
+        valid, _errors = validate_repository_config(data)
+        assert valid is False
+
     def test_with_config_versions(self):
         data = _minimal_repo()
         data["config"] = {"versions": {"gha_checkout": "v6"}}

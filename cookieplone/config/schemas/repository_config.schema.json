@@ -1,5 +1,28 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "template_entry_strict": {
+      "type": "object",
+      "required": ["path", "title", "description"],
+      "properties": {
+        "path": {"type": "string"},
+        "title": {"type": "string"},
+        "description": {"type": "string"},
+        "hidden": {"type": "boolean", "default": false}
+      },
+      "additionalProperties": false
+    },
+    "template_entry_relaxed": {
+      "type": "object",
+      "properties": {
+        "path": {"type": "string"},
+        "title": {"type": "string"},
+        "description": {"type": "string"},
+        "hidden": {"type": "boolean", "default": false}
+      },
+      "additionalProperties": false
+    }
+  },
   "type": "object",
   "required": ["version", "title"],
   "properties": {
@@ -38,20 +61,7 @@
         "additionalProperties": false
       }
     },
-    "templates": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "required": ["path", "title", "description"],
-        "properties": {
-          "path": {"type": "string"},
-          "title": {"type": "string"},
-          "description": {"type": "string"},
-          "hidden": {"type": "boolean", "default": false}
-        },
-        "additionalProperties": false
-      }
-    },
+    "templates": {"type": "object"},
     "config": {
       "type": "object",
       "properties": {
@@ -82,7 +92,19 @@
       },
       "then": {
         "required": ["templates"],
-        "properties": {"templates": {"minProperties": 1}}
+        "properties": {
+          "templates": {
+            "minProperties": 1,
+            "additionalProperties": {"$ref": "#/$defs/template_entry_strict"}
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "templates": {
+            "additionalProperties": {"$ref": "#/$defs/template_entry_relaxed"}
+          }
+        }
       }
     }
   ]
