@@ -527,13 +527,14 @@ class TestPartialOverrides:
         assert templates["up_t1"].origin == upstream.resolve()
         assert templates["up_t1"].underlay == []
 
-    def test_overlay_root_repo_dir_points_at_closest_upstream(
+    def test_overlay_root_repo_dir_points_at_downstream(
         self, tmp_path: Path, patch_user_config
     ):
-        """For an overlay template, RepositoryInfo.root_repo_dir is the closest
-        upstream layer (where the template files + hooks live), not the
-        downstream — so __cookieplone_repository_path drives upstream hook
-        sibling-template lookups correctly."""
+        """For an overlay template, RepositoryInfo.root_repo_dir is the
+        downstream (the origin root) — so __cookieplone_repository_path
+        allows sibling-template lookups to find downstream overrides first,
+        while still falling back to upstream layers via
+        __cookieplone_upstream_repos."""
         upstream = _write_repo(
             tmp_path / "upstream",
             title="Upstream",
@@ -579,7 +580,7 @@ class TestPartialOverrides:
         )
 
         try:
-            assert info.root_repo_dir == upstream.resolve()
+            assert info.root_repo_dir == downstream.resolve()
             # upstream_repos also tracked (excludes downstream).
             assert upstream.resolve() in info.upstream_repos
         finally:
@@ -671,6 +672,320 @@ class TestPartialOverrides:
 
 class TestMergedConfigValidation:
     """The merged result is re-validated; bad merges raise."""
+
+    def test_subtemplate_override_priority(self, tmp_path: Path, patch_user_config):
+        """Verify that a subtemplate override in downstream takes priority
+        over the upstream version even when the parent template is an
+        upstream overlay."""
+        from cookieplone.utils import files as f_utils
+
+        # Upstream repo with a subtemplate and a project template
+        upstream = _write_repo(
+            tmp_path / "upstream",
+            title="Upstream",
+            templates={
+                "project": {
+                    "path": "./templates/project",
+                    "title": "Project",
+                    "description": "Project",
+                },
+                "sub/settings": {
+                    "path": "./templates/sub/settings",
+                    "title": "Settings",
+                    "description": "Settings",
+                },
+            },
+            groups={
+                "main": {
+                    "title": "Main",
+                    "description": "Main",
+                    "templates": ["project", "sub/settings"],
+                }
+            },
+        )
+        (upstream / "templates" / "project").mkdir(parents=True)
+        sub_up = upstream / "templates" / "sub" / "settings"
+        sub_up.mkdir(parents=True)
+        (sub_up / "cookiecutter.json").write_text("{}")
+        (sub_up / "README.md").write_text("upstream sub")
+
+        # Downstream repo extends upstream and overrides BOTH the project
+        # (as an overlay) and the subtemplate.
+        downstream = _write_repo(
+            tmp_path / "downstream",
+            title="Downstream",
+            extends=str(upstream),
+            templates={
+                "project": {"path": "./templates/project"},
+                "sub/settings": {"path": "./templates/sub/settings"},
+            },
+        )
+        (downstream / "templates" / "project").mkdir(parents=True)
+        sub_ds = downstream / "templates" / "sub" / "settings"
+        sub_ds.mkdir(parents=True)
+        (sub_ds / "cookiecutter.json").write_text("{}")
+        (sub_ds / "README.md").write_text("downstream sub")
+
+        # CLI flow: resolve config then list options
+        r.get_repository_config(downstream)
+        options = r.get_template_options(downstream)
+        chosen = options["project"]
+
+        info = r.get_repository(
+            repository=chosen.origin,
+            template_name=chosen.name,
+            template_path=str(chosen.path),
+            accept_hooks=False,
+            template_underlay=chosen.underlay,
+        )
+
+        # Build context simulating what is passed to post-gen hook
+        from cookieplone.generator.main import _annotate_data
+        from cookieplone._types import RunConfig
+        from cookieplone.config.state import CookieploneState
+
+        context = {"cookiecutter": {}}
+        state = CookieploneState(
+            schema={"version": "2.0", "properties": {}},
+            data=context,
+            template_id="project",
+        )
+        run_config = RunConfig(
+            output_dir=tmp_path / "output",
+            no_input=True,
+            accept_hooks=False,
+            overwrite_if_exists=True,
+            skip_if_file_exists=False,
+            keep_project_on_failure=False,
+        )
+
+        _annotate_data(context["cookiecutter"], state, run_config, info)
+
+        # Now simulate subtemplate resolution logic from f_utils.get_repository_root
+        # as it would be called in a hook:
+        # get_repository_root(context, "templates/sub/settings")
+        try:
+            resolved_sub_repo = f_utils.get_repository_root(
+                context["cookiecutter"], "templates/sub/settings"
+            )
+            # It MUST point to downstream because downstream overrides it!
+            assert resolved_sub_repo == downstream.resolve()
+        finally:
+            f_utils.remove_paths(info.cleanup_paths)
+
+    def test_repository_overlay_full_integration(self, tmp_path: Path, patch_user_config):
+        """Verify the full integration of template overlays and overrides."""
+        # 1. Setup fake upstream
+        upstream = _write_repo(
+            tmp_path / "upstream",
+            title="Upstream Templates",
+            templates={
+                "project": {
+                    "path": "./templates/projects/main",
+                    "title": "Base Project",
+                    "description": "Base description",
+                },
+                "sub/settings": {
+                    "path": "./templates/sub/settings",
+                    "title": "Base Settings",
+                    "description": "Base subtemplate",
+                    "hidden": True,
+                },
+            },
+            groups={
+                "projects": {
+                    "title": "Projects",
+                    "description": "Generators",
+                    "templates": ["project"],
+                },
+                "sub": {
+                    "title": "Sub",
+                    "description": "Subtemplates",
+                    "templates": ["sub/settings"],
+                },
+            },
+        )
+        (upstream / "templates" / "projects" / "main").mkdir(parents=True)
+        (upstream / "templates" / "sub" / "settings").mkdir(parents=True)
+
+        # 2. Setup downstream extension
+        downstream_config = {
+            "version": "1.0",
+            "title": "Downstream customization",
+            "extends": str(upstream),
+            "templates": {
+                "project": {
+                    "title": "Overridden Project",
+                    "description": "Overridden description",
+                    "path": "./templates/project",
+                },
+                "sub/settings": {
+                    "path": "./templates/sub/settings",
+                    "title": "Overridden Settings",
+                    "description": "Overridden subtemplate",
+                    "hidden": True,
+                },
+            },
+        }
+        downstream = tmp_path / "downstream"
+        downstream.mkdir()
+        (downstream / "cookieplone-config.json").write_text(
+            json.dumps(downstream_config)
+        )
+        (downstream / "templates" / "project").mkdir(parents=True)
+        (downstream / "templates" / "sub" / "settings").mkdir(parents=True)
+
+        # 3. Resolve and verify config merging
+        config = r.get_repository_config(downstream)
+
+        # Assert per-field merge
+        assert config["templates"]["project"]["title"] == "Overridden Project"
+        assert config["templates"]["project"]["path"] == "./templates/project"
+
+        # Assert layers are correct
+        layers = config["_template_layers"]
+        assert len(layers["project"]) == 2
+        assert layers["project"][0] == [
+            str(upstream.resolve()),
+            "./templates/projects/main",
+        ]
+        assert layers["project"][1] == [str(downstream.resolve()), "./templates/project"]
+
+        # Assert groups are preserved from upstream
+        assert "projects" in config["groups"]
+        assert "project" in config["groups"]["projects"]["templates"]
+
+        # 4. Verify RepositoryInfo resolution logic
+        templates = r.get_template_options(downstream)
+        chosen = templates["project"]
+
+        info = r.get_repository(
+            repository=chosen.origin,
+            template_name=chosen.name,
+            template_path=str(chosen.path),
+            accept_hooks=False,
+            template_underlay=chosen.underlay,
+        )
+
+        try:
+            # root_repo_dir must be downstream to find local overrides first
+            assert info.root_repo_dir == downstream.resolve()
+            # Upstream must be in the fallback list
+            assert upstream.resolve() in info.upstream_repos
+        finally:
+            from cookieplone.utils import files as f_utils
+
+            f_utils.remove_paths(info.cleanup_paths)
+
+    def test_subtemplate_upstream_sharing_and_cleanup(
+        self, tmp_path: Path, patch_user_config
+    ):
+        """Verify that subtemplates do not delete shared upstream clones."""
+        from cookieplone.utils import files as f_utils
+
+        # 1. Setup upstream with a subtemplate
+        upstream = _write_repo(
+            tmp_path / "upstream",
+            title="Upstream",
+            templates={
+                "sub/s1": {
+                    "path": "./templates/sub/s1",
+                    "title": "S1",
+                    "description": "S1",
+                }
+            },
+            groups={
+                "sub": {
+                    "title": "Sub",
+                    "description": "Subtemplates",
+                    "templates": ["sub/s1"],
+                }
+            },
+        )
+        (upstream / "templates" / "sub" / "s1").mkdir(parents=True)
+        (upstream / "templates" / "sub" / "s1" / "cookiecutter.json").write_text("{}")
+
+        # 2. Setup downstream
+        downstream = _write_repo(
+            tmp_path / "downstream",
+            title="Downstream",
+            extends=str(upstream),
+        )
+
+        # 3. Simulate a subtemplate run that receives already-resolved upstreams
+        # (mirroring what happens in a hook process)
+        upstream_repos = [upstream.resolve()]
+
+        info = r.get_repository(
+            repository=str(downstream),
+            template_name="sub/s1",
+            template_path="templates/sub/s1",
+            upstream_repos=upstream_repos,
+        )
+
+        # 4. CRUCIAL: upstream repositories MUST NOT be in cleanup_paths
+        # because they are owned by the parent process.
+        assert upstream.resolve() not in info.cleanup_paths
+
+        # Cleanup simulation: if we were the buggy version, we would delete 'upstream' here.
+        f_utils.remove_paths(info.cleanup_paths)
+
+        # Verify upstream is still there
+        assert upstream.exists()
+        assert (upstream / "templates" / "sub" / "s1").exists()
+
+    def test_pure_upstream_subtemplate_resolution_from_downstream(
+        self, tmp_path: Path, patch_user_config
+    ):
+        """Verify that get_repository can find a template that only exists
+        in an upstream repository even when called against downstream."""
+        # 1. Setup upstream with a template
+        upstream = _write_repo(
+            tmp_path / "upstream",
+            title="Upstream",
+            templates={
+                "sub/upstream_only": {
+                    "path": "./templates/sub/upstream_only",
+                    "title": "Upstream Only",
+                    "description": "Upstream Only",
+                }
+            },
+            groups={
+                "sub": {
+                    "title": "Sub",
+                    "description": "Subtemplates",
+                    "templates": ["sub/upstream_only"],
+                }
+            },
+        )
+        (upstream / "templates" / "sub" / "upstream_only").mkdir(parents=True)
+        (
+            upstream / "templates" / "sub" / "upstream_only" / "cookiecutter.json"
+        ).write_text("{}")
+
+        # 2. Setup downstream extending it
+        downstream = _write_repo(
+            tmp_path / "downstream",
+            title="Downstream",
+            extends=str(upstream),
+        )
+
+        # 3. Request the upstream template using the downstream repository path
+        # This mirrors a hook calling generate_subtemplate for an official
+        # template while running in a customized project.
+        info = r.get_repository(
+            repository=str(downstream),
+            template_name="sub/upstream_only",
+            template_path="templates/sub/upstream_only",
+        )
+
+        # 4. Verify it was correctly found in upstream
+        assert info.root_repo_dir == upstream.resolve()
+        assert (info.base_repo_dir / "cookiecutter.json").exists()
+
+        from cookieplone.utils import files as f_utils
+
+        f_utils.remove_paths(info.cleanup_paths)
 
     def test_orphan_template_in_merged_result_fails(
         self, tmp_path: Path, patch_user_config

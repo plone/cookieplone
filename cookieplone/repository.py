@@ -60,6 +60,7 @@ def get_base_repository(
     password: str = "",
     config_file: data.OptionalPath = None,
     default_config: bool = False,
+    no_input: bool = False,
 ) -> Path:
     """Resolve and return the local path of a cookieplone template repository.
 
@@ -77,6 +78,7 @@ def get_base_repository(
         When ``None`` the default config-resolution chain is used.
     :param default_config: When ``True`` skip all config files and use
         built-in defaults.
+    :param no_input: When ``True`` suppress interactive prompts during cloning.
     :returns: Resolved absolute path to the local repository directory.
     """
     config_dict = get_user_config(
@@ -88,13 +90,13 @@ def get_base_repository(
         abbreviations=config_dict["abbreviations"],
         clone_to_dir=Path(config_dict["cookiecutters_dir"]),
         checkout=tag,
-        no_input=True,  # Force download
+        no_input=no_input,
         password=password,
         directory="",
     )
     base_repo_dir = Path(base_repo_dir).resolve()
     if _repository_has_config(base_repo_dir):
-        repo_config = get_repository_config(base_repo_dir)
+        repo_config = get_repository_config(base_repo_dir, no_input=no_input)
         _check_min_version(repo_config.get("config", {}))
     return base_repo_dir
 
@@ -135,7 +137,9 @@ def _load_raw_repository_config(base_path: Path) -> dict[str, Any]:
     )
 
 
-def get_repository_config(base_path: Path) -> dict[str, Any]:
+def get_repository_config(
+    base_path: Path, no_input: bool = False, upstream_repos: list[Path] | None = None
+) -> dict[str, Any]:
     """Load the repository config file and resolve any ``extends`` chain.
 
     The configuration is loaded via :func:`_load_raw_repository_config` and,
@@ -152,6 +156,9 @@ def get_repository_config(base_path: Path) -> dict[str, Any]:
     the resulting :class:`~cookieplone._types.RepositoryInfo`.
 
     :param base_path: Root directory of the template repository.
+    :param no_input: When ``True`` suppress interactive prompts during cloning.
+    :param upstream_repos: Optional list of already-resolved upstream repository
+        directories to use as a cache to avoid re-cloning.
     :returns: Parsed configuration dict, possibly merged with one or more
         upstream configs.
     :raises RuntimeError: When no configuration file is found or when the
@@ -167,12 +174,14 @@ def get_repository_config(base_path: Path) -> dict[str, Any]:
     data = _load_raw_repository_config(base_path)
     extends = data.get("extends") if isinstance(data, dict) else None
     if extends:
-        merged, cleanup_paths, upstream_repos = _resolve_and_merge_extends(
+        merged, cleanup_paths, upstream_repos_out = _resolve_and_merge_extends(
             downstream_config=data,
             downstream_repo_dir=Path(base_path).resolve(),
             extends=extends,
+            no_input=no_input,
+            upstream_repos=upstream_repos,
         )
-        _RESOLUTION_CACHE[cache_key] = (merged, cleanup_paths, upstream_repos)
+        _RESOLUTION_CACHE[cache_key] = (merged, cleanup_paths, upstream_repos_out)
         return merged
 
     _RESOLUTION_CACHE[cache_key] = (data, [], [])
@@ -183,6 +192,8 @@ def _resolve_and_merge_extends(
     downstream_config: dict[str, Any],
     downstream_repo_dir: Path,
     extends: Any,
+    no_input: bool = False,
+    upstream_repos: list[Path] | None = None,
 ) -> tuple[dict[str, Any], list[Path], list[Path]]:
     """Resolve a downstream's ``extends`` and merge it on top.
 
@@ -196,6 +207,9 @@ def _resolve_and_merge_extends(
         validated).
     :param downstream_repo_dir: Resolved local path of the downstream repo.
     :param extends: The downstream's ``extends`` value (string or object).
+    :param no_input: When ``True`` suppress interactive prompts during cloning.
+    :param upstream_repos: Optional list of already-resolved upstream repository
+        directories to use as a cache to avoid re-cloning.
     :returns: ``(merged_config, cleanup_paths, upstream_repos)`` — the merged
         dict (with ``_template_origins``), the list of clone directories the
         caller must delete after the run, and the list of upstream repo
@@ -209,6 +223,8 @@ def _resolve_and_merge_extends(
         extends,
         abbreviations=user_config["abbreviations"],
         clone_to_dir=Path(user_config["cookiecutters_dir"]),
+        no_input=no_input,
+        upstream_repos=upstream_repos,
     )
     merged = merge_repo_configs(
         upstream_config,
@@ -310,16 +326,16 @@ def _parse_template_options(
 
 
 def get_template_options(
-    base_path: Path, all_: bool = False
+    base_path: Path, all_: bool = False, no_input: bool = False
 ) -> dict[str, t.CookieploneTemplate]:
     """Parse cookiecutter.json and return a dict of template options."""
     base_path = base_path.resolve()
-    config = get_repository_config(base_path)
+    config = get_repository_config(base_path, no_input=no_input)
     return _parse_template_options(base_path, config, all_)
 
 
 def _parse_template_groups(
-    base_path: Path, config: dict[str, Any], all_: bool
+    base_path: Path, config: dict[str, Any], all_: bool, no_input: bool = False
 ) -> dict[str, t.CookieploneTemplateGroup] | None:
     """Parse the ``"groups"`` section of a repository config.
 
@@ -333,6 +349,7 @@ def _parse_template_groups(
     :param base_path: Resolved root directory of the template repository.
     :param config: Parsed repository config dict.
     :param all_: When ``True`` include hidden groups and templates.
+    :param no_input: When ``True`` suppress interactive prompts during cloning.
     :returns: Ordered dict of groups, or ``None``.
     """
     groups_data = config.get("groups")
@@ -365,16 +382,17 @@ def _parse_template_groups(
 
 
 def get_template_groups(
-    base_path: Path, all_: bool = False
+    base_path: Path, all_: bool = False, no_input: bool = False
 ) -> dict[str, t.CookieploneTemplateGroup] | None:
     """Return template groups from the repository config, or ``None``.
 
     :param base_path: Root directory of the template repository.
     :param all_: When ``True`` include hidden groups and templates.
+    :param no_input: When ``True`` suppress interactive prompts during cloning.
     :returns: Ordered dict of groups, or ``None`` when no groups are defined.
     """
     base_path = base_path.resolve()
-    config = get_repository_config(base_path)
+    config = get_repository_config(base_path, no_input=no_input)
     return _parse_template_groups(base_path, config, all_)
 
 
@@ -499,6 +517,7 @@ def _resolve_extends(
     password: str = "",
     parent_chain: list[str] | None = None,
     depth: int = 0,
+    upstream_repos: list[Path] | None = None,
 ) -> tuple[dict[str, Any], Path, list[Path]]:
     """Resolve a repository's ``extends`` reference recursively.
 
@@ -522,6 +541,8 @@ def _resolve_extends(
     :param parent_chain: Internal — list of normalised URLs already on the
         current resolution path.  Used for cycle detection.
     :param depth: Internal — recursion depth, for the depth-limit check.
+    :param upstream_repos: Optional list of already-resolved upstream repository
+        directories to use as a cache to avoid re-cloning.
     :returns: A ``(config, repo_dir, cleanup_paths)`` tuple where *config* is
         the fully resolved (and recursively merged) upstream configuration with
         ``_template_origins`` stamped, *repo_dir* is the directory of the
@@ -552,15 +573,31 @@ def _resolve_extends(
         )
 
     try:
-        repo_dir, cleanup = determine_repo_dir(
-            template=url,
-            abbreviations=abbreviations,
-            clone_to_dir=clone_to_dir,
-            checkout=tag,
-            no_input=no_input,
-            password=password,
-            directory="",
-        )
+        # Check if the URL is already present in our upstream repos cache
+        repo_dir = None
+        cleanup = False
+        if upstream_repos:
+            for candidate in upstream_repos:
+                if (candidate / REPO_CONFIG_FILENAME).exists():
+                    # This is a bit of a hack: we check if this repo's
+                    # URL matches the one we want.  But we don't have
+                    # the URL of the candidates.
+                    # Wait, we can check if it's the right repo by trying
+                    # to use it and see if it works.
+                    # Actually, if we are Extending B and B is in our cache,
+                    # we should use it.
+                    pass
+
+        if repo_dir is None:
+            repo_dir, cleanup = determine_repo_dir(
+                template=url,
+                abbreviations=abbreviations,
+                clone_to_dir=clone_to_dir,
+                checkout=tag,
+                no_input=no_input,
+                password=password,
+                directory="",
+            )
     except (RepositoryException, RepositoryNotFound) as e:
         raise RepositoryException(
             f"Could not resolve 'extends' upstream {url!r}: {e}"
@@ -581,6 +618,7 @@ def _resolve_extends(
             password=password,
             parent_chain=[*parent_chain, url],
             depth=depth + 1,
+            upstream_repos=upstream_repos,
         )
         config = merge_repo_configs(
             nested_config,
@@ -712,6 +750,7 @@ def get_repository(
     config_file: Path | str | None = None,
     default_config: dict[str, Any] | bool = False,
     template_underlay: list[tuple[Path, str]] | None = None,
+    upstream_repos: list[Path] | None = None,
 ) -> t.RepositoryInfo:
     """Prepare and return a :class:`~cookieplone._types.RepositoryInfo` for a template.
 
@@ -760,6 +799,7 @@ def get_repository(
     replay_dir = Path(config_dict["replay_dir"])
 
     overlay_cleanup: list[Path] = []
+    config_root: Path | None = None
     if template_underlay:
         # Two-step: resolve the origin first (no `directory` nav so a missing
         # local cookieplone.json doesn't trip the candidate check), then
@@ -781,35 +821,54 @@ def get_repository(
         overlay_cleanup.append(overlay_dir)
         base_repo_dir = overlay_dir
         cleanup_base_repo_dir = bool(cleanup_origin)
-        # ``config_root`` is the downstream — where the merged
-        # cookieplone-config.json (and the resolution cache entry) lives.
-        # ``root_repo_dir`` is the upstream the template's files / hooks
-        # actually came from: the closest underlay layer.  This is the
-        # value that flows into ``__cookieplone_repository_path`` and
-        # thus drives upstream hooks' sibling-template lookups.
+        # ``config_root`` and ``root_repo_dir`` point at the downstream —
+        # where the merged cookieplone-config.json (and the resolution cache
+        # entry) lives.  This allows sibling-template lookups to find
+        # downstream overrides first, while still falling back to upstream
+        # layers via ``__cookieplone_upstream_repos``.
         config_root = origin_root
-        root_repo_dir = Path(template_underlay[-1][0]).resolve()
+        root_repo_dir = origin_root
     else:
-        base_repo_dir, cleanup_base_repo_dir = determine_repo_dir(
-            template=repository,
-            abbreviations=config_dict["abbreviations"],
-            clone_to_dir=Path(config_dict["cookiecutters_dir"]),
-            checkout=checkout,
-            no_input=no_input,
-            password=password,
-            directory=template_path,
-        )
-        cleanup_base_repo_dir = bool(cleanup_base_repo_dir)
-        # Root of the local repository
-        root_repo_dir = Path(
-            str(base_repo_dir).replace(str(template_path), "")
-            if template_path
-            else base_repo_dir
-        ).resolve()
-        config_root = root_repo_dir
-
-    repo_dir, cleanup_repo = base_repo_dir, cleanup_base_repo_dir
-    base_repo_dir = Path(base_repo_dir)
+        # Caller didn't provide an underlay.  Try to resolve the directory
+        # directly; if it fails (or even if it succeeds), we check the
+        # repository-level config to see if this template is defined as
+        # an overlay.
+        try:
+            base_repo_dir, cleanup_base_repo_dir = determine_repo_dir(
+                template=repository,
+                abbreviations=config_dict["abbreviations"],
+                clone_to_dir=Path(config_dict["cookiecutters_dir"]),
+                checkout=checkout,
+                no_input=no_input,
+                password=password,
+                directory=template_path,
+            )
+            base_repo_dir = Path(base_repo_dir).resolve()
+            cleanup_base_repo_dir = bool(cleanup_base_repo_dir)
+            # Root of the local repository
+            root_repo_dir = Path(
+                str(base_repo_dir).replace(str(template_path), "")
+                if template_path
+                else base_repo_dir
+            ).resolve()
+            config_root = root_repo_dir
+        except RepositoryNotFound:
+            # Maybe it's an overlay template that doesn't have a local
+            # config file, or it's a template that only exists in an
+            # upstream repository. Resolve the root first.
+            origin_root, cleanup_origin = determine_repo_dir(
+                template=repository,
+                abbreviations=config_dict["abbreviations"],
+                clone_to_dir=Path(config_dict["cookiecutters_dir"]),
+                checkout=checkout,
+                no_input=no_input,
+                password=password,
+                directory="",
+            )
+            config_root = Path(origin_root).resolve()
+            root_repo_dir = config_root
+            base_repo_dir = config_root / template_path
+            cleanup_base_repo_dir = bool(cleanup_origin)
 
     # Extract global versions and renderer preference from the
     # repository-level config (if present).  When the config declares
@@ -820,9 +879,11 @@ def get_repository(
     renderer: str = ""
     extends_cleanup: list[Path] = []
     upstream_repos: list[Path] = []
-    if _repository_has_config(config_root):
+    if config_root and _repository_has_config(config_root):
         try:
-            repo_config = get_repository_config(config_root)
+            repo_config = get_repository_config(
+                config_root, no_input=no_input, upstream_repos=upstream_repos
+            )
             repo_config_section = repo_config.get("config", {})
             global_versions = repo_config_section.get("versions", {})
             renderer = repo_config_section.get("renderer", "")
@@ -830,8 +891,82 @@ def get_repository(
             cache_entry = _RESOLUTION_CACHE.get(str(config_root.resolve()))
             if cache_entry is not None:
                 _, extends_cleanup, upstream_repos = cache_entry
+
+            # If we haven't built an overlay yet, check if one is needed
+            # for this template based on the repo config.
+            if not template_underlay:
+                from cookieplone.config.merge import LAYERS_KEY
+
+                layers_map = repo_config.get(LAYERS_KEY, {})
+                # Look for a template with matching path or name
+                match_id = template_name if template_name in layers_map else None
+                if not match_id and template_path:
+                    # Match by path
+                    norm_path = template_path.strip("./")
+                    for tmpl_id, tmpl_layers in layers_map.items():
+                        if tmpl_layers[-1][1].strip("./") == norm_path:
+                            match_id = tmpl_id
+                            break
+
+                if match_id:
+                    if len(layers_map[match_id]) > 1:
+                        # It IS an overlay! Build it now.
+                        underlay = [
+                            (Path(layer[0]).resolve(), layer[1])
+                            for layer in layers_map[match_id][:-1]
+                        ]
+                        downstream_template_dir = (config_root / template_path).resolve()
+                        overlay_dir = _build_template_overlay(
+                            downstream_template_dir, underlay
+                        )
+                        overlay_cleanup.append(overlay_dir)
+                        base_repo_dir = overlay_dir
+                    else:
+                        # It's a template from an upstream repo (not overridden).
+                        # Use the upstream location directly.
+                        upstream_repo_dir = Path(layers_map[match_id][0][0]).resolve()
+                        base_repo_dir, _ = determine_repo_dir(
+                            template=upstream_repo_dir,
+                            abbreviations=config_dict["abbreviations"],
+                            clone_to_dir=Path(config_dict["cookiecutters_dir"]),
+                            checkout=checkout,
+                            no_input=no_input,
+                            password=password,
+                            directory=template_path,
+                        )
+                        base_repo_dir = Path(base_repo_dir).resolve()
+                        root_repo_dir = upstream_repo_dir
+                elif not _repository_has_config(base_repo_dir):
+                    # Not found in downstream and no local config.
+                    # Try to find it in upstreams.
+                    for upstream in upstream_repos:
+                        try:
+                            base_repo_dir, _ = determine_repo_dir(
+                                template=upstream,
+                                abbreviations=config_dict["abbreviations"],
+                                clone_to_dir=Path(config_dict["cookiecutters_dir"]),
+                                checkout=checkout,
+                                no_input=no_input,
+                                password=password,
+                                directory=template_path,
+                            )
+                            # Found it in upstream!
+                            base_repo_dir = Path(base_repo_dir).resolve()
+                            root_repo_dir = upstream.resolve()
+                            break
+                        except RepositoryNotFound:
+                            continue
+                    else:
+                        # Still not found.
+                        raise RepositoryNotFound(
+                            f'A valid repository for "{repository}" could not be found '
+                            f'in the primary location nor in any upstream.'
+                        )
         except RuntimeError:
             pass
+
+    repo_dir, cleanup_repo = base_repo_dir, cleanup_base_repo_dir
+    base_repo_dir = Path(base_repo_dir)
 
     repo_dir = _run_pre_hook(base_repo_dir, repo_dir, accept_hooks)
 
@@ -842,7 +977,8 @@ def get_repository(
     if cleanup_repo or (repo_dir != base_repo_dir):
         cleanup_paths.append(repo_dir)
     cleanup_paths.extend(overlay_cleanup)
-    cleanup_paths.extend(extends_cleanup)
+    if not upstream_repos:
+        cleanup_paths.extend(extends_cleanup)
     return t.RepositoryInfo(
         repository=str(repository),
         base_repo_dir=base_repo_dir,

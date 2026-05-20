@@ -113,6 +113,7 @@ class GenerateConfig:
     dump_answers: bool = True
     global_versions: dict[str, str] | None = None
     template_underlay: list[tuple[Path, str]] | None = None
+    upstream_repos: list[Path] | None = None
 
     def to_run_config(self) -> RunConfig:
         """Build a :class:`RunConfig` from this generation configuration."""

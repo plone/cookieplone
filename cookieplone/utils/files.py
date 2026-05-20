@@ -97,7 +97,16 @@ def get_repository_root(
             continue
         if repository := get_template_from_path(repository_path, template):
             return repository
+
     for upstream_path in context.get("__cookieplone_upstream_repos", []) or []:
         if repository := get_template_from_path(upstream_path, template):
             return repository
+
+    # Defensive fallback for hooks that drop __cookieplone_upstream_repos:
+    # return the primary repository root and let the generator's
+    # repository resolution (which has access to the merged config)
+    # handle the upstream fallback.
+    if repo_path := context.get("__cookieplone_repository_path"):
+        return Path(repo_path).resolve()
+
     raise exc.RepositoryNotFound()
