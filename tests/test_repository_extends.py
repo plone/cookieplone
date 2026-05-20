@@ -740,9 +740,9 @@ class TestMergedConfigValidation:
         )
 
         # Build context simulating what is passed to post-gen hook
-        from cookieplone.generator.main import _annotate_data
         from cookieplone._types import RunConfig
         from cookieplone.config.state import CookieploneState
+        from cookieplone.generator.main import _annotate_data
 
         context = {"cookiecutter": {}}
         state = CookieploneState(
@@ -773,7 +773,9 @@ class TestMergedConfigValidation:
         finally:
             f_utils.remove_paths(info.cleanup_paths)
 
-    def test_repository_overlay_full_integration(self, tmp_path: Path, patch_user_config):
+    def test_repository_overlay_full_integration(
+        self, tmp_path: Path, patch_user_config
+    ):
         """Verify the full integration of template overlays and overrides."""
         # 1. Setup fake upstream
         upstream = _write_repo(
@@ -849,7 +851,10 @@ class TestMergedConfigValidation:
             str(upstream.resolve()),
             "./templates/projects/main",
         ]
-        assert layers["project"][1] == [str(downstream.resolve()), "./templates/project"]
+        assert layers["project"][1] == [
+            str(downstream.resolve()),
+            "./templates/project",
+        ]
 
         # Assert groups are preserved from upstream
         assert "projects" in config["groups"]
@@ -927,7 +932,8 @@ class TestMergedConfigValidation:
         # because they are owned by the parent process.
         assert upstream.resolve() not in info.cleanup_paths
 
-        # Cleanup simulation: if we were the buggy version, we would delete 'upstream' here.
+        # Cleanup simulation: if we were the buggy version,
+        # we would delete 'upstream' here.
         f_utils.remove_paths(info.cleanup_paths)
 
         # Verify upstream is still there
