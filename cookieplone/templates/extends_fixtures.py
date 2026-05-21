@@ -13,12 +13,15 @@ See :doc:`/how-to-guides/test-an-extending-repository` for usage.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from collections.abc import Generator
 from cookieplone.config.merge import LAYERS_KEY
 from cookieplone.config.merge import normalize_extends
 from cookieplone.repository import _RESOLUTION_CACHE
 from cookieplone.repository import _load_raw_repository_config
+from cookieplone.repository import _parse_template_options
 from cookieplone.repository import _resolve_and_merge_extends
+from cookieplone.templates.bake import Result
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
@@ -241,3 +244,102 @@ def template_layers(
     if merged_repository_config is None:
         return {}
     return deepcopy(merged_repository_config.get(LAYERS_KEY, {}))
+
+
+@pytest.fixture
+def bake_from_local(
+    downstream_repo_dir: Path,
+    upstream_repo_dir: Path | None,
+    merged_repository_config: dict[str, Any] | None,
+    tmp_path: Path,
+) -> Callable[..., Result]:
+    """Factory fixture that bakes a project from the downstream repo.
+
+    Drives :func:`cookieplone.generator.generate` in-process so the
+    test exercises the exact same code path the CLI uses, including
+    extends-aware template-file overlay.  The upstream is whatever
+    :func:`upstream_repo_dir` resolved, so a single session-scoped
+    clone backs every bake.
+
+    Output goes to *pytest*'s per-test ``tmp_path`` by default.  Pass
+    ``output_dir`` to redirect.
+
+    Usage::
+
+        def test_bake_project(bake_from_local):
+            result = bake_from_local(
+                "project",
+                extra_context={"title": "My Site"},
+            )
+            assert result.exit_code == 0
+            assert result.project_path.is_dir()
+
+    :returns: A callable
+        ``(template_id, extra_context=None, output_dir=None) -> Result``.
+        ``Result`` is :class:`cookieplone.templates.bake.Result` — exposes
+        ``exit_code``, ``exception``, and ``project_path``.
+    """
+    # Import lazily so users who never touch this fixture don't pay
+    # for the generator import chain.
+    from cookieplone._types import GenerateConfig
+    from cookieplone.generator import generate
+
+    def _bake(
+        template_id: str,
+        extra_context: dict[str, Any] | None = None,
+        output_dir: Path | None = None,
+    ) -> Result:
+        if merged_repository_config is None:
+            raise RuntimeError(
+                f"bake_from_local: no repository config found at "
+                f"{downstream_repo_dir}; cannot bake."
+            )
+        templates = _parse_template_options(
+            downstream_repo_dir, merged_repository_config, all_=True
+        )
+        if template_id not in templates:
+            raise KeyError(
+                f"Template {template_id!r} not found. Available: {sorted(templates)}"
+            )
+        tmpl = templates[template_id]
+
+        cache_key = str(downstream_repo_dir.resolve())
+        cached = _RESOLUTION_CACHE.get(cache_key)
+        cached_upstreams = list(cached[2]) if cached is not None else []
+
+        out_dir = output_dir if output_dir is not None else tmp_path
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        config = GenerateConfig(
+            repository=tmpl.origin or downstream_repo_dir,
+            template_name=tmpl.name,
+            output_dir=out_dir,
+            no_input=True,
+            extra_context=extra_context,
+            template_path=str(tmpl.path),
+            template_underlay=tmpl.underlay or None,
+            upstream_repos=cached_upstreams or None,
+            dump_answers=False,
+        )
+
+        exception: BaseException | None = None
+        exit_code = 0
+        project_dir: Path | None = None
+        try:
+            project_dir = generate(config)
+        except SystemExit as e:
+            code = e.code if isinstance(e.code, int) else 0
+            if code != 0:
+                exception = e
+            exit_code = code
+        except Exception as e:
+            exception = e
+            exit_code = -1
+
+        return Result(
+            _project_dir=project_dir,
+            exception=exception,
+            exit_code=exit_code,
+        )
+
+    return _bake

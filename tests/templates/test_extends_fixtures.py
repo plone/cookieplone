@@ -293,6 +293,77 @@ def test_template_layers_empty_without_extends(pytester):
     result.assert_outcomes(passed=1)
 
 
+def _materialise_template(repo_root: Path, template_id: str) -> None:
+    """Create a dead-simple v1 cookiecutter template at
+    ``repo_root/templates/<template_id>/`` so a bake actually has files
+    to render.
+    """
+    tmpl_dir = repo_root / "templates" / template_id
+    tmpl_dir.mkdir(parents=True, exist_ok=True)
+    (tmpl_dir / "cookiecutter.json").write_text(
+        json.dumps({"__folder_name": "out", "title": "Hello"})
+    )
+    folder = tmpl_dir / "{{ cookiecutter.__folder_name }}"
+    folder.mkdir(exist_ok=True)
+    (folder / "README.md").write_text("# {{ cookiecutter.title }}\n")
+
+
+def test_bake_from_local_unknown_template_raises(pytester, synthetic_pair):
+    """Asking for a template id that doesn't exist after merging raises
+    ``KeyError`` with a helpful message."""
+    _upstream, downstream = synthetic_pair
+    _write_conftest_pointing_at(downstream, pytester)
+    pytester.makepyfile(
+        """
+        import pytest
+
+        def test_unknown(bake_from_local):
+            with pytest.raises(KeyError, match="does_not_exist"):
+                bake_from_local("does_not_exist")
+        """
+    )
+    result = pytester.runpytest("-W", "ignore")
+    result.assert_outcomes(passed=1)
+
+
+def test_bake_from_local_generates_project(pytester):
+    """End-to-end: a downstream extending an upstream that ships a
+    template produces a real project directory via in-process generate."""
+    upstream = _make_repo(
+        pytester.path / "upstream",
+        title="upstream",
+        templates={
+            "foo": {
+                "path": "./templates/foo",
+                "title": "Foo",
+                "description": "Foo template",
+                "hidden": False,
+            },
+        },
+    )
+    _materialise_template(upstream, "foo")
+    downstream = _make_pure_downstream(
+        pytester.path / "downstream", extends=str(upstream.resolve())
+    )
+    _write_conftest_pointing_at(downstream.resolve(), pytester)
+    pytester.makepyfile(
+        """
+        def test_bake(bake_from_local, tmp_path):
+            result = bake_from_local(
+                "foo",
+                extra_context={"__folder_name": "site", "title": "World"},
+                output_dir=tmp_path / "out",
+            )
+            assert result.exit_code == 0, result.exception
+            assert result.project_path is not None
+            assert result.project_path.is_dir()
+            assert (result.project_path / "README.md").read_text() == "# World\\n"
+        """
+    )
+    result = pytester.runpytest("-W", "ignore")
+    result.assert_outcomes(passed=1)
+
+
 def test_upstream_repo_dir_populates_resolution_cache(pytester, synthetic_pair):
     """The fixture must populate ``_RESOLUTION_CACHE`` so a subsequent
     ``get_repository_config(downstream_repo_dir)`` call inside a test
