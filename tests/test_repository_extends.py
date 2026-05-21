@@ -347,6 +347,78 @@ class TestGetRepositoryConfigWithExtends:
         second = r.get_repository_config(downstream)
         assert first is second
 
+    def test_cookieplone_json_merging(self, tmp_path: Path, patch_user_config):
+        """Verify that cookieplone.json files from multiple layers are merged."""
+        upstream = _write_repo(
+            tmp_path / "upstream",
+            title="Upstream",
+            templates={
+                "project": {
+                    "path": "./templates/project",
+                    "title": "Base Project",
+                    "description": "Base description",
+                }
+            },
+            groups={
+                "main": {
+                    "title": "Main",
+                    "description": "Main",
+                    "templates": ["project"],
+                }
+            },
+        )
+        up_template = upstream / "templates" / "project"
+        up_template.mkdir(parents=True)
+        (up_template / "cookieplone.json").write_text(json.dumps({
+            "id": "project",
+            "schema": {
+                "properties": {
+                    "var1": {"type": "string", "default": "val1"}
+                }
+            }
+        }))
+
+        downstream = _write_repo(
+            tmp_path / "downstream",
+            title="Downstream",
+            extends=str(upstream),
+            templates={
+                "project": {
+                    "path": "./templates/project"
+                }
+            },
+        )
+        ds_template = downstream / "templates" / "project"
+        ds_template.mkdir(parents=True)
+        (ds_template / "cookieplone.json").write_text(json.dumps({
+            "schema": {
+                "properties": {
+                    "var2": {"type": "string", "default": "val2"}
+                }
+            }
+        }))
+
+        r.get_repository_config(downstream)
+        chosen = r.get_template_options(downstream)["project"]
+
+        info = r.get_repository(
+            repository=chosen.origin,
+            template_name=chosen.name,
+            template_path=str(chosen.path),
+            accept_hooks=False,
+            template_underlay=chosen.underlay,
+        )
+
+        try:
+            overlay = info.base_repo_dir
+            # This is what currently fails: downstream overwrites upstream
+            config = json.loads((overlay / "cookieplone.json").read_text())
+            assert "var1" in config["schema"]["properties"]
+            assert "var2" in config["schema"]["properties"]
+        finally:
+            from cookieplone.utils import files as f_utils
+            f_utils.remove_paths(info.cleanup_paths)
+
 
 class TestGetTemplateOptionsWithExtends:
     """Template-listing helpers see the merged config + origin."""

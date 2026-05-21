@@ -43,6 +43,7 @@ a merged config.
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from cookieplone.exceptions import InvalidConfiguration
 from copy import deepcopy
 from packaging.version import Version
@@ -226,5 +227,52 @@ def merge_repo_configs(
     )
     if config:
         merged["config"] = config
+
+    return merged
+
+
+def merge_template_configs(upstream: dict[str, Any], downstream: dict[str, Any]) -> dict[str, Any]:
+    """Combine two template-level configuration dicts (cookieplone.json).
+
+    - ``id``: downstream wins.
+    - ``schema``: title/description/version from downstream; properties merged
+      shallowly (downstream wins per key).
+    - ``config``: shallow merge for versions; union of lists for extensions and
+      no_render; subtemplates merged keyed by ID.
+    """
+    merged = deepcopy(upstream)
+
+    if "id" in downstream:
+        merged["id"] = downstream["id"]
+
+    # Merge schema
+    ups_schema = merged.setdefault("schema", {})
+    ds_schema = downstream.get("schema", {})
+    for field in ("title", "description", "version"):
+        if field in ds_schema:
+            ups_schema[field] = ds_schema[field]
+
+    ups_props = ups_schema.setdefault("properties", {})
+    ds_props = ds_schema.get("properties", {})
+    ups_props.update(deepcopy(ds_props))
+
+    # Merge config
+    ups_config = merged.setdefault("config", {})
+    ds_config = downstream.get("config", {})
+
+    for list_field in ("extensions", "no_render"):
+        if list_field in ds_config:
+            existing = ups_config.get(list_field, [])
+            ups_config[list_field] = list(OrderedDict.fromkeys(existing + ds_config[list_field]))
+
+    if "versions" in ds_config:
+        ups_config.setdefault("versions", {}).update(ds_config["versions"])
+
+    if "subtemplates" in ds_config:
+        # Keyed union of subtemplates by ID
+        ups_subs = {s["id"]: s for s in ups_config.get("subtemplates", [])}
+        for ds_sub in ds_config["subtemplates"]:
+            ups_subs[ds_sub["id"]] = ds_sub
+        ups_config["subtemplates"] = list(ups_subs.values())
 
     return merged

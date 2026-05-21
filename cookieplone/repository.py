@@ -18,6 +18,7 @@ from cookieplone.exceptions import VersionTooOldException
 from packaging.version import Version
 from pathlib import Path
 from typing import Any
+from copy import deepcopy
 
 import json
 import shutil
@@ -424,7 +425,9 @@ def _repository_from_zip(
         )
     except exc.InvalidZipRepository as e:
         raise RepositoryException("Invalid Zip repository") from e
-    return [Path(unzipped_dir)], True
+    # Only clean up if it's a temporary directory, not the standard cache
+    cleanup = "cookieplone-tmp-" in str(unzipped_dir)
+    return [Path(unzipped_dir)], cleanup
 
 
 def _repository_from_vcs(
@@ -440,7 +443,9 @@ def _repository_from_vcs(
         )
     except exc.RepositoryCloneFailed as e:
         raise RepositoryException(f"Invalid vcs repository {template}") from e
-    return [Path(cloned_repo)], True
+    # Only clean up if it's a temporary directory, not the standard cache
+    cleanup = "cookieplone-tmp-" in str(cloned_repo)
+    return [Path(cloned_repo)], cleanup
 
 
 def determine_repo_dir(
@@ -662,6 +667,11 @@ def _build_template_overlay(
     layers overwrite earlier ones per file, so a downstream may override
     individual files while inheriting everything else from upstream.
 
+    Template-level configuration files (``cookieplone.json`` and
+    ``cookiecutter.json``) are handled specially: instead of simple
+    replacement, they are merged layer-by-layer using downstream-wins
+    semantics.
+
     :param base_template_dir: The winning template directory (downstream's
         local one).  May or may not exist on disk — a missing directory just
         means downstream contributes no files of its own and the result is
@@ -672,12 +682,49 @@ def _build_template_overlay(
         responsible for cleanup (typically via ``RepositoryInfo.cleanup_paths``).
     """
     overlay_dir = Path(tempfile.mkdtemp(prefix="cookieplone-overlay-"))
+    # Track template configs for merging
+    configs_v2: list[dict[str, Any]] = []
+    configs_v1: list[dict[str, Any]] = []
+
+    def _collect_configs(dir_path: Path):
+        for filename in ("cookieplone.json", "cookiecutter.json"):
+            config_path = dir_path / filename
+            if config_path.is_file():
+                try:
+                    data = json.loads(config_path.read_text())
+                    if filename == "cookieplone.json":
+                        configs_v2.append(data)
+                    else:
+                        configs_v1.append(data)
+                except json.JSONDecodeError:
+                    continue
+
     for repo_dir, rel_path in underlay:
         src = (Path(repo_dir) / rel_path).resolve()
         if src.is_dir():
+            _collect_configs(src)
             _overlay_copy(src, overlay_dir)
+
     if base_template_dir.is_dir():
+        _collect_configs(base_template_dir)
         _overlay_copy(base_template_dir, overlay_dir)
+
+    # Merge and write back configs
+    if configs_v2:
+        from cookieplone.config.merge import merge_template_configs
+
+        merged = configs_v2[0]
+        for next_config in configs_v2[1:]:
+            merged = merge_template_configs(merged, next_config)
+        (overlay_dir / "cookieplone.json").write_text(json.dumps(merged))
+        # Ensure cookiecutter.json is removed so it doesn't conflict
+        (overlay_dir / "cookiecutter.json").unlink(missing_ok=True)
+    elif configs_v1:
+        merged = configs_v1[0]
+        for next_config in configs_v1[1:]:
+            merged.update(deepcopy(next_config))
+        (overlay_dir / "cookiecutter.json").write_text(json.dumps(merged))
+
     return overlay_dir
 
 
