@@ -222,5 +222,6 @@ Tracking this as an opt-in append mode in [issue #185](https://github.com/plone/
 ## See also
 
 - {ref}`repo-extends`: full reference for the `extends` field and merge rules.
+- [Test an extending repository](test-an-extending-repository.md): the pytest fixtures shipped with `cookieplone` for testing a downstream that uses `extends`.
 - [Template repositories](../concepts/template-repositories.md): concept page covering repository layout and inheritance.
 - [Use a custom template repository](use-a-custom-template-repository.md): selecting any repository (with or without `extends`) at the CLI.

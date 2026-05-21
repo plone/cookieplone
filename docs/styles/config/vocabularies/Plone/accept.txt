@@ -67,3 +67,9 @@ uv
 Volto
 Vue
 Zope
+[Pp]ytest(11)?
+conftest
+[Ff]ixture(s)?
+pytester
+sidecar
+subprocess
