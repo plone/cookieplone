@@ -37,6 +37,7 @@ dependencies = [
 
 [project.entry-points.pytest11]
 cookieplone = "cookieplone.templates.fixtures"
+cookieplone_extends = "cookieplone.templates.extends_fixtures"
 
 [project.scripts]
 cookieplone = 'cookieplone.__main__:main'
