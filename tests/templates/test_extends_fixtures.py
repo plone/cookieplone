@@ -209,6 +209,90 @@ def test_upstream_checkout_override_is_passed_through(pytester, synthetic_pair):
     result.assert_outcomes(passed=1)
 
 
+def test_merged_repository_config_with_extends(pytester, synthetic_pair):
+    """When the downstream extends an upstream, the merged config
+    carries the upstream's templates."""
+    _upstream, downstream = synthetic_pair
+    _write_conftest_pointing_at(downstream, pytester)
+    pytester.makepyfile(
+        """
+        def test_merged(merged_repository_config):
+            assert merged_repository_config is not None
+            assert "upstream_tmpl" in merged_repository_config["templates"]
+        """
+    )
+    result = pytester.runpytest("-W", "ignore")
+    result.assert_outcomes(passed=1)
+
+
+def test_merged_repository_config_without_extends(pytester):
+    """When the downstream has no extends, the fixture returns the raw
+    downstream config unchanged."""
+    bare = _make_repo(pytester.path / "bare", title="bare")
+    _write_conftest_pointing_at(bare.resolve(), pytester)
+    pytester.makepyfile(
+        """
+        def test_raw(merged_repository_config):
+            assert merged_repository_config is not None
+            assert merged_repository_config["title"] == "bare"
+            assert "bare_tmpl" in merged_repository_config["templates"]
+        """
+    )
+    result = pytester.runpytest("-W", "ignore")
+    result.assert_outcomes(passed=1)
+
+
+def test_merged_repository_config_returns_copy(pytester, synthetic_pair):
+    """Mutating the returned dict must not affect a subsequent test."""
+    _upstream, downstream = synthetic_pair
+    _write_conftest_pointing_at(downstream, pytester)
+    pytester.makepyfile(
+        """
+        def test_first(merged_repository_config):
+            merged_repository_config["title"] = "mutated"
+
+        def test_second(merged_repository_config):
+            # Same session, but a fresh copy per test.
+            assert merged_repository_config["title"] != "mutated"
+        """
+    )
+    result = pytester.runpytest("-W", "ignore")
+    result.assert_outcomes(passed=2)
+
+
+def test_template_layers_with_extends(pytester, synthetic_pair):
+    """When extending an upstream, every templates' layer list is
+    present in the sidecar."""
+    _upstream, downstream = synthetic_pair
+    _write_conftest_pointing_at(downstream, pytester)
+    pytester.makepyfile(
+        """
+        def test_layers(template_layers):
+            assert "upstream_tmpl" in template_layers
+            layers = template_layers["upstream_tmpl"]
+            assert len(layers) >= 1
+            # Each layer is [repo_dir, relative_path].
+            assert len(layers[0]) == 2
+        """
+    )
+    result = pytester.runpytest("-W", "ignore")
+    result.assert_outcomes(passed=1)
+
+
+def test_template_layers_empty_without_extends(pytester):
+    """When the downstream has no extends, the sidecar is empty."""
+    bare = _make_repo(pytester.path / "bare", title="bare")
+    _write_conftest_pointing_at(bare.resolve(), pytester)
+    pytester.makepyfile(
+        """
+        def test_no_layers(template_layers):
+            assert template_layers == {}
+        """
+    )
+    result = pytester.runpytest("-W", "ignore")
+    result.assert_outcomes(passed=1)
+
+
 def test_upstream_repo_dir_populates_resolution_cache(pytester, synthetic_pair):
     """The fixture must populate ``_RESOLUTION_CACHE`` so a subsequent
     ``get_repository_config(downstream_repo_dir)`` call inside a test

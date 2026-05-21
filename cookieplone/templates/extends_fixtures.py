@@ -14,11 +14,14 @@ See :doc:`/how-to-guides/test-an-extending-repository` for usage.
 from __future__ import annotations
 
 from collections.abc import Generator
+from cookieplone.config.merge import LAYERS_KEY
 from cookieplone.config.merge import normalize_extends
 from cookieplone.repository import _RESOLUTION_CACHE
 from cookieplone.repository import _load_raw_repository_config
 from cookieplone.repository import _resolve_and_merge_extends
+from copy import deepcopy
 from pathlib import Path
+from typing import Any
 
 import pytest
 import shutil
@@ -181,3 +184,60 @@ def upstream_repo_dir(
             if path.exists():
                 shutil.rmtree(path, ignore_errors=True)
         _RESOLUTION_CACHE.pop(downstream_key, None)
+
+
+@pytest.fixture
+def merged_repository_config(
+    downstream_repo_dir: Path,
+    upstream_repo_dir: Path | None,
+) -> dict[str, Any] | None:
+    """The fully-merged ``cookieplone-config.json`` dict.
+
+    Reads the cached merge result populated by
+    :func:`upstream_repo_dir`.  When the downstream declares no
+    ``extends`` (in which case ``upstream_repo_dir`` is ``None``), the
+    raw downstream config is returned unchanged — useful so a downstream
+    can write the same assertions whether or not extension is in play.
+
+    Returns a deep copy so tests may mutate the result freely without
+    affecting other tests.
+
+    .. note::
+
+       Does **not** honour ``--cookieplone-upstream-dir``: that flag is
+       a short-circuit for ``upstream_repo_dir`` only, and the merged
+       view it would produce is undefined.  Use the ``upstream_checkout``
+       fixture override to pin a specific upstream tag.
+
+    :returns: The merged config dict (downstream-wins, transitive
+        layers folded in), or ``None`` when no config can be loaded.
+    """
+    cache_key = str(downstream_repo_dir.resolve())
+    cached = _RESOLUTION_CACHE.get(cache_key)
+    if cached is not None:
+        return deepcopy(cached[0])
+    try:
+        return _load_raw_repository_config(downstream_repo_dir)
+    except RuntimeError:
+        return None
+
+
+@pytest.fixture
+def template_layers(
+    merged_repository_config: dict[str, Any] | None,
+) -> dict[str, list[list[str]]]:
+    """The ``_template_layers`` sidecar from the merged config.
+
+    Each value is the upstream-first list of ``(repo_dir, path)`` pairs
+    that contribute to a template id.  When the downstream has no
+    ``extends`` the sidecar is absent and an empty dict is returned.
+
+    Use this fixture to assert layer order without depending on internal
+    merge function names (the sidecar is a stable public contract).
+
+    :returns: Mapping of template id to its layer stack; empty when no
+        merge took place.
+    """
+    if merged_repository_config is None:
+        return {}
+    return deepcopy(merged_repository_config.get(LAYERS_KEY, {}))
