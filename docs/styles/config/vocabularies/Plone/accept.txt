@@ -54,6 +54,9 @@ TUI
 transpile[dr]{0,1}
 [Uu]ncomment
 [Uu]nhide
+[Rr]edeclar(e|es|ed|ing|ation)
+[Dd]ownstream
+[Uu]pstream
 namespace(s)?
 unregister
 unscoped

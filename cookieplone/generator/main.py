@@ -45,6 +45,13 @@ def _annotate_data(
     # include template dir or url in the context dict
     data["_template"] = str(repository_info.repo_dir)
     data["__cookieplone_repository_path"] = str(repository_info.root_repo_dir)
+    # When the chosen template was resolved through `extends`, the upstream
+    # repository roots are tracked separately so post-generation hooks can
+    # still find sub-templates that live in upstream (not in the downstream
+    # repository root nor in the per-template overlay).
+    data["__cookieplone_upstream_repos"] = [
+        str(repo) for repo in repository_info.upstream_repos
+    ]
 
     # include output_dir in the context dict
     data["_output_dir"] = f"{run_config.output_dir.resolve()}"

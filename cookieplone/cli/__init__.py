@@ -115,19 +115,21 @@ def prompt_for_group(
     return groups[choices[answer]]
 
 
-def prompt_for_template(base_path: Path, all_: bool = False) -> t.CookieploneTemplate:
+def prompt_for_template(
+    base_path: Path, all_: bool = False, no_input: bool = False
+) -> t.CookieploneTemplate:
     """Parse config in base_path and prompt user to choose a template.
 
     When the repository defines groups, a two-step selection is presented:
     first the user picks a category, then a template within that category.
     Otherwise the flat template list is shown directly.
     """
-    groups = get_template_groups(base_path, all_)
+    groups = get_template_groups(base_path, all_, no_input=no_input)
     if groups:
         group = prompt_for_group(groups)
         templates = group.templates
     else:
-        templates = get_template_options(base_path, all_)
+        templates = get_template_options(base_path, all_, no_input=no_input)
     choices = {f"{idx}": name for idx, name in enumerate(templates, 1)}
     console.welcome_screen(templates=templates)
     answer = Prompt.ask("Select a template", choices=list(choices.keys()), default="1")
@@ -135,14 +137,16 @@ def prompt_for_template(base_path: Path, all_: bool = False) -> t.CookieploneTem
     return templates[choices[answer]]
 
 
-def get_template(template: str, repo_path: Path, all_: bool) -> t.CookieploneTemplate:
+def get_template(
+    template: str, repo_path: Path, all_: bool, no_input: bool = False
+) -> t.CookieploneTemplate:
     if not template:
         # Display template options
-        cookieplone_template = prompt_for_template(repo_path, all_)
+        cookieplone_template = prompt_for_template(repo_path, all_, no_input=no_input)
     else:
         # Template name was passed from command line
         # so we get all template options, including the hidden ones
-        templates = get_template_options(repo_path, True)
+        templates = get_template_options(repo_path, True, no_input=no_input)
         cookieplone_template = templates.get(template)
         if not cookieplone_template:
             console.error(
@@ -264,13 +268,13 @@ def cli(
         template = answers_data.pop("__template__", template)
 
     try:
-        repo_path = get_base_repository(repository, tag)
+        repo_path = get_base_repository(repository, tag, no_input=no_input)
     except VersionTooOldException as exc:
         console.sanity_screen(exc.message)
         raise typer.Exit(1) from exc
 
     # Template info
-    cookieplone_template = get_template(template, repo_path, all_)
+    cookieplone_template = get_template(template, repo_path, all_, no_input=no_input)
 
     if not output_dir:
         output_dir = Path().cwd()
@@ -288,9 +292,16 @@ def cli(
             template=cookieplone_template.name,
         )
 
-    # Run generator
+    # Run generator.  When the chosen template was resolved through an
+    # ``extends`` chain, its ``origin`` points at the upstream clone where
+    # the template files actually live; use that as the repository so
+    # generation targets the correct on-disk location rather than re-cloning
+    # the downstream.  If the template has underlay layers (a downstream
+    # partial override on top of upstream), pass them through so the
+    # generator can overlay the downstream files on top of upstream files.
+    gen_repository = cookieplone_template.origin or repository
     gen_config = GenerateConfig(
-        repository=repository,
+        repository=gen_repository,
         template_name=cookieplone_template.name,
         output_dir=output_dir,
         tag=tag,
@@ -304,6 +315,7 @@ def cli(
         template_path=str(cookieplone_template.path),
         skip_if_file_exists=skip_if_file_exists,
         keep_project_on_failure=keep_project_on_failure,
+        template_underlay=cookieplone_template.underlay or None,
     )
     try:
         generate(gen_config)

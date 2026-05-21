@@ -31,9 +31,11 @@ It declares the available templates, organizes them into groups for display, and
 | `version` | string | yes | Schema version. Must be `"1.0"`. |
 | `title` | string | yes | Human-readable name for the template repository. |
 | `description` | string | no | Short description of the repository. |
-| `extends` | string | no | Repository to inherit templates from (see {ref}`repo-extends`). |
+| `extends` | string \| object | no | Repository to inherit templates from (see {ref}`repo-extends`). |
 | `groups` | object | no | Template groups for the selection menu (see {ref}`repo-groups`). |
-| `templates` | object | yes | Template definitions (see {ref}`repo-templates`). |
+| `templates` | object | yes¹ | Template definitions (see {ref}`repo-templates`). |
+
+¹ `templates` is optional when `extends` is set—see {ref}`repo-extends`.
 | `config` | object | no | Global configuration shared by all templates (see {ref}`repo-config`). |
 
 (repo-templates)=
@@ -201,23 +203,110 @@ When the key is absent or empty, no version check is performed (backwards compat
 (repo-extends)=
 ## `extends`
 
-```{note}
-The `extends` field is reserved for a future version.
-It is accepted by the schema but not yet processed by the generator.
-```
-
 The `extends` field declares that this repository builds on top of another template repository.
-When implemented, it will allow organizations to:
+It lets organizations keep a minimal repository with only their local templates and overrides while transparently consuming an upstream, mirroring how `extends` works in GitLab CI and similar inheritance systems.
 
-- Inherit templates from an upstream source (such as the Plone community repository).
-- Override specific templates with custom versions.
-- Add new templates on top of the upstream set.
+A downstream repository can:
+
+- **Inherit** every template and group from upstream by default.
+- **Override** a specific template by redeclaring it under the same `id`.
+- **Add** brand-new templates on top of the upstream set.
+- **Hide** an upstream template by redeclaring it with `"hidden": true`.
+
+When `extends` is set, the `templates` field is optional—a "pure-extension" downstream that only inherits is valid.
+
+### Forms
+
+`extends` accepts either a string or an object:
 
 ```json
 {
   "extends": "gh:plone/cookieplone-templates"
 }
 ```
+
+```json
+{
+  "extends": {
+    "url": "gh:plone/cookieplone-templates",
+    "tag": "2.1.0"
+  }
+}
+```
+
+The object form pins the upstream to a specific tag or branch for reproducibility.
+The string form uses the upstream default branch.
+
+### Merge rules
+
+When a downstream declares `extends`, Cookieplone clones the upstream and merges its config underneath the downstream with the following rules.
+
+| Field | Rule |
+|---|---|
+| `version` | Downstream wins (the merged result must satisfy the downstream schema version). |
+| `title` / `description` | Downstream wins. |
+| `extends` | Stripped from the merged result. |
+| `templates` | Keyed union; a downstream entry merges per-field with the upstream entry of the same `id`. Downstream wins per field; fields the downstream omits inherit from upstream. When the downstream entry supplies `path`, its template directory is overlaid on top of upstream's at render time. |
+| `groups` | Keyed union; a downstream group entry replaces the upstream entry with the same `id`. The `templates` list inside a group is **replaced** wholesale, not merged. |
+| `config.versions` | Shallow merge, downstream wins per key. |
+| `config.renderer` | Downstream wins if set; otherwise falls back to upstream. |
+| `config.min_version` | Stricter wins: `max(upstream.min_version, downstream.min_version)` using PEP 440 ordering. |
+
+```{note}
+Group-level merging is currently **replace-or-nothing**: a downstream that redeclares a group inherits no entries from the upstream group. To add a single template to an upstream group, the downstream must re-list every upstream template ID in that group.
+
+An opt-in append mode is tracked in [issue #185](https://github.com/plone/cookieplone/issues/185).
+```
+
+### Partial redeclares
+
+When a downstream redeclares a template that exists upstream, the entry is merged per field. The downstream may declare just the fields it wants to change:
+
+```json
+"templates": {
+  "project": {"hidden": true}
+}
+```
+
+This *hides* the upstream `project` template without supplying a local `path` / `title` / `description`: the missing fields are filled from upstream after merge.
+
+When the downstream supplies a `path`, the downstream entry's directory is **overlaid on top of upstream's** at render time. The generator walks the upstream template first, then copies the downstream template directory on top, so a downstream may override individual files (for example `README.md`) while inheriting the upstream `cookieplone.json`, hooks, and everything else:
+
+```json
+"templates": {
+  "project": {
+    "path": "./templates/project",
+    "title": "Override of upstream"
+  }
+}
+```
+
+```
+templates/project/
+└── {{ cookiecutter.__folder_name }}/
+    └── README.md       # overrides upstream's README
+```
+
+The overlay is materialised in a temporary directory and cleaned up after the run.
+
+### Transitive inheritance
+
+`extends` follows chains. If `A` extends `B` and `B` extends `C`, then `A` resolves to `C ∪ B ∪ A` with each downstream layer winning over the layers below it.
+
+To prevent runaway resolution, the chain is bounded by `MAX_EXTENDS_DEPTH = 5`.
+A circular chain (`A → B → A`) is detected and reported with the full cycle.
+
+### Errors
+
+| Failure | Behaviour |
+|---|---|
+| Upstream URL unreachable | `RepositoryException` naming the URL and the underlying clone error. |
+| Schema validation fails on a loaded link | `RuntimeError` listing the validation errors. |
+| Cycle detected | `InvalidConfiguration` with the full cycle, for example `A → B → A`. |
+| Depth limit exceeded | `InvalidConfiguration` with the chain so far. |
+| Cross-referential check fails on the merged result | `RuntimeError` explaining which template/group declaration is at fault. |
+
+See {ref}`extend-an-upstream-template-repository` for a worked walkthrough.
 
 ## Backward compatibility
 

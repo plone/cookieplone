@@ -78,7 +78,15 @@ def get_template_from_path(
 def get_repository_root(
     context: dict[str, Any] | OrderedDict[str, Any], template: str
 ) -> Path:
-    """Return the templates root."""
+    """Return the templates root.
+
+    Walks the primary repository-pointer keys first
+    (``__cookieplone_repository_path``, ``_repo_dir``, ``_template``).  If
+    *template* isn't found relative to any of those, falls back to the
+    list of upstream repository roots in ``__cookieplone_upstream_repos`` —
+    populated for templates resolved through ``extends`` so a sub-template
+    living in upstream is still reachable from a downstream-driven run.
+    """
     possible_keys = [
         "__cookieplone_repository_path",
         "_repo_dir",
@@ -89,4 +97,16 @@ def get_repository_root(
             continue
         if repository := get_template_from_path(repository_path, template):
             return repository
+
+    for upstream_path in context.get("__cookieplone_upstream_repos", []) or []:
+        if repository := get_template_from_path(upstream_path, template):
+            return repository
+
+    # Defensive fallback for hooks that drop __cookieplone_upstream_repos:
+    # return the primary repository root and let the generator's
+    # repository resolution (which has access to the merged config)
+    # handle the upstream fallback.
+    if repo_path := context.get("__cookieplone_repository_path"):
+        return Path(repo_path).resolve()
+
     raise exc.RepositoryNotFound()

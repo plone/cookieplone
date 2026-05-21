@@ -211,3 +211,85 @@ class TestCheckMinVersion:
                 template_name="project",
                 template_path="",
             )
+
+
+class TestNamespacedCloneDir:
+    """Tests for _namespaced_clone_dir preventing repo name collisions."""
+
+    def test_github_https_with_git_suffix(self):
+        """https://github.com/org/repo.git is namespaced under org."""
+        from cookieplone.repository import _namespaced_clone_dir
+
+        result = _namespaced_clone_dir(
+            "https://github.com/eea/cookieplone-templates.git",
+            Path("/home/user/.cookiecutters"),
+        )
+        assert result == Path("/home/user/.cookiecutters/eea")
+
+    def test_github_https_without_git_suffix(self):
+        """https://github.com/org/repo (no .git) is also namespaced."""
+        from cookieplone.repository import _namespaced_clone_dir
+
+        result = _namespaced_clone_dir(
+            "https://github.com/plone/cookieplone-templates",
+            Path("/home/user/.cookiecutters"),
+        )
+        assert result == Path("/home/user/.cookiecutters/plone")
+
+    def test_git_ssh_url(self):
+        """git@host:org/repo.git SSH-style URLs are namespaced."""
+        from cookieplone.repository import _namespaced_clone_dir
+
+        result = _namespaced_clone_dir(
+            "git@github.com:eea/cookieplone-templates.git",
+            Path("/home/user/.cookiecutters"),
+        )
+        assert result == Path("/home/user/.cookiecutters/eea")
+
+    def test_gitlab_url(self):
+        """GitLab URLs are namespaced by their organisation."""
+        from cookieplone.repository import _namespaced_clone_dir
+
+        result = _namespaced_clone_dir(
+            "https://gitlab.com/someorg/somerepo.git",
+            Path("/home/user/.cookiecutters"),
+        )
+        assert result == Path("/home/user/.cookiecutters/someorg")
+
+    def test_same_repo_name_different_org_no_collision(self):
+        """Two repos with the same name but different orgs get different dirs."""
+        from cookieplone.repository import _namespaced_clone_dir
+
+        base = Path("/home/user/.cookiecutters")
+        eea_dir = _namespaced_clone_dir(
+            "https://github.com/eea/cookieplone-templates.git",
+            base,
+        )
+        plone_dir = _namespaced_clone_dir(
+            "https://github.com/plone/cookieplone-templates.git",
+            base,
+        )
+        assert eea_dir != plone_dir
+        # They should be in separate org subdirectories
+        assert eea_dir == base / "eea"
+        assert plone_dir == base / "plone"
+
+    def test_unrecognizable_url_returns_base_dir(self):
+        """URLs without a recognizable org/repo structure return clone_to_dir"""
+        from cookieplone.repository import _namespaced_clone_dir
+
+        result = _namespaced_clone_dir(
+            "file:///local/path/to/repo",
+            Path("/home/user/.cookiecutters"),
+        )
+        assert result == Path("/home/user/.cookiecutters")
+
+    def test_trailing_slash_stripped(self):
+        """Trailing slashes on URLs don't break org extraction."""
+        from cookieplone.repository import _namespaced_clone_dir
+
+        result = _namespaced_clone_dir(
+            "https://github.com/eea/cookieplone-templates.git/",
+            Path("/home/user/.cookiecutters"),
+        )
+        assert result == Path("/home/user/.cookiecutters/eea")

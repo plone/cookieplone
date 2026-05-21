@@ -15,11 +15,19 @@ REPOSITORY_CONFIG_SCHEMA: dict[str, Any] = json.loads(_SCHEMA_PATH.read_text())
 def _collect_group_errors(data: dict[str, Any]) -> list[str]:
     """Check cross-referential constraints between groups and templates.
 
+    When ``extends`` is set, cross-referential checks are deferred: groups
+    may legitimately reference templates that live in the upstream and are
+    not yet visible in this partial config.  The merged result (which no
+    longer carries ``extends``) is re-validated by the caller and is where
+    these checks actually take effect.
+
     :param data: A repository config dict that has already passed schema
         validation.
     :returns: List of human-readable error messages.  Empty if valid.
     """
     errors: list[str] = []
+    if data.get("extends"):
+        return errors
     template_ids = set(data.get("templates", {}))
     seen: dict[str, str] = {}  # template_id -> group_id
 

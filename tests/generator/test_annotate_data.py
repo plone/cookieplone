@@ -18,6 +18,23 @@ def test_sets_cookieplone_repository_path(state, run_config, repository_info):
     assert data["__cookieplone_repository_path"] == str(repository_info.root_repo_dir)
 
 
+def test_sets_upstream_repos_when_present(state, run_config, repository_info, tmp_path):
+    """_annotate_data exposes upstream_repos so subtemplate lookup can fall back."""
+    upstream = tmp_path / "upstream"
+    upstream.mkdir()
+    repository_info.upstream_repos = [upstream]
+    data: dict = {"title": "Test"}
+    _annotate_data(data, state, run_config, repository_info)
+    assert data["__cookieplone_upstream_repos"] == [str(upstream)]
+
+
+def test_sets_upstream_repos_empty_by_default(state, run_config, repository_info):
+    """When no upstream repos are tracked the key is an empty list, not absent."""
+    data: dict = {"title": "Test"}
+    _annotate_data(data, state, run_config, repository_info)
+    assert data["__cookieplone_upstream_repos"] == []
+
+
 def test_sets_output_dir(state, run_config, repository_info):
     """_annotate_data sets _output_dir to resolved output_dir."""
     data: dict = {"title": "Test"}

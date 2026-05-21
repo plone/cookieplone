@@ -200,3 +200,29 @@ def test_get_repository_root_failure(
     with pytest.raises(RepositoryNotFound) as exc:
         files.get_repository_root({key: repository_path}, template)
     assert "RepositoryNotFound" in str(exc)
+
+
+def test_get_repository_root_falls_back_to_upstream_repos(
+    monkeypatch, repository_structure
+):
+    """When primary keys miss, walk __cookieplone_upstream_repos."""
+    monkeypatch.chdir(repository_structure)
+    context = {
+        "__cookieplone_repository_path": "templates/somewhere/else",
+        "__cookieplone_upstream_repos": ["templates/add-ons/backend"],
+    }
+    result = files.get_repository_root(context, "docs/starter")
+    assert result is not None
+
+
+def test_get_repository_root_upstream_repos_empty_or_missing(
+    monkeypatch, repository_structure
+):
+    """An empty / missing __cookieplone_upstream_repos still raises cleanly."""
+    monkeypatch.chdir(repository_structure)
+    with pytest.raises(RepositoryNotFound):
+        files.get_repository_root(
+            {"__cookieplone_upstream_repos": []}, "addons/backend"
+        )
+    with pytest.raises(RepositoryNotFound):
+        files.get_repository_root({}, "addons/backend")

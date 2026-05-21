@@ -83,6 +83,8 @@ def generate(config: GenerateConfig) -> Path:
             config.passwd,
             config.config_file,
             config.default_config,
+            template_underlay=config.template_underlay,
+            upstream_repos=config.upstream_repos,
         )
     except (RepositoryException, FailedHookException) as e:
         raise RepositoryException(str(e)) from e
@@ -208,6 +210,9 @@ def generate_subtemplate(
         template_path=template_path,
         dump_answers=False,
         global_versions=global_versions,
+        upstream_repos=[
+            Path(p) for p in context.get("__cookieplone_upstream_repos", []) or []
+        ],
     )
     with quiet_mode():
         result = generate(config)
