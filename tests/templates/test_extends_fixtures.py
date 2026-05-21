@@ -364,6 +364,69 @@ def test_bake_from_local_generates_project(pytester):
     result.assert_outcomes(passed=1)
 
 
+def test_bake_in_subprocess_returns_nonzero_for_missing_repo(pytester, tmp_path):
+    """Smoke test: the subprocess returns a non-zero exit code when the
+    downstream points at a non-existent path.  Verifies the fixture
+    actually invokes the CLI and captures the result."""
+    missing = tmp_path / "does-not-exist"
+    pytester.makeconftest(
+        f"""
+        from pathlib import Path
+        import pytest
+
+        @pytest.fixture(scope="session")
+        def downstream_repo_dir() -> Path:
+            return Path({str(missing)!r})
+        """
+    )
+    pytester.makepyfile(
+        """
+        def test_failure(bake_in_subprocess):
+            result = bake_in_subprocess()
+            assert result.exit_code != 0
+        """
+    )
+    result = pytester.runpytest("-W", "ignore")
+    result.assert_outcomes(passed=1)
+
+
+def test_bake_in_subprocess_runs_cli(pytester):
+    """End-to-end: a real template baked via the installed CLI exits
+    cleanly and produces the expected output file."""
+    upstream = _make_repo(
+        pytester.path / "upstream",
+        title="upstream",
+        templates={
+            "foo": {
+                "path": "./templates/foo",
+                "title": "Foo",
+                "description": "Foo template",
+                "hidden": False,
+            },
+        },
+    )
+    _materialise_template(upstream, "foo")
+    downstream = _make_pure_downstream(
+        pytester.path / "downstream", extends=str(upstream.resolve())
+    )
+    _write_conftest_pointing_at(downstream.resolve(), pytester)
+    pytester.makepyfile(
+        """
+        def test_runs(bake_in_subprocess, tmp_path):
+            result = bake_in_subprocess(
+                "foo",
+                "__folder_name=site",
+                "title=Hello",
+                output_dir=tmp_path / "out",
+            )
+            assert result.exit_code == 0, (result.stdout, result.stderr)
+            assert (tmp_path / "out" / "site" / "README.md").exists()
+        """
+    )
+    result = pytester.runpytest("-W", "ignore")
+    result.assert_outcomes(passed=1)
+
+
 def test_upstream_repo_dir_populates_resolution_cache(pytester, synthetic_pair):
     """The fixture must populate ``_RESOLUTION_CACHE`` so a subsequent
     ``get_repository_config(downstream_repo_dir)`` call inside a test

@@ -23,12 +23,33 @@ from cookieplone.repository import _parse_template_options
 from cookieplone.repository import _resolve_and_merge_extends
 from cookieplone.templates.bake import Result
 from copy import deepcopy
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import os
 import pytest
 import shutil
+import subprocess
+import sys
 import warnings
+
+
+@dataclass
+class SubprocessBakeResult:
+    """Captured result of a :func:`bake_in_subprocess` invocation.
+
+    :ivar exit_code: Process exit code.  ``0`` on success.
+    :ivar stdout: Captured standard output.
+    :ivar stderr: Captured standard error.
+    :ivar output_dir: The directory passed to ``-o``; project (if any)
+        is created inside.
+    """
+
+    exit_code: int
+    stdout: str
+    stderr: str
+    output_dir: Path
 
 
 CLI_UPSTREAM_DIR = "--cookieplone-upstream-dir"
@@ -340,6 +361,80 @@ def bake_from_local(
             _project_dir=project_dir,
             exception=exception,
             exit_code=exit_code,
+        )
+
+    return _bake
+
+
+@pytest.fixture
+def bake_in_subprocess(
+    downstream_repo_dir: Path,
+    upstream_repo_dir: Path | None,
+    tmp_path: Path,
+) -> Callable[..., SubprocessBakeResult]:
+    """Factory: bake via the installed ``cookieplone`` CLI in a subprocess.
+
+    Opt-in variant of :func:`bake_from_local` for end-to-end smoke tests
+    that want to exercise the real entry point rather than the in-process
+    API.  Slower than :func:`bake_from_local`; reach for it when an
+    in-process test wouldn't catch the bug (CLI argument parsing,
+    environment handling, packaging issues).
+
+    Invokes ``python -m cookieplone`` with ``--no-input``, ``-o output_dir``,
+    and ``COOKIEPLONE_REPOSITORY`` set to the downstream repo.  Extra CLI
+    arguments (a template id positional, ``EXTRA_CONTEXT`` ``key=value``
+    pairs, or other flags) are appended verbatim.
+
+    Usage::
+
+        def test_smoke(bake_in_subprocess):
+            result = bake_in_subprocess(
+                "project",                  # template id within the repo
+                "title=My Site",
+                "__folder_name=site",
+            )
+            assert result.exit_code == 0
+
+    :returns: A callable
+        ``(*cli_args, output_dir=None, env=None, timeout=120)
+            -> SubprocessBakeResult``.
+    """
+
+    def _bake(
+        *cli_args: str,
+        output_dir: Path | None = None,
+        env: dict[str, str] | None = None,
+        timeout: float | None = 120,
+    ) -> SubprocessBakeResult:
+        out_dir = output_dir if output_dir is not None else tmp_path / "out"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        cmd = [
+            sys.executable,
+            "-m",
+            "cookieplone",
+            "--no-input",
+            "-o",
+            str(out_dir),
+            *cli_args,
+        ]
+        merged_env = {
+            **os.environ,
+            "COOKIEPLONE_REPOSITORY": str(downstream_repo_dir),
+            **(env or {}),
+        }
+        run = subprocess.run(  # noqa: S603 — args are caller-controlled in tests
+            cmd,
+            capture_output=True,
+            text=True,
+            env=merged_env,
+            timeout=timeout,
+            check=False,
+        )
+        return SubprocessBakeResult(
+            exit_code=run.returncode,
+            stdout=run.stdout,
+            stderr=run.stderr,
+            output_dir=out_dir,
         )
 
     return _bake
