@@ -369,34 +369,30 @@ class TestGetRepositoryConfigWithExtends:
         )
         up_template = upstream / "templates" / "project"
         up_template.mkdir(parents=True)
-        (up_template / "cookieplone.json").write_text(json.dumps({
-            "id": "project",
-            "schema": {
-                "properties": {
-                    "var1": {"type": "string", "default": "val1"}
-                }
-            }
-        }))
+        (up_template / "cookieplone.json").write_text(
+            json.dumps({
+                "id": "project",
+                "schema": {
+                    "properties": {"var1": {"type": "string", "default": "val1"}}
+                },
+            })
+        )
 
         downstream = _write_repo(
             tmp_path / "downstream",
             title="Downstream",
             extends=str(upstream),
-            templates={
-                "project": {
-                    "path": "./templates/project"
-                }
-            },
+            templates={"project": {"path": "./templates/project"}},
         )
         ds_template = downstream / "templates" / "project"
         ds_template.mkdir(parents=True)
-        (ds_template / "cookieplone.json").write_text(json.dumps({
-            "schema": {
-                "properties": {
-                    "var2": {"type": "string", "default": "val2"}
+        (ds_template / "cookieplone.json").write_text(
+            json.dumps({
+                "schema": {
+                    "properties": {"var2": {"type": "string", "default": "val2"}}
                 }
-            }
-        }))
+            })
+        )
 
         r.get_repository_config(downstream)
         chosen = r.get_template_options(downstream)["project"]
@@ -417,6 +413,7 @@ class TestGetRepositoryConfigWithExtends:
             assert "var2" in config["schema"]["properties"]
         finally:
             from cookieplone.utils import files as f_utils
+
             f_utils.remove_paths(info.cleanup_paths)
 
 

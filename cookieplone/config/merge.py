@@ -231,7 +231,9 @@ def merge_repo_configs(
     return merged
 
 
-def merge_template_configs(upstream: dict[str, Any], downstream: dict[str, Any]) -> dict[str, Any]:
+def merge_template_configs(
+    upstream: dict[str, Any], downstream: dict[str, Any]
+) -> dict[str, Any]:
     """Combine two template-level configuration dicts (cookieplone.json).
 
     - ``id``: downstream wins.
@@ -263,7 +265,9 @@ def merge_template_configs(upstream: dict[str, Any], downstream: dict[str, Any])
     for list_field in ("extensions", "no_render"):
         if list_field in ds_config:
             existing = ups_config.get(list_field, [])
-            ups_config[list_field] = list(OrderedDict.fromkeys(existing + ds_config[list_field]))
+            ups_config[list_field] = list(
+                OrderedDict.fromkeys(existing + ds_config[list_field])
+            )
 
     if "versions" in ds_config:
         ups_config.setdefault("versions", {}).update(ds_config["versions"])

@@ -15,10 +15,10 @@ from cookieplone.exceptions import PreFlightException
 from cookieplone.exceptions import RepositoryException
 from cookieplone.exceptions import RepositoryNotFound
 from cookieplone.exceptions import VersionTooOldException
+from copy import deepcopy
 from packaging.version import Version
 from pathlib import Path
 from typing import Any
-from copy import deepcopy
 
 import json
 import shutil
@@ -656,6 +656,47 @@ def _overlay_copy(src: Path, dst: Path) -> None:
             shutil.copy2(entry, target)
 
 
+def _collect_overlay_configs(
+    dir_path: Path, configs_v1: list[dict[str, Any]], configs_v2: list[dict[str, Any]]
+) -> None:
+    """Scan *dir_path* for template-level config files and append them to the
+    appropriate collector list.
+    """
+    for filename in ("cookieplone.json", "cookiecutter.json"):
+        config_path = dir_path / filename
+        if config_path.is_file():
+            try:
+                data = json.loads(config_path.read_text())
+                if filename == "cookieplone.json":
+                    configs_v2.append(data)
+                else:
+                    configs_v1.append(data)
+            except json.JSONDecodeError:
+                continue
+
+
+def _write_merged_overlay_configs(
+    overlay_dir: Path,
+    configs_v1: list[dict[str, Any]],
+    configs_v2: list[dict[str, Any]],
+) -> None:
+    """Merge collected config files and write the result back to *overlay_dir*."""
+    if configs_v2:
+        from cookieplone.config.merge import merge_template_configs
+
+        merged = configs_v2[0]
+        for next_config in configs_v2[1:]:
+            merged = merge_template_configs(merged, next_config)
+        (overlay_dir / "cookieplone.json").write_text(json.dumps(merged))
+        # Ensure cookiecutter.json is removed so it doesn't conflict
+        (overlay_dir / "cookiecutter.json").unlink(missing_ok=True)
+    elif configs_v1:
+        merged = configs_v1[0]
+        for next_config in configs_v1[1:]:
+            merged.update(deepcopy(next_config))
+        (overlay_dir / "cookiecutter.json").write_text(json.dumps(merged))
+
+
 def _build_template_overlay(
     base_template_dir: Path,
     underlay: list[tuple[Path, str]],
@@ -686,44 +727,17 @@ def _build_template_overlay(
     configs_v2: list[dict[str, Any]] = []
     configs_v1: list[dict[str, Any]] = []
 
-    def _collect_configs(dir_path: Path):
-        for filename in ("cookieplone.json", "cookiecutter.json"):
-            config_path = dir_path / filename
-            if config_path.is_file():
-                try:
-                    data = json.loads(config_path.read_text())
-                    if filename == "cookieplone.json":
-                        configs_v2.append(data)
-                    else:
-                        configs_v1.append(data)
-                except json.JSONDecodeError:
-                    continue
-
     for repo_dir, rel_path in underlay:
         src = (Path(repo_dir) / rel_path).resolve()
         if src.is_dir():
-            _collect_configs(src)
+            _collect_overlay_configs(src, configs_v1, configs_v2)
             _overlay_copy(src, overlay_dir)
 
     if base_template_dir.is_dir():
-        _collect_configs(base_template_dir)
+        _collect_overlay_configs(base_template_dir, configs_v1, configs_v2)
         _overlay_copy(base_template_dir, overlay_dir)
 
-    # Merge and write back configs
-    if configs_v2:
-        from cookieplone.config.merge import merge_template_configs
-
-        merged = configs_v2[0]
-        for next_config in configs_v2[1:]:
-            merged = merge_template_configs(merged, next_config)
-        (overlay_dir / "cookieplone.json").write_text(json.dumps(merged))
-        # Ensure cookiecutter.json is removed so it doesn't conflict
-        (overlay_dir / "cookiecutter.json").unlink(missing_ok=True)
-    elif configs_v1:
-        merged = configs_v1[0]
-        for next_config in configs_v1[1:]:
-            merged.update(deepcopy(next_config))
-        (overlay_dir / "cookiecutter.json").write_text(json.dumps(merged))
+    _write_merged_overlay_configs(overlay_dir, configs_v1, configs_v2)
 
     return overlay_dir
 
