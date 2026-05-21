@@ -275,7 +275,7 @@ class TestNamespacedCloneDir:
         assert plone_dir == base / "plone"
 
     def test_unrecognizable_url_returns_base_dir(self):
-        """URLs without a recognizable org/repo structure return clone_to_dir unchanged."""
+        """URLs without a recognizable org/repo structure return clone_to_dir"""
         from cookieplone.repository import _namespaced_clone_dir
 
         result = _namespaced_clone_dir(
