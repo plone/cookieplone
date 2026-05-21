@@ -21,11 +21,24 @@ from pathlib import Path
 from typing import Any
 
 import json
+import re
 import shutil
 import tempfile
 
 
 REPO_CONFIG_FILENAME = "cookieplone-config.json"
+
+# Regex to extract the org/repo path from a VCS URL.
+# Matches:
+#   https://github.com/org/repo.git
+#   https://github.com/org/repo
+#   git@github.com:org/repo.git
+#   ssh://git@github.com/org/repo.git
+_VCS_ORG_REPO_RE = re.compile(
+    r"(?:https?|git|ssh|file)://[^/]+/(.+?)(?:\.git)?$"
+    r"|"
+    r"git@[^:]+:(.+?)(?:\.git)?$"
+)
 
 LEGACY_CONFIG_FILENAME = "cookiecutter.json"
 
@@ -430,15 +443,50 @@ def _repository_from_zip(
     return [Path(unzipped_dir)], cleanup
 
 
+def _namespaced_clone_dir(template_url: str, clone_to_dir: Path) -> Path:
+    """Compute a namespaced ``clone_to_dir`` to avoid directory collisions.
+
+    Cookiecutter's :func:`clone` derives the local directory name from the
+    last component of the URL (e.g. ``cookieplone-templates``), which means
+    two repositories owned by different organisations but sharing the same
+    name would collide (e.g. ``eea/cookieplone-templates`` vs
+    ``plone/cookieplone-templates``).
+
+    This helper extracts the ``org/repo`` path from *template_url* and
+    creates a namespaced subdirectory under *clone_to_dir* so that each
+    organisation gets its own cache space.
+
+    :param template_url: Fully-expanded repository URL.
+    :param clone_to_dir: Base cookiecutters directory (e.g. ``~/.cookiecutters``).
+    :returns: A :class:`~pathlib.Path` that includes the organisation namespace
+        (e.g. ``~/.cookiecutters/eea``).
+    """
+    url = template_url.rstrip("/")
+
+    # Try https://host/org/repo(.git) or git@host:org/repo(.git)
+    match = _VCS_ORG_REPO_RE.match(url)
+    if match:
+        org_repo = match.group(1) or match.group(2)
+        # org_repo is like "eea/cookieplone-templates"
+        # Use the org part as a namespace subdirectory
+        parts = org_repo.split("/")
+        if len(parts) >= 2:
+            return clone_to_dir / parts[0]
+
+    # Fallback: no recognizable org path; use the base dir unchanged
+    return clone_to_dir
+
+
 def _repository_from_vcs(
     template: str, clone_to_dir, no_input, checkout
 ) -> tuple[list[Path], bool]:
     """Prepare a repository from a vcs url."""
+    namespaced_dir = _namespaced_clone_dir(template, Path(clone_to_dir))
     try:
         cloned_repo = base.clone(
             repo_url=template,
             checkout=checkout,
-            clone_to_dir=clone_to_dir,
+            clone_to_dir=namespaced_dir,
             no_input=no_input,
         )
     except exc.RepositoryCloneFailed as e:
