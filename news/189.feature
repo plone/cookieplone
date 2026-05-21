@@ -1,1 +1,0 @@
-Added pytest fixtures (`upstream_repo_dir`, `merged_repository_config`, `template_layers`, `bake_from_local`, `bake_in_subprocess`) so downstream repositories that use `extends` can assert their merged config and bake projects end-to-end with a single session-scoped upstream clone. @ericof

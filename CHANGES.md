@@ -9,6 +9,14 @@
 
 <!-- towncrier release notes start -->
 
+## 2.0.0a3 (2026-05-21)
+
+
+### New features:
+
+- Implemented the repository `extends` mechanism so a downstream `cookieplone-config.json` can declare an upstream and inherit, override, add, or hide its templates with downstream-wins merge semantics. Template entries merge per-field, so partial redeclares like `{"hidden": true}` inherit `path` / `title` / `description` from upstream; when a downstream supplies its own `path`, the downstream template directory is overlaid on top of the upstream tree at render time so individual files (e.g. `README.md`) can be overridden without copying the upstream wholesale. Supports tag pinning, transitive chains, cycle detection, and a depth limit. @ericof [#175](https://github.com/plone/cookieplone/issues/175)
+- Added pytest fixtures (`upstream_repo_dir`, `merged_repository_config`, `template_layers`, `bake_from_local`, `bake_in_subprocess`) so downstream repositories that use `extends` can assert their merged config and bake projects end-to-end with a single session-scoped upstream clone. @ericof [#189](https://github.com/plone/cookieplone/issues/189)
+
 ## 2.0.0a2 (2026-04-14)
 
 
