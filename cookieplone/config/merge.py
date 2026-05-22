@@ -258,6 +258,10 @@ def merge_template_configs(
     ds_props = ds_schema.get("properties", {})
     ups_props.update(deepcopy(ds_props))
 
+    if "allOf" in ds_schema:
+        ups_all_of = ups_schema.get("allOf", [])
+        ups_schema["allOf"] = ups_all_of + deepcopy(ds_schema["allOf"])
+
     # Merge config
     ups_config = merged.setdefault("config", {})
     ds_config = downstream.get("config", {})
