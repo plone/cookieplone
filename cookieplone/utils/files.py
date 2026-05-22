@@ -109,4 +109,6 @@ def get_repository_root(
     if repo_path := context.get("__cookieplone_repository_path"):
         return Path(repo_path).resolve()
 
-    raise exc.RepositoryNotFound()
+    raise exc.RepositoryNotFound(
+        f"Template {template!r} not found in any configured repository."
+    )

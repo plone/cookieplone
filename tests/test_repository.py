@@ -293,3 +293,102 @@ class TestNamespacedCloneDir:
             Path("/home/user/.cookiecutters"),
         )
         assert result == Path("/home/user/.cookiecutters/eea")
+
+
+class TestRepositoryFromVcs:
+    """Each cookiecutter clone failure produces a specific user-facing message."""
+
+    URL = "https://github.com/plone/cookieplone-templates.git"
+
+    def _make_clone_fail(self, monkeypatch, exception):
+        """Replace ``base.clone`` with a stub that raises *exception*."""
+
+        def fake_clone(**kwargs):
+            raise exception
+
+        monkeypatch.setattr(repository.base, "clone", fake_clone)
+
+    def test_vcs_not_installed(self, monkeypatch, tmp_path):
+        """``VCSNotInstalled`` becomes a RepositoryException prompting install."""
+        from cookiecutter.exceptions import VCSNotInstalled
+        from cookieplone.exceptions import RepositoryException
+
+        self._make_clone_fail(monkeypatch, VCSNotInstalled("'git' is not installed."))
+        with pytest.raises(RepositoryException) as exc_info:
+            repository._repository_from_vcs(
+                self.URL, tmp_path, no_input=True, checkout=""
+            )
+        message = str(exc_info.value)
+        assert "git" in message
+        assert "Install the required VCS" in message
+
+    def test_repository_not_found_preserves_message(self, monkeypatch, tmp_path):
+        """``RepositoryNotFound`` keeps the upstream 'have you made a typo?' hint."""
+        from cookiecutter.exceptions import RepositoryNotFound as CCRepositoryNotFound
+        from cookieplone.exceptions import RepositoryException
+
+        upstream = CCRepositoryNotFound(
+            f"The repository {self.URL} could not be found, have you made a typo?"
+        )
+        self._make_clone_fail(monkeypatch, upstream)
+        with pytest.raises(RepositoryException) as exc_info:
+            repository._repository_from_vcs(
+                self.URL, tmp_path, no_input=True, checkout=""
+            )
+        message = str(exc_info.value)
+        assert "have you made a typo" in message
+        assert "private repository" in message
+
+    def test_repository_clone_failed_preserves_message(self, monkeypatch, tmp_path):
+        """``RepositoryCloneFailed`` keeps the upstream branch/tag message."""
+        from cookiecutter.exceptions import RepositoryCloneFailed
+        from cookieplone.exceptions import RepositoryException
+
+        upstream = RepositoryCloneFailed(
+            f"The bogus branch of repository {self.URL} could not found, "
+            "have you made a typo?"
+        )
+        self._make_clone_fail(monkeypatch, upstream)
+        with pytest.raises(RepositoryException) as exc_info:
+            repository._repository_from_vcs(
+                self.URL, tmp_path, no_input=True, checkout="bogus"
+            )
+        assert "bogus branch" in str(exc_info.value)
+
+    def test_called_process_error_surfaces_output(self, monkeypatch, tmp_path):
+        """``CalledProcessError`` exposes git's stderr to the user."""
+        from cookieplone.exceptions import RepositoryException
+
+        import subprocess
+
+        upstream = subprocess.CalledProcessError(
+            returncode=128,
+            cmd=["git", "clone", self.URL],
+            output=b"fatal: Authentication failed for 'https://example.com/'",
+        )
+        self._make_clone_fail(monkeypatch, upstream)
+        with pytest.raises(RepositoryException) as exc_info:
+            repository._repository_from_vcs(
+                self.URL, tmp_path, no_input=True, checkout=""
+            )
+        message = str(exc_info.value)
+        assert "Failed to clone" in message
+        assert "Authentication failed" in message
+
+    def test_called_process_error_without_output(self, monkeypatch, tmp_path):
+        """``CalledProcessError`` with no captured output still produces a message."""
+        from cookieplone.exceptions import RepositoryException
+
+        import subprocess
+
+        upstream = subprocess.CalledProcessError(
+            returncode=1,
+            cmd=["git", "clone", self.URL],
+            output=None,
+        )
+        self._make_clone_fail(monkeypatch, upstream)
+        with pytest.raises(RepositoryException) as exc_info:
+            repository._repository_from_vcs(
+                self.URL, tmp_path, no_input=True, checkout=""
+            )
+        assert "Failed to clone" in str(exc_info.value)

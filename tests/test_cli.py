@@ -1,7 +1,11 @@
 from click.exceptions import BadParameter
 from cookieplone import cli
+from cookieplone.exceptions import RepositoryException
+from cookieplone.exceptions import VersionTooOldException
+from typer.testing import CliRunner
 
 import pytest
+import typer
 
 
 @pytest.mark.parametrize(
@@ -98,6 +102,56 @@ class TestResolveTag:
         from cookieplone import settings
 
         assert cli.resolve_tag("") == settings.REPO_DEFAULT_TAG
+
+
+class TestCliRepositoryErrorHandling:
+    """Repository-resolution errors are surfaced via ``sanity_screen``,
+    not as uncaught tracebacks."""
+
+    @pytest.fixture
+    def runner(self):
+        app = typer.Typer()
+        app.command()(cli.cli)
+        return app, CliRunner()
+
+    @pytest.fixture
+    def recorded_sanity(self, monkeypatch):
+        """Capture the message passed to ``console.sanity_screen``."""
+        recorded: list[str] = []
+        monkeypatch.setattr(
+            cli.console, "sanity_screen", lambda msg: recorded.append(msg)
+        )
+        return recorded
+
+    @pytest.mark.parametrize(
+        "exception_factory",
+        [
+            pytest.param(
+                lambda: RepositoryException("could not clone bogus-url"),
+                id="repository-exception",
+            ),
+            pytest.param(
+                lambda: VersionTooOldException("cookieplone >= 99.0.0 required"),
+                id="version-too-old",
+            ),
+        ],
+    )
+    def test_pre_flight_errors_become_sanity_screen(
+        self, monkeypatch, runner, recorded_sanity, exception_factory
+    ):
+        """Pre-flight exceptions exit with code 1 via a single sanity_screen."""
+        exception = exception_factory()
+
+        def fake_get_base_repository(*args, **kwargs):
+            raise exception
+
+        monkeypatch.setattr(cli, "get_base_repository", fake_get_base_repository)
+        app, runner_ = runner
+
+        result = runner_.invoke(app, ["project", "--no-input"])
+
+        assert result.exit_code == 1
+        assert recorded_sanity == [exception.message]
 
 
 @pytest.mark.parametrize(

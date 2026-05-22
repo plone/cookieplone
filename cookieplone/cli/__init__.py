@@ -9,6 +9,7 @@ from cookieplone import settings
 from cookieplone._types import GenerateConfig
 from cookieplone.exceptions import GeneratorException
 from cookieplone.exceptions import PreFlightException
+from cookieplone.exceptions import RepositoryException
 from cookieplone.exceptions import VersionTooOldException
 from cookieplone.generator import generate
 from cookieplone.logger import configure_logger
@@ -108,6 +109,23 @@ def resolve_tag(tag: str) -> str:
     :returns: The resolved tag/branch name.
     """
     return tag or os.environ.get(settings.REPO_TAG) or settings.REPO_DEFAULT_TAG
+
+
+def resolve_base_repository(repository: str, tag: str, no_input: bool) -> Path:
+    """Resolve the templates repository, exiting cleanly on pre-flight errors.
+
+    Wraps :func:`~cookieplone.repository.get_base_repository` so that
+    :class:`~cookieplone.exceptions.RepositoryException` and
+    :class:`~cookieplone.exceptions.VersionTooOldException` are surfaced via
+    the standard error panel instead of bubbling up as tracebacks.
+
+    :raises typer.Exit: With code ``1`` after rendering the sanity screen.
+    """
+    try:
+        return get_base_repository(repository, tag, no_input=no_input)
+    except (RepositoryException, VersionTooOldException) as exc:
+        console.sanity_screen(exc.message)
+        raise typer.Exit(1) from exc
 
 
 def annotate_context(context: dict, repo_path: Path, template: str) -> dict:
@@ -289,11 +307,7 @@ def cli(
     if answers_data := parse_answers_file(answers_file):
         template = answers_data.pop("__template__", template)
 
-    try:
-        repo_path = get_base_repository(repository, tag, no_input=no_input)
-    except VersionTooOldException as exc:
-        console.sanity_screen(exc.message)
-        raise typer.Exit(1) from exc
+    repo_path = resolve_base_repository(repository, tag, no_input=no_input)
 
     # Template info
     cookieplone_template = get_template(template, repo_path, all_, no_input=no_input)
