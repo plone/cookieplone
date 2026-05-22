@@ -67,10 +67,11 @@ cookieplone -o ~/projects
 ### `--tag`, `--branch`
 
 - **Type**: string
-- **Default**: `main`
+- **Default**: `next`
 
 Git tag or branch of the template repository to use.
-Overridden by the `COOKIEPLONE_REPOSITORY_TAG` environment variable.
+When not provided on the command line, the `COOKIEPLONE_REPOSITORY_TAG`
+environment variable is consulted; otherwise the default applies.
 
 ```console
 cookieplone --tag 2024.10.1

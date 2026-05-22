@@ -76,6 +76,30 @@ def test_get_password_from_env(monkeypatch, env_var: str, value: str, expected: 
     assert result == expected
 
 
+class TestResolveTag:
+    """Precedence: CLI ``--tag`` > ``COOKIEPLONE_REPOSITORY_TAG`` > default."""
+
+    @pytest.fixture(autouse=True)
+    def _clear_env(self, monkeypatch):
+        monkeypatch.delenv("COOKIEPLONE_REPOSITORY_TAG", raising=False)
+
+    def test_cli_value_wins_over_env(self, monkeypatch):
+        """An explicit CLI ``--tag`` beats the environment variable."""
+        monkeypatch.setenv("COOKIEPLONE_REPOSITORY_TAG", "from-env")
+        assert cli.resolve_tag("from-cli") == "from-cli"
+
+    def test_env_used_when_cli_empty(self, monkeypatch):
+        """The env variable is consulted when no CLI value is provided."""
+        monkeypatch.setenv("COOKIEPLONE_REPOSITORY_TAG", "from-env")
+        assert cli.resolve_tag("") == "from-env"
+
+    def test_default_when_neither_set(self):
+        """Falls back to ``settings.REPO_DEFAULT_TAG`` when nothing is set."""
+        from cookieplone import settings
+
+        assert cli.resolve_tag("") == settings.REPO_DEFAULT_TAG
+
+
 @pytest.mark.parametrize(
     "template,extra_context,expected",
     [

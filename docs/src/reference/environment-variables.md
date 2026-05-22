@@ -31,7 +31,7 @@ cookieplone
 - **Default**: `next`
 
 Specifies the git tag or branch to check out when cloning the template repository.
-Overrides the `--tag`/`--branch` CLI flag.
+An explicit `--tag`/`--branch` CLI flag takes precedence over this variable.
 
 ```console
 export COOKIEPLONE_REPOSITORY_TAG="2024.10.1"

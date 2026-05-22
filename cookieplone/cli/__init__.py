@@ -97,6 +97,19 @@ def get_password_from_env() -> str:
     return ""
 
 
+def resolve_tag(tag: str) -> str:
+    """Resolve the templates repository tag/branch to use.
+
+    Precedence: an explicit ``--tag`` / ``--branch`` CLI value wins, otherwise
+    the ``COOKIEPLONE_REPOSITORY_TAG`` environment variable, otherwise the
+    hardcoded :data:`~cookieplone.settings.REPO_DEFAULT_TAG`.
+
+    :param tag: Value of ``--tag`` from the CLI; empty string when unset.
+    :returns: The resolved tag/branch name.
+    """
+    return tag or os.environ.get(settings.REPO_TAG) or settings.REPO_DEFAULT_TAG
+
+
 def annotate_context(context: dict, repo_path: Path, template: str) -> dict:
     context["__generator_sha"] = internal.repo_sha(repo_path)
     context["__generator_signature"] = internal.signature_md(repo_path)
@@ -170,8 +183,17 @@ def cli(
         typer.Option("--output-dir", "-o", help="Where to generate the code."),
     ] = None,
     tag: Annotated[
-        str, typer.Option("--tag", "--branch", help="Tag.")
-    ] = settings.REPO_DEFAULT_TAG,
+        str,
+        typer.Option(
+            "--tag",
+            "--branch",
+            help=(
+                "Branch or tag of the templates repository to use. "
+                f"Falls back to ${settings.REPO_TAG} when unset, then to "
+                f"{settings.REPO_DEFAULT_TAG!r}."
+            ),
+        ),
+    ] = "",
     info: Annotated[
         bool,
         typer.Option(
@@ -254,7 +276,7 @@ def cli(
         repository = settings.REPO_DEFAULT
 
     passwd = get_password_from_env()
-    tag = os.environ.get(settings.REPO_TAG) or tag
+    tag = resolve_tag(tag)
 
     if info:
         console.info_screen(repository=repository, passwd=passwd, tag=tag)
