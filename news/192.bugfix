@@ -1,0 +1,1 @@
+Restored expected precedence for the templates repository tag: an explicit `--tag`/`--branch` CLI argument now wins over the `COOKIEPLONE_REPOSITORY_TAG` environment variable, which in turn wins over the hardcoded default. Previously the environment variable silently overrode the CLI argument. @ericof

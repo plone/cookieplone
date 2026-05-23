@@ -23,6 +23,7 @@ from typing import Any
 import json
 import re
 import shutil
+import subprocess
 import tempfile
 
 
@@ -480,7 +481,13 @@ def _namespaced_clone_dir(template_url: str, clone_to_dir: Path) -> Path:
 def _repository_from_vcs(
     template: str, clone_to_dir, no_input, checkout
 ) -> tuple[list[Path], bool]:
-    """Prepare a repository from a vcs url."""
+    """Prepare a repository from a vcs url.
+
+    :raises RepositoryException: When the clone fails. The message is
+        tailored to the underlying cause (VCS missing, repository not found,
+        bad branch/tag, or any other clone-time failure) so the user can act
+        on it without consulting the traceback.
+    """
     namespaced_dir = _namespaced_clone_dir(template, Path(clone_to_dir))
     try:
         cloned_repo = base.clone(
@@ -489,8 +496,22 @@ def _repository_from_vcs(
             clone_to_dir=namespaced_dir,
             no_input=no_input,
         )
+    except exc.VCSNotInstalled as e:
+        raise RepositoryException(
+            f"Cannot clone {template!r}: {e} Install the required VCS tool and retry."
+        ) from e
+    except exc.RepositoryNotFound as e:
+        raise RepositoryException(
+            f"{e} If this is a private repository, check your authentication."
+        ) from e
     except exc.RepositoryCloneFailed as e:
-        raise RepositoryException(f"Invalid vcs repository {template}") from e
+        # cookiecutter already produces a useful message (typically a missing
+        # branch/tag); preserve it instead of replacing with a generic one.
+        raise RepositoryException(str(e)) from e
+    except subprocess.CalledProcessError as e:
+        output = (e.output or b"").decode("utf-8", errors="replace").strip()
+        detail = f"\n{output}" if output else ""
+        raise RepositoryException(f"Failed to clone {template!r}.{detail}") from e
     # Only clean up if it's a temporary directory, not the standard cache
     cleanup = "cookieplone-tmp-" in str(cloned_repo)
     return [Path(cloned_repo)], cleanup

@@ -68,7 +68,7 @@ class OutputDirExistsException(GeneratorException):
         super().__init__(message, state, original)
 
 
-class RepositoryException(exc.CookiecutterException):
+class RepositoryException(CookieploneException, exc.CookiecutterException):
     """Repository-related exception.
 
     Raised when there is an issue obtaining a repository.
