@@ -143,6 +143,49 @@ def _filter_initial_answers(
     return data
 
 
+def _apply_overwrite_to_property(
+    variable: str,
+    property_: dict[str, Any],
+    overwrite: Any,
+    in_dictionary_variable: bool = False,
+):
+    """Apply a single overwrite to a property definition."""
+    context_value = property_.get("default")
+    if isinstance(context_value, list):
+        if in_dictionary_variable:
+            property_["default"] = overwrite
+            return
+        if isinstance(overwrite, list):
+            # We are dealing with a multichoice variable
+            # Let's confirm all choices are valid for the given context
+            if set(overwrite).issubset(set(context_value)):
+                property_["default"] = overwrite
+            else:
+                raise ValueError(
+                    f"{overwrite} provided for multi-choice variable "
+                    f"{variable}, but valid choices are {context_value}"
+                )
+        else:
+            # We are dealing with a choice variable
+            if overwrite in context_value:
+                # This overwrite is actually valid for the given context
+                # Let's set it as default (by definition first item in list)
+                # see ``cookiecutter.prompt.prompt_choice_for_config``
+                context_value.remove(overwrite)
+                context_value.insert(0, overwrite)
+            else:
+                raise ValueError(
+                    f"{overwrite} provided for choice variable "
+                    f"{variable}, but the choices are {context_value}."
+                )
+    elif isinstance(context_value, dict) and isinstance(overwrite, dict):
+        # Partially overwrite some keys in original dict
+        _apply_overwrites_to_schema(property_, overwrite, in_dictionary_variable=True)
+    else:
+        # Simply overwrite the value for this variable
+        property_["default"] = overwrite
+
+
 def _apply_overwrites_to_schema(
     schema: dict[str, Any],
     overwrite_context: dict[str, Any],
@@ -179,43 +222,19 @@ def _apply_overwrites_to_schema(
             properties[variable] = {"default": overwrite}
 
         property_ = properties.get(variable, _NO_VALUE)
-        context_value = property_.get("default")
-        if isinstance(context_value, list):
-            if in_dictionary_variable:
-                property_["default"] = overwrite
-                continue
-            if isinstance(overwrite, list):
-                # We are dealing with a multichoice variable
-                # Let's confirm all choices are valid for the given context
-                if set(overwrite).issubset(set(context_value)):
-                    property_["default"] = overwrite
-                else:
-                    raise ValueError(
-                        f"{overwrite} provided for multi-choice variable "
-                        f"{variable}, but valid choices are {context_value}"
-                    )
-            else:
-                # We are dealing with a choice variable
-                if overwrite in context_value:
-                    # This overwrite is actually valid for the given context
-                    # Let's set it as default (by definition first item in list)
-                    # see ``cookiecutter.prompt.prompt_choice_for_config``
-                    context_value.remove(overwrite)
-                    context_value.insert(0, overwrite)
-                else:
-                    raise ValueError(
-                        f"{overwrite} provided for choice variable "
-                        f"{variable}, but the choices are {context_value}."
-                    )
-        elif isinstance(context_value, dict) and isinstance(overwrite, dict):
-            # Partially overwrite some keys in original dict
-            _apply_overwrites_to_schema(
-                context_value, overwrite, in_dictionary_variable=True
-            )
-            property_["default"] = context_value
-        else:
-            # Simply overwrite the value for this variable
-            property_["default"] = overwrite
+        _apply_overwrite_to_property(
+            variable, property_, overwrite, in_dictionary_variable
+        )
+
+    # Apply overwrites to allOf blocks
+    for item in schema.get("allOf", []):
+        for block in ("then", "else"):
+            if block in item:
+                _apply_overwrites_to_schema(
+                    item[block],
+                    overwrite_context,
+                    in_dictionary_variable=in_dictionary_variable,
+                )
 
 
 def _merge_versions(
@@ -280,6 +299,7 @@ def _generate_state(
         # to apply default values from the context
         for additional_context in (default_context, extra_context):
             if additional_context:
+                data.update(additional_context)
                 initial_data.update(additional_context)
                 try:
                     _apply_overwrites_to_schema(schema, additional_context)

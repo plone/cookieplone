@@ -1,0 +1,1 @@
+Fix an issue where user-provided context for computed fields was being overwritten by schema defaults. It also adds support for recursive overrides in allOf blocks. @erral
