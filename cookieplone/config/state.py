@@ -210,12 +210,21 @@ def _apply_overwrites_to_schema(
         elif isinstance(context_value, dict) and isinstance(overwrite, dict):
             # Partially overwrite some keys in original dict
             _apply_overwrites_to_schema(
-                context_value, overwrite, in_dictionary_variable=True
+                property_, overwrite, in_dictionary_variable=True
             )
-            property_["default"] = context_value
         else:
             # Simply overwrite the value for this variable
             property_["default"] = overwrite
+
+    # Apply overwrites to allOf blocks
+    for item in schema.get("allOf", []):
+        for block in ("then", "else"):
+            if block in item:
+                _apply_overwrites_to_schema(
+                    item[block],
+                    overwrite_context,
+                    in_dictionary_variable=in_dictionary_variable,
+                )
 
 
 def _merge_versions(
@@ -280,6 +289,7 @@ def _generate_state(
         # to apply default values from the context
         for additional_context in (default_context, extra_context):
             if additional_context:
+                data.update(additional_context)
                 initial_data.update(additional_context)
                 try:
                     _apply_overwrites_to_schema(schema, additional_context)
