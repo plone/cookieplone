@@ -498,7 +498,7 @@ requires-dist = [
     { name = "packaging", specifier = "==26.0" },
     { name = "semver", specifier = "==3.0.4" },
     { name = "tui-forms", specifier = ">=1.0.0b1" },
-    { name = "typer", specifier = "==0.24.1" },
+    { name = "typer", specifier = "==0.26.0" },
     { name = "xmltodict", specifier = "==1.0.4" },
 ]
 
@@ -2356,17 +2356,17 @@ wheels = [
 
 [[package]]
 name = "typer"
-version = "0.24.1"
+version = "0.26.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-doc" },
-    { name = "click" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
     { name = "rich" },
     { name = "shellingham" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f5/24/cb09efec5cc954f7f9b930bf8279447d24618bb6758d4f6adf2574c41780/typer-0.24.1.tar.gz", hash = "sha256:e39b4732d65fbdcde189ae76cf7cd48aeae72919dea1fdfc16593be016256b45", size = 118613, upload-time = "2026-02-21T16:54:40.609Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/81/db/25a5e308af68fda1cc49a4423eded2a7cad1381fbc1f7a4d5502d6fe26c6/typer-0.26.0.tar.gz", hash = "sha256:08177aa85fd81ceb6e8f7cb879cf22dbaa81f98c02b7d570acf112513d2aa66f", size = 198809, upload-time = "2026-05-26T14:37:09.446Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4a/91/48db081e7a63bb37284f9fbcefda7c44c277b18b0e13fbc36ea2335b71e6/typer-0.24.1-py3-none-any.whl", hash = "sha256:112c1f0ce578bfb4cab9ffdabc68f031416ebcc216536611ba21f04e9aa84c9e", size = 56085, upload-time = "2026-02-21T16:54:41.616Z" },
+    { url = "https://files.pythonhosted.org/packages/64/e1/01faefdf98e3a05ca5f3487caabab033fda84c5bd1bae7f73b8bb5dd553e/typer-0.26.0-py3-none-any.whl", hash = "sha256:859d520a4dc91c075cb370195462b6f7024fceb5d6de5c204bb8b1d51a60ad66", size = 123093, upload-time = "2026-05-26T14:37:07.783Z" },
 ]
 
 [[package]]
