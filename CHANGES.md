@@ -9,6 +9,27 @@
 
 <!-- towncrier release notes start -->
 
+## 2.0.0b1 (2026-06-01)
+
+
+### New features:
+
+- Clone failures now report a specific, actionable error: a missing VCS tool, a repository that cannot be reached, a bad branch/tag, or any other clone-time failure surface the underlying message instead of the generic `Invalid vcs repository ...`. The CLI displays the message via the standard error panel and exits cleanly, instead of letting the exception propagate as a traceback. @ericof [#191](https://github.com/plone/cookieplone/issues/191)
+- Add Plone 6.2 in settings @erral [#193](https://github.com/plone/cookieplone/issues/193)
+
+
+### Bug fixes:
+
+- Fixed template merge logic to correctly preserve and combine `allOf` blocks in JSON schemas. This ensures conditional questions from downstream templates are not lost during the merge process. [#merge-all-of](https://github.com/plone/cookieplone/issues/merge-all-of)
+- Restored expected precedence for the templates repository tag: an explicit `--tag`/`--branch` CLI argument now wins over the `COOKIEPLONE_REPOSITORY_TAG` environment variable, which in turn wins over the hardcoded default. Previously the environment variable silently overrode the CLI argument. @ericof [#192](https://github.com/plone/cookieplone/issues/192)
+- Fix an issue where user-provided context for computed fields was being overwritten by schema defaults. It also adds support for recursive overrides in allOf blocks. @erral [#200](https://github.com/plone/cookieplone/issues/200)
+
+
+### Internal:
+
+- Bumped the `tui-forms` dependency to `>=1.0.0a5`. @ericof [#197](https://github.com/plone/cookieplone/issues/197)
+- Bumped the `tui-forms` dependency to `>=1.0.0b1`. @ericof [#200](https://github.com/plone/cookieplone/issues/200)
+
 ## 2.0.0a3 (2026-05-21)
 
 

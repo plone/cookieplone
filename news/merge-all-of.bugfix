@@ -1,1 +1,0 @@
-Fixed template merge logic to correctly preserve and combine `allOf` blocks in JSON schemas. This ensures conditional questions from downstream templates are not lost during the merge process.
