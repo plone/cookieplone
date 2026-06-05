@@ -9,6 +9,16 @@
 
 <!-- towncrier release notes start -->
 
+## 2.0.0b2 (2026-06-05)
+
+
+### Internal:
+
+- Upgraded `typer` to 0.26.4 and adapted to Typer's vendored Click. Typer no longer depends on the external `click` package, so the test suite now catches `BadParameter` via Typer's public export. @ericof [#199](https://github.com/plone/cookieplone/issues/199)
+- Upgraded `cookiecutter` to 2.7.1. @ericof 
+- Upgraded `gitpython` to 3.1.50. @ericof 
+- Upgraded `packaging` to 26.2. @ericof 
+
 ## 2.0.0b1 (2026-06-01)
 
 
