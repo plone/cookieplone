@@ -1,7 +1,7 @@
-from click.exceptions import BadParameter
 from cookieplone import cli
 from cookieplone.exceptions import RepositoryException
 from cookieplone.exceptions import VersionTooOldException
+from typer import BadParameter
 from typer.testing import CliRunner
 
 import pytest

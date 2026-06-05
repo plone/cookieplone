@@ -26,11 +26,11 @@ classifiers = [
   "Topic :: Software Development :: Code Generators",
 ]
 dependencies = [
-  "cookiecutter==2.6.0",
+  "cookiecutter==2.7.1",
   "semver==3.0.4",
-  "typer==0.24.1",
-  "packaging==26.0",
-  "gitpython==3.1.46",
+  "typer==0.26.4",
+  "packaging==26.2",
+  "gitpython==3.1.50",
   "xmltodict==1.0.4",
   "tui-forms>=1.0.0b1",
 ]

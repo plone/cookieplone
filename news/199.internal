@@ -1,0 +1,1 @@
+Upgraded `typer` to 0.26.4 and adapted to Typer's vendored Click. Typer no longer depends on the external `click` package, so the test suite now catches `BadParameter` via Typer's public export. @ericof
