@@ -497,7 +497,7 @@ requires-dist = [
     { name = "gitpython", specifier = "==3.1.50" },
     { name = "packaging", specifier = "==26.2" },
     { name = "semver", specifier = "==3.0.4" },
-    { name = "tui-forms", specifier = ">=1.0.0b1" },
+    { name = "tui-forms", specifier = ">=1.0.0b2" },
     { name = "typer", specifier = "==0.26.4" },
     { name = "xmltodict", specifier = "==1.0.4" },
 ]
@@ -2318,15 +2318,15 @@ wheels = [
 
 [[package]]
 name = "tui-forms"
-version = "1.0.0b1"
+version = "1.0.0b2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jinja2" },
     { name = "jsonschema" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2d/ad/cdda14f5f8fb14623581ea1b214ff02c0208488fa58c80d0187dde946372/tui_forms-1.0.0b1.tar.gz", hash = "sha256:7a9ec3ffaaef4009c5672b9bd7bcad7592c41540f0a17871f33d276f77a94ff6", size = 1165600, upload-time = "2026-05-29T15:17:49.061Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/f4/d322a781d50373ba3ac72a251a1c5bfd75bcac1b8cf532ca9754804df3ee/tui_forms-1.0.0b2.tar.gz", hash = "sha256:05603a5c528eba9d0b10843175fdc69e0316ff5955bd89d9c7d3b1e72ba17aee", size = 1165541, upload-time = "2026-06-05T19:52:29.713Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/45/64e7bc5a93094553e5bdf534ff2d832d2e6d216121d9ca53c651702c674c/tui_forms-1.0.0b1-py3-none-any.whl", hash = "sha256:a6e9b0ce30ebb794bd85da66eb92ff088afcfd5389bbfcec59e7edb13ef89d5d", size = 1629920, upload-time = "2026-05-29T15:17:46.973Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/6d/f84e2ab64417ec817da909c708d2ad88115b01fac59006f0cafe6f86d9ab/tui_forms-1.0.0b2-py3-none-any.whl", hash = "sha256:0ce11ede01bc4c6fc541fe7ab4eb10cdc7e3d722bb6c10af742ed3169854b4de", size = 1629936, upload-time = "2026-06-05T19:52:31.304Z" },
 ]
 
 [package.optional-dependencies]

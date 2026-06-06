@@ -32,7 +32,7 @@ dependencies = [
   "packaging==26.2",
   "gitpython==3.1.50",
   "xmltodict==1.0.4",
-  "tui-forms>=1.0.0b1",
+  "tui-forms>=1.0.0b2",
 ]
 
 [project.entry-points.pytest11]
