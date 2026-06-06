@@ -67,6 +67,7 @@ class RepositoryInfo:
     config_dict: dict[str, Any]
     global_versions: dict[str, str] = field(default_factory=dict)
     renderer: str = ""
+    summary: dict[str, Any] = field(default_factory=dict)
     cleanup_paths: list[Path] = field(default_factory=list)
     upstream_repos: list[Path] = field(default_factory=list)
 
@@ -124,4 +125,52 @@ class GenerateConfig:
             overwrite_if_exists=self.overwrite_if_exists,
             skip_if_file_exists=self.skip_if_file_exists,
             keep_project_on_failure=self.keep_project_on_failure,
+        )
+
+
+@dataclass
+class SignatureInfo:
+    """Information about a template signature for display in the UI."""
+
+    text: str = "The Plone Community"
+    url: str = "https://plone.org"
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "SignatureInfo":
+        """Build a :class:`SignatureInfo` from a raw config mapping.
+
+        :param data: The ``signature`` sub-mapping from a template's
+            ``cookieplone-config.json`` ``config.summary`` block. Missing keys
+            fall back to the class defaults.
+        :returns: A populated :class:`SignatureInfo`.
+        """
+        return cls(
+            text=data.get("text", cls.text),
+            url=data.get("url", cls.url),
+        )
+
+
+@dataclass
+class SummaryInfo:
+    """Information about the summary for display in the UI."""
+
+    enabled: bool = False
+    message: str = "Now, code it, create a git repository, push to your organization."
+    thanks: str = "Sorry for the convenience,"
+    signature: SignatureInfo = field(default_factory=SignatureInfo)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "SummaryInfo":
+        """Build a :class:`SummaryInfo` from a raw config mapping.
+
+        :param data: The ``config.summary`` mapping from a template's
+            ``cookieplone-config.json``. Missing keys fall back to the class
+            defaults; an empty mapping yields a disabled summary.
+        :returns: A populated :class:`SummaryInfo`.
+        """
+        return cls(
+            enabled=data.get("enabled", cls.enabled),
+            message=data.get("message", cls.message),
+            thanks=data.get("thanks", cls.thanks),
+            signature=SignatureInfo.from_dict(data.get("signature", {})),
         )

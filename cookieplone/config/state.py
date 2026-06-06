@@ -85,6 +85,10 @@ class CookieploneState:
     :param versions: Version pinning dict from the config's ``versions`` mapping.
         Injected into ``data["versions"]`` so templates can access values via
         ``{{ versions.<key> }}``.
+    :param summary: The repository config's ``config.summary`` mapping driving
+        the post-generation summary screen (``enabled``, ``message``,
+        ``thanks``, ``signature``).  Populated from
+        :attr:`~cookieplone._types.RepositoryInfo.summary` during generation.
     """
 
     schema: dict[str, Any]
@@ -97,6 +101,7 @@ class CookieploneState:
     subtemplates: list[SubTemplate] = field(default_factory=list)
     template_id: str = ""
     versions: dict[str, str] = field(default_factory=dict)
+    summary: dict[str, Any] = field(default_factory=dict)
 
 
 def _parse_schema(context: dict[str, Any], version: str = "1.0") -> ParsedConfig:

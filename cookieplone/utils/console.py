@@ -327,3 +327,23 @@ def quiet_mode():
         yield
     finally:
         disable_quiet_mode()
+
+
+def summary_screen(
+    template_title: str, title: str, path: Path, info: t.SummaryInfo
+) -> None:
+    """Print a summary of the generated codebase."""
+    msg = f"""
+        [bold blue]{title}[/bold blue]
+
+        {info.message}
+
+        {info.thanks}
+        {info.signature.text}
+    """
+    panel(
+        title=f"New {template_title} was generated",
+        subtitle=f"Located at {path}",
+        msg=msg,
+        url=info.signature.url,
+    )
