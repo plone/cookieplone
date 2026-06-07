@@ -20,6 +20,7 @@ from cookieplone.repository import get_template_options
 from cookieplone.utils import console
 from cookieplone.utils import files
 from cookieplone.utils import internal
+from cookieplone.utils import summary
 from copy import deepcopy
 from pathlib import Path
 from rich.prompt import Prompt
@@ -354,13 +355,15 @@ def cli(
         template_underlay=cookieplone_template.underlay or None,
     )
     try:
-        generate(gen_config)
+        path, state = generate(gen_config, return_state=True)
     except (GeneratorException, PreFlightException, VersionTooOldException) as exc:
         console.error(exc.message)
         raise typer.Exit(1)  # noQA:B904
     except Exception as exc:
         console.error(str(exc))
         raise typer.Exit(1)  # noQA:B904
+    else:
+        summary.display_summary_screen(path, cookieplone_template.title, state)
 
 
 def main():

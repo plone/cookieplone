@@ -4,7 +4,7 @@ myst:
     "description": "Full specification for the cookieplone-config.json repository configuration file."
     "property=og:description": "Full specification for the cookieplone-config.json repository configuration file."
     "property=og:title": "Repository configuration (cookieplone-config.json)"
-    "keywords": "Cookieplone, cookieplone-config.json, repository, templates, groups, versions, extends"
+    "keywords": "Cookieplone, cookieplone-config.json, repository, templates, groups, versions, extends, summary"
 ---
 
 # Repository configuration (`cookieplone-config.json`)
@@ -133,6 +133,15 @@ Global configuration shared across all templates in the repository.
 {
   "config": {
     "min_version": "2.0.0a2",
+    "summary": {
+      "enabled": true,
+      "message": "Now, code it, create a git repository, push to your organization.",
+      "thanks": "Sorry for the convenience,",
+      "signature": {
+        "text": "The Plone Community",
+        "url": "https://plone.org"
+      }
+    },
     "versions": {
       "gha_version_checkout": "v6",
       "gha_version_setup_node": "v4",
@@ -200,6 +209,38 @@ Please upgrade:  uvx --no-cache cookieplone@2.0.0a2
 
 When the key is absent or empty, no version check is performed (backwards compatible with existing repositories).
 
+### `config.summary`
+
+Configures the summary screen shown after a codebase is generated.
+This is rendered automatically once generation completes, so templates no longer need to print a closing panel from their own post-generation hooks.
+
+```json
+{
+  "config": {
+    "summary": {
+      "enabled": true,
+      "message": "Now, code it, create a git repository, push to your organization.",
+      "thanks": "Sorry for the convenience,",
+      "signature": {
+        "text": "The Plone Community",
+        "url": "https://plone.org"
+      }
+    }
+  }
+}
+```
+
+| Key | Type | Required | Default | Description |
+|-----|------|----------|---------|-------------|
+| `enabled` | boolean | no | `false` | When `true`, the summary screen is shown after generation. |
+| `message` | string | no | `"Now, code it, create a git repository, push to your organization."` | Body text shown in the panel. |
+| `thanks` | string | no | `"Sorry for the convenience,"` | Closing line shown above the signature. |
+| `signature.text` | string | no | `"The Plone Community"` | Signature label shown below the message. |
+| `signature.url` | string | no | `"https://plone.org"` | URL associated with the signature. |
+
+The summary screen is disabled by default: a repository opts in by setting `enabled` to `true`.
+Any omitted key falls back to the default shown above, so a repository can override just the `signature` while keeping the standard message.
+
 (repo-extends)=
 ## `extends`
 
@@ -249,6 +290,7 @@ When a downstream declares `extends`, Cookieplone clones the upstream and merges
 | `templates` | Keyed union; a downstream entry merges per-field with the upstream entry of the same `id`. Downstream wins per field; fields the downstream omits inherit from upstream. When the downstream entry supplies `path`, its template directory is overlaid on top of upstream's at render time. |
 | `groups` | Keyed union; a downstream group entry replaces the upstream entry with the same `id`. The `templates` list inside a group is **replaced** wholesale, not merged. |
 | `config.versions` | Shallow merge, downstream wins per key. |
+| `config.summary` | Shallow merge, downstream wins per key. |
 | `config.renderer` | Downstream wins if set; otherwise falls back to upstream. |
 | `config.min_version` | Stricter wins: `max(upstream.min_version, downstream.min_version)` using PEP 440 ordering. |
 

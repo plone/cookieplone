@@ -1033,10 +1033,12 @@ def _populate_repository_metadata(
     checkout: str,
     password: str,
     overlay_cleanup: list[Path],
-) -> tuple[dict[str, str], str, list[Path], list[Path], Path, Path]:
-    """Populate global versions, renderer, and handle overlay from repo config."""
+) -> tuple[dict[str, str], str, dict[str, Any], list[Path], list[Path], Path, Path]:
+    """Populate global versions, renderer, summary, and handle overlay from
+    repo config."""
     global_versions: dict[str, str] = {}
     renderer: str = ""
+    summary: dict[str, Any] = {}
     extends_cleanup: list[Path] = []
     upstream_repos_out: list[Path] = []
 
@@ -1044,6 +1046,7 @@ def _populate_repository_metadata(
         return (
             global_versions,
             renderer,
+            summary,
             extends_cleanup,
             upstream_repos_out,
             base_repo_dir,
@@ -1056,6 +1059,7 @@ def _populate_repository_metadata(
         )
         global_versions = repo_config.get("config", {}).get("versions", {})
         renderer = repo_config.get("config", {}).get("renderer", "")
+        summary = repo_config.get("config", {}).get("summary", {})
         _check_min_version(repo_config.get("config", {}))
         cache_entry = _RESOLUTION_CACHE.get(str(config_root.resolve()))
         if cache_entry is not None:
@@ -1087,6 +1091,7 @@ def _populate_repository_metadata(
     return (
         global_versions,
         renderer,
+        summary,
         extends_cleanup,
         upstream_repos_out,
         base_repo_dir,
@@ -1168,6 +1173,7 @@ def get_repository(
     (
         global_versions,
         renderer,
+        summary,
         extends_cleanup,
         upstream_repos_out,
         base_repo_dir,
@@ -1212,6 +1218,7 @@ def get_repository(
         config_dict=config_dict,
         global_versions=global_versions,
         renderer=renderer,
+        summary=summary,
         cleanup_paths=cleanup_paths,
         upstream_repos=upstream_repos_out,
     )

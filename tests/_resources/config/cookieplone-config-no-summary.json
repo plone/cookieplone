@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "title": "Plone Community Templates (no summary)",
+  "description": "Repository config fixture without a config.summary block",
+  "groups": {
+    "projects": {
+      "title": "Projects",
+      "description": "Generators that create a new Plone project",
+      "templates": [
+        "project"
+      ],
+      "hidden": false
+    }
+  },
+  "templates": {
+    "project": {
+      "path": "./templates/projects/monorepo",
+      "title": "Volto Project",
+      "description": "Create a new Plone project that uses the Volto frontend",
+      "hidden": false
+    }
+  },
+  "config": {
+    "versions": {
+      "gha_version_checkout": "v6"
+    }
+  }
+}

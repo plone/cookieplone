@@ -197,6 +197,15 @@
     }
   },
   "config": {
+    "summary": {
+      "enabled": true,
+      "message": "Your Plone project is ready to roll!",
+      "thanks": "Thanks for choosing Plone,",
+      "signature": {
+        "text": "The Plone Community Team",
+        "url": "https://plone.org/community"
+      }
+    },
     "versions": {
       "devops_traefik_version": "v2.11",
       "devops_zeo_version": "6.0.0",

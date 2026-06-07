@@ -16,6 +16,7 @@ with a downstream one, applying the merge rules documented in issue #175:
   share an ``id``.  Group ``templates`` lists are replaced wholesale (not
   appended) so downstream can re-order or drop entries.
 - ``config.versions``: shallow merge, downstream wins per key.
+- ``config.summary``: shallow merge, downstream wins per key.
 - ``config.renderer``: downstream wins if set, otherwise upstream.
 - ``config.min_version``: ``max(upstream, downstream)`` via PEP 440 ordering.
 
@@ -103,6 +104,10 @@ def _merge_config_section(upstream: dict, downstream: dict) -> dict:
     versions = {**upstream.get("versions", {}), **downstream.get("versions", {})}
     if versions:
         merged["versions"] = versions
+
+    summary = {**upstream.get("summary", {}), **downstream.get("summary", {})}
+    if summary:
+        merged["summary"] = summary
 
     renderer = downstream.get("renderer") or upstream.get("renderer")
     if renderer:

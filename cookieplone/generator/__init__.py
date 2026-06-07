@@ -21,6 +21,8 @@ from cookieplone.utils import files
 from cookieplone.utils.console import quiet_mode
 from cookieplone.utils.cookiecutter import load_replay
 from pathlib import Path
+from typing import Literal
+from typing import overload
 
 import os
 import warnings
@@ -44,7 +46,19 @@ def _dump_answers(answers_: Answers, template_name: str, no_input: bool = False)
     return answers.write_answers(answers_, template_name, no_input)
 
 
-def generate(config: GenerateConfig) -> Path:
+@overload
+def generate(config: GenerateConfig, return_state: Literal[False] = False) -> Path: ...
+
+
+@overload
+def generate(
+    config: GenerateConfig, return_state: Literal[True]
+) -> tuple[Path, CookieploneState]: ...
+
+
+def generate(
+    config: GenerateConfig, return_state: bool = False
+) -> Path | tuple[Path, CookieploneState]:
     """Generate a project from a cookieplone template.
 
     Resolves the repository, builds the run state (including any replay or
@@ -53,7 +67,10 @@ def generate(config: GenerateConfig) -> Path:
 
     :param config: A :class:`~cookieplone._types.GenerateConfig` holding all
         generation options.
-    :returns: Path to the generated project directory.
+    :param return_state: When ``True``, return the
+        :class:`~cookieplone.config.CookieploneState` alongside the output path.
+    :returns: Path to the generated project directory, or a
+        ``(Path, CookieploneState)`` tuple when *return_state* is ``True``.
     :raises exc.InvalidModeException: When incompatible options are combined
         (e.g. *replay* with *no_input* or *extra_context*).
     :raises RepositoryException: When the repository cannot be resolved.
@@ -114,6 +131,10 @@ def generate(config: GenerateConfig) -> Path:
         replay_context=context_from_replayfile if config.replay else None,
         global_versions=effective_versions,
     )
+    # The post-generation summary screen is configured at the repository level
+    # (``cookieplone-config.json`` ``config.summary``), surfaced here on the
+    # run state so the CLI can render it after generation completes.
+    state.summary = repository_info.summary
 
     run_config = config.to_run_config()
     dump_location = None
@@ -133,7 +154,7 @@ def generate(config: GenerateConfig) -> Path:
     except Exception as e:
         raise GeneratorException(message=str(e), state=state, original=e)  # noQA:B904
     else:
-        return Path(result)
+        return Path(result) if not return_state else (Path(result), state)
     finally:
         if config.dump_answers:
             path = _dump_answers(state.answers, config.template_name, config.no_input)
