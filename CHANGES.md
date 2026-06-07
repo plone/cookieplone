@@ -9,6 +9,18 @@
 
 <!-- towncrier release notes start -->
 
+## 2.0.0b3 (2026-06-07)
+
+
+### New features:
+
+- Added an optional post-generation summary screen, configurable via the `config.summary` block of `cookieplone-config.json`. @ericof [#204](https://github.com/plone/cookieplone/issues/204)
+
+
+### Bug fixes:
+
+- The confirmation screen now always preserves the order of the form questions. @ericof [#202](https://github.com/plone/cookieplone/issues/202)
+
 ## 2.0.0b2 (2026-06-05)
 
 
