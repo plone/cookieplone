@@ -20,7 +20,7 @@ jobs:
       - name: Install hatch
         run: pipx install hatch
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.python-version }}
           cache: 'pip'
