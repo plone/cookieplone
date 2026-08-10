@@ -174,6 +174,23 @@ def welcome_screen(templates: list[t.CookieploneTemplate] | None = None):
     base_print(panel)
 
 
+def error_screen(msg: str):
+    """Display an error message inside the cookieplone panel.
+
+    :param msg: Error message to be displayed. Rich markup is supported.
+    """
+    banner = choose_banner()
+    items = [
+        Align.center(f"[bold blue]{banner}[/bold blue]"),
+        Align.center(f"[red]{msg}[/red]"),
+    ]
+    panel = Panel(
+        Group(*items),
+        title="cookieplone",
+    )
+    base_print(panel)
+
+
 def version_screen():
     """Print version information."""
     base_print(version_info())

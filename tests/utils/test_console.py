@@ -49,3 +49,16 @@ def test_choose_banner(set_console_width, width: int, banner: str):
 def test_prints(mock_print, func, msg, style, color):
     func(msg)
     mock_print.assert_called_once_with(msg, style, color)
+
+
+@patch("cookieplone.utils.console.base_print")
+def test_error_screen(mock_base_print):
+    from rich.console import Console
+
+    console.error_screen("Repository not found")
+    mock_base_print.assert_called_once()
+    panel = mock_base_print.call_args[0][0]
+    assert panel.title == "cookieplone"
+    recorder = Console(width=120, record=True)
+    recorder.print(panel)
+    assert "Repository not found" in recorder.export_text()
