@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+from cookiecutter.exceptions import RepositoryCloneFailed, RepositoryNotFound
 from rich.prompt import Prompt
 
 from cookieplone import _types as t
@@ -54,6 +55,25 @@ def parse_boolean(value: str) -> bool:
     return value.lower() in ("1", "yes", "y")
 
 
+def get_repository_or_exit(repository: str, tag: str) -> Path:
+    """Resolve the base repository, displaying an error screen on failure.
+
+    :param repository: Repository URL, abbreviation, or local path.
+    :param tag: Repository tag, branch, or commit to be used.
+    :returns: Path to the local checkout of the repository.
+    :raises typer.Exit: If no valid repository is found for the given tag.
+    """
+    try:
+        return get_base_repository(repository, tag)
+    except (RepositoryNotFound, RepositoryCloneFailed) as exc:
+        console.error_screen(
+            f"Repository [bold]{repository}[/bold] with tag [bold]{tag}[/bold]"
+            " not found.\n\n"
+            "Please, try to use a newer version of cookieplone or use another tag."
+        )
+        raise typer.Exit(1) from exc
+
+
 def prompt_for_template(base_path: Path, all_: bool = False) -> t.CookieploneTemplate:
     """Parse cookiecutter.json in base_path and prompt user to choose."""
     templates = get_template_options(base_path, all_)
@@ -73,7 +93,7 @@ def cli(
         data.OptionalPath,
         typer.Option("--output-dir", "-o", help="Where to generate the code."),
     ] = None,
-    tag: Annotated[str, typer.Option(help="Tag.")] = "main",
+    tag: Annotated[str, typer.Option(help="Tag.")] = "20260810.1",
     info: Annotated[
         bool,
         typer.Option(
@@ -158,7 +178,7 @@ def cli(
         console.info_screen(repository=repository, passwd=passwd, tag=tag)
         raise typer.Exit()
 
-    repo_path = get_base_repository(repository, tag)
+    repo_path = get_repository_or_exit(repository, tag)
     if not template:
         # Display template options
         cookieplone_template = prompt_for_template(repo_path)
