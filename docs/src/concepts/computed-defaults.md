@@ -48,19 +48,19 @@ In this example:
 
 ## Evaluation order
 
-Properties are evaluated in the order they appear in the `properties` object.
-A computed field can reference only fields that appear **earlier** in `properties`.
+Cookieplone asks all visible questions first, then evaluates computed fields in the order they appear in the `properties` object.
+A computed field can reference every answer to a visible question, and the computed fields that appear **earlier** in `properties`.
 
-Referencing a field that appears later produces an empty string or raises a Jinja2 error,
+A reference to a computed field that appears later renders as an empty string, without an error,
 because that field has not been resolved yet when the expression is evaluated.
 
 ## Available context
 
 Inside a computed expression, the Jinja2 context includes:
 
-- All user-answered fields resolved so far.
+- All answers to visible questions.
 - All computed fields resolved so far.
-- All built-in Cookieplone filters (see {doc}`/reference/filters`).
+- The filters that the template lists in `config.extensions` (see {doc}`/reference/filters`).
 - The `cookiecutter` namespace prefix (for example, `cookiecutter.project_slug`).
 
 ## Constant fields

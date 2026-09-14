@@ -23,4 +23,7 @@ filters
 validators
 configuration
 environment-variables
+templates/index
+compatibility
+api/index
 ```

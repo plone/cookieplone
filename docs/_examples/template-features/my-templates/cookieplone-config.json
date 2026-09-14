@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "title": "Example templates",
+  "description": "Templates used in the Cookieplone documentation.",
+  "groups": {
+    "add-ons": {
+      "title": "Add-ons",
+      "description": "Generators that create an add-on.",
+      "templates": ["features"]
+    },
+    "internal": {
+      "title": "Internal",
+      "description": "Templates for maintainers.",
+      "templates": ["internal"],
+      "hidden": true
+    }
+  },
+  "templates": {
+    "features": {
+      "path": "./templates/features",
+      "title": "Template features",
+      "description": "Validators, computed fields, and filters."
+    },
+    "internal": {
+      "path": "./templates/internal",
+      "title": "Internal tool",
+      "description": "A template for maintainers.",
+      "hidden": true
+    }
+  }
+}

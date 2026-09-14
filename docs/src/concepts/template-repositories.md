@@ -4,66 +4,75 @@ myst:
     "description": "An explanation of what a Cookieplone template repository is and how it is structured."
     "property=og:description": "An explanation of what a Cookieplone template repository is and how it is structured."
     "property=og:title": "Template repositories"
-    "keywords": "Cookieplone, template repository, cookiecutter.json, templates, hidden, git, local path"
+    "keywords": "Cookieplone, template repository, cookieplone-config.json, templates, groups, hidden, git, local path"
 ---
 
 # Template repositories
 
-A template repository is a git repository (or local directory) that contains one or more Cookieplone templates.
-Cookieplone clones or copies the repository, reads its manifest, and presents the available templates to you.
+A template repository is a directory, git repository, or zip archive that contains one or more Cookieplone templates.
+Cookieplone reads the repository's configuration, presents its templates in a menu, and generates the one you choose.
 
-## Repository manifest
+## Repository configuration
 
-Every template repository must contain a `cookiecutter.json` file at its root.
-This root manifest is different from the per-template schema files—it describes the repository, not a single template.
+Every template repository has a `cookieplone-config.json` file at its root.
+It describes the repository, not a single template: which templates exist, where they live, and how the menu groups them.
 
-```json
-{
-  "templates": {
-    "project": {
-      "path": "./templates/project",
-      "title": "A Plone project",
-      "description": "Full Plone project with backend and frontend."
-    },
-    "addon": {
-      "path": "./templates/addon",
-      "title": "A Plone add-on",
-      "description": "Minimal installable Plone add-on."
-    }
-  }
-}
+```{literalinclude} ../../_examples/template-features/my-templates/cookieplone-config.json
+:language: json
 ```
-
-Each entry under `templates` has:
 
 | Key | Required | Description |
 |---|---|---|
-| `path` | yes | Relative path from the repository root to the template directory. |
-| `title` | yes | Short name shown in the selection menu. |
-| `description` | yes | One-sentence description shown under the title. |
-| `hidden` | no | When `true`, the template is omitted from the default menu. |
+| `version` | yes | Version of the configuration format. Must be `"1.0"`. |
+| `title` | yes | Name of the repository. |
+| `description` | no | One-sentence description of the repository. |
+| `groups` | yes, in practice | Categories of the first menu. Every template must belong to exactly one group. |
+| `templates` | yes, unless `extends` is set | Templates of the repository, by template ID. |
+| `config` | no | Settings for all templates: `versions`, `renderer`, `min_version`, and `summary`. |
+| `extends` | no | Another repository whose templates this one inherits. |
+
+Each entry under `templates` has these keys:
+
+| Key | Required | Description |
+|---|---|---|
+| `path` | yes | Path from the repository root to the template directory. |
+| `title` | yes | Name shown in the menu. |
+| `description` | yes | One-sentence description shown in the menu. |
+| `hidden` | no | When `true`, the template is left out of the menu. |
+
+Each entry under `groups` has these keys:
+
+| Key | Required | Description |
+|---|---|---|
+| `title` | yes | Name shown in the menu. |
+| `description` | yes | One-sentence description shown in the menu. |
+| `templates` | yes | IDs of the templates in the group, at least one. |
+| `hidden` | no | When `true`, the group and its templates are left out of the menu. |
+
+See {doc}`/reference/repository-config` for every key, including `config` and `extends`.
 
 ## Directory layout
 
-```
+```text
 my-templates/
-├── cookiecutter.json          # repository manifest
+├── cookieplone-config.json          ← repository configuration
 └── templates/
-    ├── project/               # a full template
-    │   ├── cookieplone.json   # template schema (v2)
-    │   ├── hooks/
-    │   │   └── pre_prompt.py
-    │   └── {{cookiecutter.project_slug}}/
+    ├── features/
+    │   ├── cookieplone.json         ← questions and settings of the template
+    │   ├── hooks/                   ← optional hooks
+    │   ├── my_validators.py         ← optional Python helpers
+    │   └── {{ cookiecutter.project_slug }}/
     │       └── ...
-    └── addon/
+    └── internal/
         ├── cookieplone.json
-        └── {{cookiecutter.python_package_name}}/
+        └── {{ cookiecutter.project_slug }}/
             └── ...
 ```
 
-Each sub-directory listed in the manifest is an independent Cookiecutter template with its own schema file and optional `hooks/` directory.
+Each template directory has its own `cookieplone.json` (see {doc}`/reference/schema-v2`), an optional `hooks/` directory, and a directory named with a Jinja2 expression that becomes the generated project.
+Keep templates under `templates/`: sub-templates are addressed by their path under that directory (see {doc}`/concepts/subtemplates`).
 
-## Supported source types
+## Supported sources
 
 Cookieplone accepts any of these repository sources:
 
@@ -77,18 +86,17 @@ Cookieplone accepts any of these repository sources:
 | Local directory | `/home/user/my-templates` |
 | Zip archive (URL or path) | `https://example.com/templates.zip` |
 
-Set the source via `COOKIEPLONE_REPOSITORY` or the positional `template` argument combined with a repository override.
+Set the source with the `COOKIEPLONE_REPOSITORY` environment variable.
+The positional argument of `cookieplone` is a template ID inside that repository, not a repository.
+Without `COOKIEPLONE_REPOSITORY`, Cookieplone uses `gh:plone/cookieplone-templates`, the official [`cookieplone-templates`](https://github.com/plone/cookieplone-templates) repository.
+
+A local directory can be a plain directory or a git repository.
+A git repository needs at least one commit.
 
 ## Hidden templates
 
-A template marked `"hidden": true` is not shown in the default selection menu.
-Pass `--all` (short: `-a`) to include hidden templates in the menu.
-
-Hidden templates are useful for:
-
-- Sub-templates called programmatically from a post-generation hook.
-- Experimental or work-in-progress templates.
-- Internal maintenance templates.
+A template or group marked `"hidden": true` is left out of the menu.
+Pass `--all` (short: `-a`) to include hidden groups and templates, or pass a template ID to run a hidden template directly.
 
 See {doc}`/how-to-guides/create-a-hidden-template` for an example.
 
@@ -120,17 +128,19 @@ Group-level merging is currently replace-or-nothing: a downstream that redeclare
 
 When Cookieplone starts, it:
 
-1. Resolves and clones the repository.
-2. Reads the root `cookiecutter.json`.
-3. Builds the list of templates from the `templates` key.
-4. Filters out hidden templates unless `--all` is passed.
-5. Presents the remaining templates in the order they appear in the manifest.
+1. Resolves the repository source, and clones or unpacks it when it's remote.
+2. Reads `cookieplone-config.json`, merging the upstream configuration when `extends` is set.
+3. Validates the configuration, and checks `config.min_version` against the running Cookieplone.
+4. Selects the template passed on the command line, hidden or not.
+   Without one, it shows the groups, then the templates of the chosen group, in the order the configuration lists them.
+   Hidden groups and templates are left out unless you pass `--all`.
 
 ## Related pages
 
-- {doc}`/concepts/subtemplates`: how multiple templates within one repository compose.
-- {doc}`/how-to-guides/create-a-hidden-template`: mark a template as hidden.
+- {doc}`/concepts/subtemplates`: how templates generate other templates.
+- {doc}`/how-to-guides/create-a-hidden-template`: hide a template or a group.
 - {doc}`/how-to-guides/extend-an-upstream-template-repository`: build a downstream repository on top of an upstream one.
 - {doc}`/how-to-guides/use-a-custom-template-repository`: use a repository other than the default.
+- {doc}`/reference/repository-config`: every key of `cookieplone-config.json`.
 - {doc}`/reference/schema-v2`: the per-template `cookieplone.json` schema.
 - {doc}`/reference/environment-variables`: `COOKIEPLONE_REPOSITORY` and `COOKIEPLONE_REPOSITORY_TAG`.

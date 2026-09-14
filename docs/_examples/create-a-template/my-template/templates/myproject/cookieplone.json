@@ -1,0 +1,37 @@
+{
+  "id": "myproject",
+  "schema": {
+    "title": "My project",
+    "description": "A minimal example project.",
+    "version": "2.0",
+    "properties": {
+      "project_title": {
+        "type": "string",
+        "title": "Project title",
+        "description": "The human-readable name of your project.",
+        "default": "My Project"
+      },
+      "project_slug": {
+        "type": "string",
+        "title": "Project slug",
+        "description": "Identifier used for the directory name.",
+        "default": "my-project"
+      },
+      "author_name": {
+        "type": "string",
+        "title": "Author name",
+        "default": "Jane Developer"
+      },
+      "author_email": {
+        "type": "string",
+        "title": "Author email",
+        "default": "jane@example.com"
+      }
+    }
+  },
+  "config": {
+    "versions": {
+      "python": "3.12"
+    }
+  }
+}

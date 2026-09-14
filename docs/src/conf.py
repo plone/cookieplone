@@ -4,9 +4,9 @@
 
 # -- Path setup --------------------------------------------------------------
 
+from cookieplone import __version__
 from datetime import datetime
 from packaging.version import Version
-from plone_sphinx_theme import __version__
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -225,6 +225,23 @@ html_static_path = [
 
 # Don't show class signature with the class' name.
 autodoc_class_signature = "separated"
+
+# Warn about every cross-reference whose target cannot be found, so that the
+# -W build fails on broken references to the Python API.
+nitpicky = True
+
+# Targets referenced from docstrings that the documentation does not include:
+# GitPython has no intersphinx inventory configured here, and generate() and
+# GeneratorException are not part of the documented hook API.
+nitpick_ignore = [
+    ("py:class", "git.Repo"),
+    ("py:class", "git.config.GitConfigParser"),
+    ("py:class", "git.objects.commit.Commit"),
+    ("py:class", "git.repo.base.Repo"),
+    ("py:meth", "git.Repo.config_reader"),
+    ("py:exc", "GeneratorException"),
+    ("py:func", "generate"),
+]
 
 
 # -- Options for sphinx_sitemap to html -----------------------------

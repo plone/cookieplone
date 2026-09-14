@@ -1,0 +1,1 @@
+Refreshed `uv.lock` to resolve the open Dependabot alerts, and upgraded `pytest` to 9.1.1 and `pytest-cov` to 7.1.0. Class-scoped test fixtures are now class methods, as pytest 10 will require. @ericof

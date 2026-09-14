@@ -18,6 +18,7 @@ Read these pages to build a mental model of how Cookieplone works and why it wor
 
 how-cookieplone-works
 template-repositories
+hooks
 subtemplates
 validators-and-filters
 computed-defaults

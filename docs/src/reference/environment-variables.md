@@ -15,7 +15,7 @@ CLI flags take precedence over environment variables where both exist.
 ## `COOKIEPLONE_REPOSITORY`
 
 - **Type**: string (URL, local path, or abbreviation)
-- **Default**: `gh:plone/cookieplone-templates`
+- **Default**: `gh:plone/cookieplone-templates`, the official [`cookieplone-templates`](https://github.com/plone/cookieplone-templates) repository
 
 Overrides the default template repository.
 Accepts any source that Cookieplone supports: a git URL, a local directory path, a zip archive URL, or an abbreviated form (`gh:`, `gl:`, `bb:`).
@@ -28,13 +28,14 @@ cookieplone
 ## `COOKIEPLONE_REPOSITORY_TAG`
 
 - **Type**: string (git tag or branch name)
-- **Default**: `next`
+- **Default**: `main`
 
 Specifies the git tag or branch to check out when cloning the template repository.
 An explicit `--tag`/`--branch` CLI flag takes precedence over this variable.
+When neither this variable, `--tag`, nor `COOKIEPLONE_REPOSITORY` is set, and the `main` branch has no `cookieplone-config.json`, Cookieplone checks out `next` instead.
 
 ```console
-export COOKIEPLONE_REPOSITORY_TAG="2024.10.1"
+export COOKIEPLONE_REPOSITORY_TAG="next"
 cookieplone
 ```
 
@@ -43,10 +44,11 @@ cookieplone
 - **Type**: string
 - **Default**: _(none)_
 
-Password or token used to authenticate when cloning a private template repository.
+Password of a password-protected zip archive used as the template repository.
 Also checked under the name `COOKIECUTTER_REPO_PASSWORD` for compatibility.
 
-Set this variable rather than embedding credentials in the repository URL.
+Cookieplone doesn't use this variable for git repositories.
+It clones them with your git installation, which uses its own credentials, such as an SSH key.
 
 ## `COOKIEPLONE_RENDERER`
 
@@ -69,14 +71,10 @@ If the renderer name is not registered with `tui_forms`, Cookieplone aborts with
 - **Type**: string
 - **Default**: _(not set)_
 
-When set to any non-empty value, suppresses the interactive (Textual User Interface) wizard
-and falls back to a plain text prompt.
-Use this in headless environments where a terminal User Interface (TUI) cannot render correctly.
+When set to any non-empty value, silences the messages that Cookieplone prints to the console.
+It doesn't change the wizard.
 
-```console
-export COOKIEPLONE_QUIET_MODE_SWITCH=1
-cookieplone
-```
+Cookieplone sets this variable itself while it generates sub-templates, so that their messages don't clutter the main run, and removes it afterward.
 
 ## `COOKIEPLONE_CONFIG`
 
@@ -106,7 +104,8 @@ Overridden by both `COOKIEPLONE_CONFIG` and `--config-file`.
 - **Type**: flag (presence)
 - **Default**: _(not set)_
 
-When set to any non-empty value, the `use_prerelease_versions`, `latest_plone`, and `latest_volto` filters include pre-release versions in their results.
+When set, even to an empty value, the `use_prerelease_versions` filter returns `Yes` instead of `No`.
+Templates that pass that result to the `latest_plone` and `latest_volto` filters then include prerelease versions.
 
 ```console
 export USE_PRERELEASE=1

@@ -67,6 +67,16 @@ uv
 Volto
 Vue
 Zope
+Ansible
+Corepack
+FileStorage
+pnpm
+PostgreSQL
+RelStorage
+Traefik
+Varnish
+Vitest
+ZEO
 [Pp]ytest(11)?
 conftest
 [Ff]ixture(s)?

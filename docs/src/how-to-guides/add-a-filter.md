@@ -9,7 +9,7 @@ myst:
 
 # Add a filter
 
-Filters in Cookieplone are Jinja2 filters registered automatically for every template.
+Filters in Cookieplone are Jinja2 filters that a template enables by listing them in `config.extensions` of its `cookieplone.json`.
 They live in `cookieplone/filters/__init__.py` and use the `@simple_filter` decorator from `cookiecutter.utils`.
 
 ## Understand the decorator
@@ -26,7 +26,7 @@ def my_filter(value: str) -> str:
     return value.upper()
 ```
 
-Template authors then call it as `{{ cookiecutter.some_field | my_filter }}`.
+Template authors enable it by adding `cookieplone.filters.my_filter` to `config.extensions`, then call it as `{{ cookiecutter.some_field | my_filter }}`.
 
 ## Add the filter function
 

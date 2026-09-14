@@ -1,8 +1,11 @@
 from cookieplone import cli
+from cookieplone import settings
+from cookieplone.exceptions import GeneratorException
 from cookieplone.exceptions import RepositoryException
 from cookieplone.exceptions import VersionTooOldException
 from typer import BadParameter
 from typer.testing import CliRunner
+from types import SimpleNamespace
 
 import pytest
 import typer
@@ -99,9 +102,98 @@ class TestResolveTag:
 
     def test_default_when_neither_set(self):
         """Falls back to ``settings.REPO_DEFAULT_TAG`` when nothing is set."""
-        from cookieplone import settings
-
         assert cli.resolve_tag("") == settings.REPO_DEFAULT_TAG
+
+
+class TestUsesDefaultRepository:
+    """The fallback tag only applies when neither repository nor tag is set."""
+
+    @pytest.fixture(autouse=True)
+    def _clear_env(self, monkeypatch):
+        monkeypatch.delenv("COOKIEPLONE_REPOSITORY", raising=False)
+        monkeypatch.delenv("COOKIEPLONE_REPOSITORY_TAG", raising=False)
+
+    def test_nothing_set(self):
+        """With no overrides the run uses the defaults."""
+        assert cli.uses_default_repository("") is True
+
+    @pytest.mark.parametrize(
+        "env,tag",
+        [
+            pytest.param(
+                {"COOKIEPLONE_REPOSITORY": "gh:org/templates"}, "", id="repository-env"
+            ),
+            pytest.param({"COOKIEPLONE_REPOSITORY_TAG": "main"}, "", id="tag-env"),
+            pytest.param({}, "main", id="tag-option"),
+        ],
+    )
+    def test_any_override(self, monkeypatch, env: dict[str, str], tag: str):
+        """Setting the repository or the tag, even to a default value, opts out."""
+        for key, value in env.items():
+            monkeypatch.setenv(key, value)
+        assert cli.uses_default_repository(tag) is False
+
+
+class TestResolveBaseRepositoryFallback:
+    """``resolve_base_repository`` switches to the fallback tag when needed."""
+
+    @pytest.fixture
+    def checkouts(self, monkeypatch, tmp_path) -> list[tuple]:
+        """Resolve the base repository to ``tmp_path`` and record checkouts."""
+        recorded: list[tuple] = []
+
+        def fake_checkout(repo_path, tag, no_input=False):
+            recorded.append((repo_path, tag))
+            return repo_path
+
+        monkeypatch.setattr(cli, "get_base_repository", lambda *args, **kw: tmp_path)
+        monkeypatch.setattr(cli, "checkout_fallback_tag", fake_checkout)
+        return recorded
+
+    def test_switches_when_config_missing(self, tmp_path, checkouts):
+        """A clone without ``cookieplone-config.json`` moves to the fallback tag."""
+        result = cli.resolve_base_repository(
+            settings.REPO_DEFAULT, "main", no_input=True, fallback_tag="next"
+        )
+        assert result == (tmp_path, "next")
+        assert checkouts == [(tmp_path, "next")]
+
+    def test_keeps_tag_when_config_present(self, tmp_path, checkouts):
+        """A clone that already provides the config stays at the requested tag."""
+        (tmp_path / "cookieplone-config.json").write_text("{}")
+        result = cli.resolve_base_repository(
+            settings.REPO_DEFAULT, "main", no_input=True, fallback_tag="next"
+        )
+        assert result == (tmp_path, "main")
+        assert checkouts == []
+
+    def test_no_fallback_tag(self, tmp_path, checkouts):
+        """Without a fallback tag the clone is used as is."""
+        result = cli.resolve_base_repository(
+            settings.REPO_DEFAULT, "main", no_input=True
+        )
+        assert result == (tmp_path, "main")
+        assert checkouts == []
+
+    def test_checkout_error_becomes_sanity_screen(self, monkeypatch, tmp_path):
+        """A failing fallback checkout exits with code 1 via ``sanity_screen``."""
+        exception = RepositoryException("could not check out next")
+        recorded: list[str] = []
+
+        def fake_checkout(*args, **kwargs):
+            raise exception
+
+        monkeypatch.setattr(cli, "get_base_repository", lambda *args, **kw: tmp_path)
+        monkeypatch.setattr(cli, "checkout_fallback_tag", fake_checkout)
+        monkeypatch.setattr(
+            cli.console, "sanity_screen", lambda msg: recorded.append(msg)
+        )
+        with pytest.raises(typer.Exit) as exc:
+            cli.resolve_base_repository(
+                settings.REPO_DEFAULT, "main", no_input=True, fallback_tag="next"
+            )
+        assert exc.value.exit_code == 1
+        assert recorded == [exception.message]
 
 
 class TestCliRepositoryErrorHandling:
@@ -152,6 +244,69 @@ class TestCliRepositoryErrorHandling:
 
         assert result.exit_code == 1
         assert recorded_sanity == [exception.message]
+
+
+class TestCliFallbackTag:
+    """``cli`` enables the fallback only for default runs, and generates from
+    the tag the repository was checked out at."""
+
+    @pytest.fixture
+    def run_cli(self, monkeypatch, tmp_path):
+        """Invoke ``cli`` with repository resolution and generation stubbed."""
+        monkeypatch.delenv("COOKIEPLONE_REPOSITORY", raising=False)
+        monkeypatch.delenv("COOKIEPLONE_REPOSITORY_TAG", raising=False)
+        calls: dict = {}
+
+        def fake_resolve(repository, tag, no_input, fallback_tag=""):
+            calls["resolve"] = (repository, tag, fallback_tag)
+            return tmp_path, fallback_tag or tag
+
+        def fake_generate(config, return_state=False):
+            calls["generate"] = config
+            raise GeneratorException("stop before rendering")
+
+        template = SimpleNamespace(
+            name="project",
+            path="templates/project",
+            title="Project",
+            origin=None,
+            underlay=[],
+        )
+        monkeypatch.setattr(cli, "resolve_base_repository", fake_resolve)
+        monkeypatch.setattr(cli, "get_template", lambda *args, **kwargs: template)
+        monkeypatch.setattr(cli, "annotate_context", lambda context, **kwargs: context)
+        monkeypatch.setattr(cli, "generate", fake_generate)
+        monkeypatch.setattr(cli.console, "error", lambda msg: None)
+        app = typer.Typer()
+        app.command()(cli.cli)
+
+        def func(*args: str) -> dict:
+            CliRunner().invoke(
+                app, ["project", "--no-input", "--output-dir", str(tmp_path), *args]
+            )
+            return calls
+
+        return func
+
+    def test_defaults_enable_fallback(self, run_cli):
+        """A run without overrides asks for the fallback and generates from it."""
+        calls = run_cli()
+        assert calls["resolve"] == (
+            settings.REPO_DEFAULT,
+            settings.REPO_DEFAULT_TAG,
+            settings.REPO_FALLBACK_TAG,
+        )
+        assert calls["generate"].tag == settings.REPO_FALLBACK_TAG
+
+    def test_explicit_tag_disables_fallback(self, run_cli):
+        """An explicit ``--tag`` is used as is, even when it names the default."""
+        calls = run_cli("--tag", settings.REPO_DEFAULT_TAG)
+        assert calls["resolve"] == (
+            settings.REPO_DEFAULT,
+            settings.REPO_DEFAULT_TAG,
+            "",
+        )
+        assert calls["generate"].tag == settings.REPO_DEFAULT_TAG
 
 
 @pytest.mark.parametrize(

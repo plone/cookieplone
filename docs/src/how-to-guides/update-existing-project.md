@@ -41,11 +41,13 @@ With this flag, Cookieplone skips any file that already exists on disk, adding o
 
 ## Combine with a specific template tag
 
-Pin the update to a specific template release:
+Pin the update to a release of [`cookieplone-templates`](https://github.com/plone/cookieplone-templates/tags), replacing `YYYYMMDD.N` with its release tag:
 
 ```console
-cookieplone -f --tag v2.0.0 --answers-file /path/to/project/.cookieplone.json
+cookieplone -f --tag YYYYMMDD.N --answers-file /path/to/project/.cookieplone.json
 ```
+
+See {doc}`/how-to-guides/automate-with-ci` for which tags work with Cookieplone 2.0.
 
 ## Review the changes before committing
 

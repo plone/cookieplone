@@ -9,8 +9,9 @@ myst:
 
 # Filters reference
 
-Cookieplone registers these Jinja2 filters automatically for every template.
-Use them with the `|` operator in template files, computed field defaults, and directory names.
+A template enables each filter it uses by listing it in `config.extensions` of its `cookieplone.json`, as `cookieplone.filters.` followed by the filter name, for example `cookieplone.filters.pascal_case`.
+Once enabled, use a filter with the `|` operator in computed field defaults, file contents, file names, and directory names.
+A filter that is not listed stops the generation with an error such as `No filter named 'pascal_case'.`
 
 All filters are defined in `cookieplone/filters/__init__.py` using the `@simple_filter` decorator from `cookiecutter.utils`.
 

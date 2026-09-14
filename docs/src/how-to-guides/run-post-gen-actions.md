@@ -9,6 +9,9 @@ myst:
 
 # Run post-generation actions
 
+```{versionadded} 2.0.0
+```
+
 This guide shows how to replace hand-rolled action loops in `post_gen_project.py` with {py:func}`cookieplone.utils.post_gen.run_post_gen_actions` and its built-in handlers.
 
 ## The problem
@@ -157,6 +160,7 @@ TO_REMOVE = {
 
 Factory that returns a handler renaming files within the output directory.
 Creates destination parent directories as needed.
+A source that doesn't exist is skipped with a logged warning.
 
 ```python
 {"handler": move_files([("docs/.readthedocs.yaml", ".readthedocs.yml")]), "title": "Move docs", "enabled": True}
@@ -166,7 +170,8 @@ Creates destination parent directories as needed.
 
 Factory that returns a handler running `make <target>` in a subfolder.
 Defaults to `make format` in the output directory.
-Skips silently if no `Makefile` is found.
+When the folder has no `Makefile`, the handler logs a warning and skips.
+It captures the output of `make` and ignores its exit status, so a failing target doesn't stop the generation.
 
 ```python
 {"handler": run_make_format("format", "backend"), "title": "Format backend", "enabled": True}

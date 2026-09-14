@@ -61,8 +61,9 @@ The `schema` object defines the interactive form.
 | `version` | string | yes | Must be `"2.0"`. |
 | `properties` | object | yes | Ordered map of field definitions. |
 
-Properties are evaluated in the order they appear in the file.
-Computed fields can reference only fields that appear earlier in `properties`.
+Visible questions are asked in the order they appear in the file.
+After the last question, computed fields are evaluated in the same order.
+A computed field can reference every visible answer and the computed fields that appear before it.
 
 ## Field types
 
@@ -159,8 +160,9 @@ Its value is derived from a Jinja2 expression in `default`.
 }
 ```
 
-The expression has access to all fields that appear earlier in `properties`.
-Cookieplone's built-in filters are available (see {doc}`/reference/filters`).
+The expression can reference every visible answer and the computed fields that appear before it.
+A reference to a computed field that appears later renders as an empty string.
+Filters are available when the template lists them in `config.extensions` (see {doc}`/reference/filters`).
 
 ## Constant fields
 
@@ -180,7 +182,7 @@ It is not shown to the user and its `default` is a literal string, not a Jinja2 
 ## Validator key
 
 The `validator` key accepts a dotted Python import path.
-The function at that path must accept a single string argument and return `bool`.
+The module must be importable, and the function must follow the {ref}`validator contract <validator-contract>`.
 
 ```json
 {
@@ -215,7 +217,7 @@ These values control how Cookieplone processes the template after the user answe
     },
     "subtemplates": [
       {"id": "sub/backend", "title": "Backend", "enabled": "1"},
-      {"id": "sub/frontend", "title": "Frontend", "enabled": "{{ cookiecutter.has_frontend }}"}
+      {"id": "sub/frontend", "title": "Frontend", "enabled": "{{ '1' if cookiecutter.has_frontend else '0' }}"}
     ]
   }
 }
@@ -225,7 +227,7 @@ These values control how Cookieplone processes the template after the user answe
 |---|---|---|
 | `extensions` | array of strings | Jinja2 extension classes to load (dotted import paths). These make custom filters and tags available in template files. |
 | `no_render` | array of strings | Glob patterns for files that should be copied as-is, without Jinja2 rendering. |
-| `versions` | object | String-to-string mapping of version identifiers. Injected into the template context as `{{ version.<key> }}`. |
+| `versions` | object | String-to-string mapping of version identifiers. Injected into the template context as `{{ versions.<key> }}`. |
 | `subtemplates` | array of objects | Sub-templates to run after the main template. Each entry has `id`, `title`, and `enabled` keys. |
 
 All `config` keys are optional.
@@ -294,7 +296,7 @@ Each entry is an object with three required keys.
   "config": {
     "subtemplates": [
       {"id": "sub/backend", "title": "Backend", "enabled": "1"},
-      {"id": "sub/frontend", "title": "Frontend", "enabled": "{{ cookiecutter.has_frontend }}"}
+      {"id": "sub/frontend", "title": "Frontend", "enabled": "{{ '1' if cookiecutter.has_frontend else '0' }}"}
     ]
   }
 }
@@ -302,7 +304,7 @@ Each entry is an object with three required keys.
 
 | Key | Type | Description |
 |---|---|---|
-| `id` | string | Path to the sub-template directory, relative to the template repository root. |
+| `id` | string | Path of the sub-template directory under the repository's `templates/` directory: `sub/backend` is `templates/sub/backend`. |
 | `title` | string | Human-readable label shown in logs and passed to post-generation hooks. |
 | `enabled` | string | Controls whether the sub-template runs. See below. |
 
@@ -312,15 +314,18 @@ The `enabled` field determines whether a sub-template is activated.
 It can be a **static value** or a **Jinja2 expression**:
 
 - **Static**: `"1"` to always enable, `"0"` to always disable.
-- **Jinja2 expression**: An expression like `"{{ cookiecutter.has_frontend }}"` that is rendered against the current template context after all user answers are collected. The resolved value is passed through to the post-generation hook.
+- **Jinja2 expression**: An expression such as `"{{ '1' if cookiecutter.has_frontend else '0' }}"`, rendered against the template context after all answers are collected. The resolved value is passed through to the post-generation hook.
+
+The value must render to `1` or `0`.
+`run_subtemplates` converts it with `int()`, so a boolean answer rendered directly, as `True` or `False`, makes the hook fail.
 
 ```json
 {
   "config": {
     "subtemplates": [
       {"id": "sub/backend", "title": "Backend", "enabled": "1"},
-      {"id": "sub/docs", "title": "Documentation", "enabled": "{{ cookiecutter.initialize_docs }}"},
-      {"id": "sub/frontend", "title": "Frontend", "enabled": "{{ cookiecutter.has_frontend }}"}
+      {"id": "sub/docs", "title": "Documentation", "enabled": "{{ '1' if cookiecutter.initialize_docs else '0' }}"},
+      {"id": "sub/frontend", "title": "Frontend", "enabled": "{{ '1' if cookiecutter.has_frontend else '0' }}"}
     ]
   }
 }
@@ -386,10 +391,16 @@ The processing order matches the declaration order in the configuration file.
 
 ### Confirmation page
 
+```{versionadded} 2.0.0
+```
+
 After the last question the wizard shows a summary of the answers.
 The user can confirm to proceed or decline to restart the wizard with their previous answers pre-populated.
 
 ### Back-navigation
+
+```{versionadded} 2.0.0
+```
 
 While filling in the wizard the user can type `<` at any prompt to go back to the previous question.
 A hint is displayed automatically when going back is possible.

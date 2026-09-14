@@ -116,6 +116,49 @@ def get_base_repository(
     return base_repo_dir
 
 
+def checkout_fallback_tag(repo_dir: Path, tag: str, no_input: bool = False) -> Path:
+    """Switch an existing clone of a template repository to *tag*.
+
+    The clone made by :func:`get_base_repository` already fetched every remote
+    branch, so a ``git checkout`` is enough.  Cloning again would make
+    cookiecutter ask to delete the clone that was just made, and answering
+    "reuse" there skips the checkout altogether.
+
+    :param repo_dir: Local clone returned by :func:`get_base_repository`.
+    :param tag: Branch or tag to check out.
+    :param no_input: When ``True`` suppress interactive prompts while loading
+        the repository configuration.
+    :returns: Resolved path of *repo_dir*, now checked out at *tag*.
+    :raises RepositoryException: When *tag* cannot be checked out, or when it
+        does not provide a ``cookieplone-config.json``.
+    :raises VersionTooOldException: When the configuration at *tag* requires a
+        newer cookieplone.
+    """
+    repo_dir = Path(repo_dir).resolve()
+    try:
+        subprocess.check_output(  # noqa: S603
+            ["git", "checkout", tag],  # noqa: S607
+            cwd=repo_dir,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        output = (e.output or b"").decode("utf-8", errors="replace").strip()
+        detail = f"\n{output}" if output else ""
+        raise RepositoryException(
+            f"Failed to check out {tag!r} in {repo_dir}.{detail}"
+        ) from e
+    if not (repo_dir / REPO_CONFIG_FILENAME).exists():
+        raise RepositoryException(
+            f"{REPO_CONFIG_FILENAME} not found in {repo_dir} after checking out "
+            f"{tag!r}."
+        )
+    # get_base_repository cached the configuration of the previous checkout.
+    _RESOLUTION_CACHE.pop(str(repo_dir), None)
+    repo_config = get_repository_config(repo_dir, no_input=no_input)
+    _check_min_version(repo_config.get("config", {}))
+    return repo_dir
+
+
 def _load_raw_repository_config(base_path: Path) -> dict[str, Any]:
     """Load and validate the repo config file at *base_path* without resolving
     ``extends``.

@@ -75,8 +75,8 @@ default_context:
   github_username: "ericof"
 ```
 
-Field-level user input always overrides `default_context`.
-`EXTRA_CONTEXT` on the command line overrides both.
+The answers file and `EXTRA_CONTEXT` on the command line override `default_context`.
+In an interactive run, these values pre-fill the questions, and the answer you type wins.
 
 ### `abbreviations`
 

@@ -5,3 +5,6 @@
 # Documentation builds
 _build
 styles/Microsoft
+
+# Output of _checks/inventory_templates.py
+_templates-inventory

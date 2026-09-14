@@ -46,10 +46,19 @@ if __name__ == "__main__":
     check_git()
 ```
 
-Cookieplone executes this script as `python hooks/pre_prompt.py`.
-A non-zero exit code causes Cookieplone to abort and display the error output.
+Cookieplone runs this script with the Python interpreter that runs Cookieplone itself, in a temporary copy of the template directory.
+A non-zero exit code makes Cookieplone print the hook's output, followed by:
+
+```text
+Sanity checks failed.
+Please review the errors above and try again.
+```
+
+Cookieplone then exits without asking any question.
 
 ## Check a minimum Python version
+
+The hook runs with the interpreter that runs Cookieplone, so `sys.version_info` describes that interpreter, not a Python the generated project may use later:
 
 ```python
 # hooks/pre_prompt.py
@@ -74,6 +83,10 @@ Do not raise unhandled exceptions; they produce a noisy traceback that obscures 
 
 The `pre_prompt` hook runs after the template repository is resolved and cloned, but before the interactive wizard starts.
 It does not receive the user's answers because none have been collected yet.
+For the same reason, Cookieplone doesn't render it with Jinja2: an expression such as `{{ cookiecutter.project_slug }}` in the script stays as written.
+It also runs with `--no-input`, and on every re-run over an existing project.
+
+See {doc}`/concepts/hooks` for the other hooks and how failures are handled.
 
 ## Related pages
 

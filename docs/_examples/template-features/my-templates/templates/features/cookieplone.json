@@ -1,0 +1,70 @@
+{
+  "id": "features",
+  "schema": {
+    "title": "Template features",
+    "description": "Validators, computed fields, and filters.",
+    "version": "2.0",
+    "properties": {
+      "project_title": {
+        "type": "string",
+        "title": "Project title",
+        "default": "Example Add-on"
+      },
+      "project_slug": {
+        "type": "string",
+        "title": "Project slug",
+        "default": "example-addon",
+        "validator": "my_validators.no_spaces"
+      },
+      "python_package_name": {
+        "type": "string",
+        "title": "Python package name",
+        "default": "collective.example_addon"
+      },
+      "author_email": {
+        "type": "string",
+        "title": "Author email",
+        "default": "jane@example.com",
+        "validator": "cookieplone.validators.not_empty"
+      },
+      "has_docs": {
+        "type": "boolean",
+        "title": "Add documentation?",
+        "default": true
+      },
+      "package_path": {
+        "type": "string",
+        "format": "computed",
+        "default": "{{ cookiecutter.python_package_name | package_path }}"
+      },
+      "module_path": {
+        "type": "string",
+        "format": "computed",
+        "default": "src/{{ cookiecutter.package_path }}"
+      },
+      "class_name": {
+        "type": "string",
+        "format": "computed",
+        "default": "{{ cookiecutter.python_package_name | package_name | pascal_case }}"
+      },
+      "docs_enabled": {
+        "type": "string",
+        "format": "computed",
+        "default": "{{ '1' if cookiecutter.has_docs else '0' }}"
+      },
+      "generator": {
+        "type": "string",
+        "format": "constant",
+        "default": "example-templates 1.0"
+      }
+    }
+  },
+  "config": {
+    "extensions": [
+      "cookieplone.filters.package_name",
+      "cookieplone.filters.package_namespace",
+      "cookieplone.filters.package_path",
+      "cookieplone.filters.pascal_case"
+    ]
+  }
+}

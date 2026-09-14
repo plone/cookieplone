@@ -1,59 +1,86 @@
 ---
 myst:
   html_meta:
-    "description": "How to mark a template as hidden in a Cookieplone template repository."
-    "property=og:description": "How to mark a template as hidden in a Cookieplone template repository."
+    "description": "How to hide a template or a group of templates in a Cookieplone template repository."
+    "property=og:description": "How to hide a template or a group of templates in a Cookieplone template repository."
     "property=og:title": "Create a hidden template"
-    "keywords": "Cookieplone, hidden template, template repository, cookiecutter.json, --all flag"
+    "keywords": "Cookieplone, hidden template, template repository, cookieplone-config.json, groups, --all flag"
 ---
 
 # Create a hidden template
 
-Some templates in a repository are intended for internal or advanced use, not for general discovery.
-Mark them as `hidden` in the root `cookiecutter.json` to exclude them from the default template list.
+A hidden template doesn't appear in Cookieplone's menu, but you can still run it by its ID.
+Hide templates that a post-generation hook generates, templates that aren't ready yet, and tools for the repository's maintainers.
 
-## Mark a template as hidden
+The examples on this page come from the example repository `docs/_examples/template-features/` in the Cookieplone source tree.
 
-In the root `cookiecutter.json`, add `"hidden": true` to a template entry:
+## Hide a template
+
+In the repository's `cookieplone-config.json`, set `"hidden": true` on the template:
 
 ```json
 {
   "templates": {
-    "project": {
-      "path": "./templates/project",
-      "title": "A Plone project",
-      "description": "Full Plone project with backend and frontend."
-    },
-    "cache-config": {
-      "path": "./templates/sub/cache",
-      "title": "Cache configuration sub-template",
-      "description": "Adds cache configuration to an existing project.",
+    "internal": {
+      "path": "./templates/internal",
+      "title": "Internal tool",
+      "description": "A template for maintainers.",
       "hidden": true
     }
   }
 }
 ```
 
-When a user runs `cookieplone`, the `cache-config` template does not appear in the menu.
+A hidden template still belongs to exactly one group, like every other template.
 
-## Show hidden templates
+## Hide a group
 
-To list and select hidden templates, pass `--all` (short: `-a`):
+Set `"hidden": true` on a group to hide the group together with all its templates:
 
-```console
-cookieplone --all
+```json
+{
+  "groups": {
+    "internal": {
+      "title": "Internal",
+      "description": "Templates for maintainers.",
+      "templates": ["internal"],
+      "hidden": true
+    }
+  }
+}
 ```
 
-The full menu, including hidden templates, appears.
+A visible group whose templates are all hidden doesn't appear in the menu either.
 
-## Common use cases for hidden templates
+The complete configuration of the example repository has a visible group and a hidden one:
 
-- **Sub-templates** that are called programmatically from a post-generation hook, not directly by the user.
-- **Experimental or in-progress** templates that are not ready for general use.
-- **Internal maintenance** templates used only by the template repository maintainers.
+```{literalinclude} ../../_examples/template-features/my-templates/cookieplone-config.json
+:language: json
+```
+
+## Run a hidden template
+
+Pass the template ID to Cookieplone:
+
+```console
+COOKIEPLONE_REPOSITORY=./my-templates uvx cookieplone internal
+```
+
+Cookieplone runs a template selected by ID whether it's hidden or not.
+
+## Show hidden templates in the menu
+
+Pass `--all`, or its short form `-a`:
+
+```console
+COOKIEPLONE_REPOSITORY=./my-templates uvx cookieplone --all
+```
+
+The menu then includes hidden groups and hidden templates.
 
 ## Related pages
 
-- {doc}`/reference/cli`: `--all` flag.
-- {doc}`/concepts/subtemplates`: how sub-templates work and when to use them.
-- {doc}`/concepts/template-repositories`: the full template repository structure.
+- {doc}`/reference/cli`: the `--all` option.
+- {doc}`/reference/repository-config`: the `hidden` keys of groups and templates.
+- {doc}`/concepts/subtemplates`: how templates generate other templates.
+- {doc}`/concepts/template-repositories`: the structure of a template repository.

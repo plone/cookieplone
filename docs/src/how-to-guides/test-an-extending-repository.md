@@ -11,6 +11,9 @@ myst:
 
 # Test an extending repository
 
+```{versionadded} 2.0.0
+```
+
 When your downstream repository declares `extends`, you want a test suite that asserts the merge actually does what you expect: that the right templates win, that your overrides apply, that a baked codebase still produces working output.
 
 Cookieplone ships a pytest plugin that gives you this for free.
