@@ -1,1 +1,0 @@
-Changed the default branch of `cookieplone-templates` from `next` to `main`. While `main` does not provide a `cookieplone-config.json`, Cookieplone checks out `next` instead, unless the template repository or the tag is set explicitly. @ericof

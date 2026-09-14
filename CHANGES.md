@@ -9,6 +9,28 @@
 
 <!-- towncrier release notes start -->
 
+## 2.0.0 (2026-09-14)
+
+
+### New features:
+
+- Changed the default branch of `cookieplone-templates` from `next` to `main`. While `main` does not provide a `cookieplone-config.json`, Cookieplone checks out `next` instead, unless the template repository or the tag is set explicitly. @ericof [#212](https://github.com/plone/cookieplone/issues/212)
+
+
+### Bug fixes:
+
+- Relaxed the `gitpython` requirement from `==3.1.50` to `>=3.1.62`, fixing several GitPython security advisories and letting installations pick up future GitPython security releases. @ericof [#212](https://github.com/plone/cookieplone/issues/212)
+
+
+### Internal:
+
+- Refreshed `uv.lock` to resolve the open Dependabot alerts, and upgraded `pytest` to 9.1.1 and `pytest-cov` to 7.1.0. Class-scoped test fixtures are now class methods, as pytest 10 will require. @ericof [#212](https://github.com/plone/cookieplone/issues/212)
+
+
+### Documentation:
+
+- Rewrote the documentation for Cookieplone 2.0: installation, a first project tutorial, a reference page for each official template, supported versions, and troubleshooting. Examples and generated trees are now checked in CI. @ericof [#212](https://github.com/plone/cookieplone/issues/212)
+
 ## 2.0.0b3 (2026-06-07)
 
 
