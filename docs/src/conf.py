@@ -20,7 +20,7 @@ from packaging.version import Version
 # -- Project information -----------------------------------------------------
 
 project = "Cookieplone"
-author = "Érico Andrei"
+author = "Plone Community"
 trademark_name = "plone"
 now = datetime.now()
 year = str(now.year)
