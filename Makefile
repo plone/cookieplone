@@ -120,6 +120,14 @@ docs-vale: $(VENV_FOLDER) ## Run vale on the documentation
 docs-linkcheckbroken: $(VENV_FOLDER) ## Run checks for broken links
 	@make -C ./docs linkcheckbroken
 
+.PHONY: docs-linkcheck
+docs-linkcheck: $(VENV_FOLDER) ## Check all links in the documentation
+	@make -C ./docs linkcheck
+
+.PHONY: docs-snippets
+docs-snippets: $(VENV_FOLDER) ## Check the documentation against generated templates and examples
+	@docs/_checks/check_snippets.sh
+
 .PHONY: docs-test
 docs-test: $(VENV_FOLDER) ## Run tests on the documentation
 	@make -C ./docs test

@@ -28,28 +28,33 @@ uvx cookieplone [TEMPLATE] [EXTRA_CONTEXT]... [OPTIONS]
 - **Type**: string
 - **Default**: _(empty—prompts you to choose)_
 
-The name of a template within the resolved template repository.
+The ID of a template in the template repository, as listed under `templates` in its `cookieplone-config.json`.
 When omitted, Cookieplone displays a menu of available templates.
+A template ID selects the template even when it's hidden.
 
 ```console
 cookieplone project
 ```
 
-If `COOKIEPLONE_REPOSITORY` is set, the value refers to a template within that repository.
+The argument never names a repository.
+Cookieplone takes the repository from `COOKIEPLONE_REPOSITORY`, or uses [`cookieplone-templates`](https://github.com/plone/cookieplone-templates) when that variable isn't set.
+An answers file with a `__template__` key selects that template instead of this argument.
 
 ### `EXTRA_CONTEXT`
 
 - **Type**: list of `key=value` strings
 - **Default**: _(none)_
 
-Key/value pairs that override individual template fields.
+Key/value pairs that set answers for template fields.
 Each item must contain exactly one `=`.
 
 ```console
-cookieplone project author_name="Érico Andrei" project_title="My Site"
+cookieplone project author="Érico Andrei" title="My Site"
 ```
 
-Values from `EXTRA_CONTEXT` take precedence over the answers file and template defaults.
+Values from `EXTRA_CONTEXT` take precedence over the answers file, `default_context`, and template defaults.
+In an interactive run, they pre-fill the questions, and the answer you type wins.
+See {doc}`/how-to-guides/use-extra-context`.
 
 ## Options
 
@@ -75,8 +80,11 @@ environment variable is consulted; otherwise the default applies.
 
 When Cookieplone uses both the default template repository and the default branch, and that branch has no `cookieplone-config.json`, it checks out `next` instead.
 
+Release tags of `cookieplone-templates` use the `YYYYMMDD.N` format.
+Setting a tag or branch turns off the fallback to `next`.
+
 ```console
-cookieplone --tag 2024.10.1
+cookieplone --branch next
 ```
 
 ### `--no-input`
@@ -84,8 +92,7 @@ cookieplone --tag 2024.10.1
 - **Type**: flag (boolean)
 - **Default**: `False`
 
-Skip all interactive prompts and use only the values from `cookieplone.json` defaults,
-the answers file, and `EXTRA_CONTEXT`.
+Skip all interactive prompts and use only the values from `EXTRA_CONTEXT`, the answers file, `default_context`, and the `cookieplone.json` defaults.
 
 ```console
 cookieplone --no-input --answers .cookieplone.json
@@ -133,7 +140,7 @@ Combine with `-s` to overwrite only files that are not yet present (`-s` takes p
 - **Type**: path
 - **Default**: _(none)_
 
-Path to a JSON or YAML file containing pre-filled answers.
+Path to a JSON file containing pre-filled answers.
 The `__template__` key in the file, if present, selects the template automatically.
 
 ```console
@@ -186,7 +193,7 @@ cookieplone --debug-file cookieplone-debug.log
 - **Default**: `False`
 
 Include hidden templates in the template selection menu.
-By default, templates marked `"hidden": true` in the repository's root `cookiecutter.json` are not shown.
+By default, templates and groups marked `"hidden": true` in the repository's `cookieplone-config.json` are not shown.
 
 ```console
 cookieplone --all

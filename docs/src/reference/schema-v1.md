@@ -1,16 +1,18 @@
 ---
 myst:
   html_meta:
-    "description": "Reference for the legacy cookiecutter.json v1 template schema supported by cookieplone."
-    "property=og:description": "Reference for the legacy cookiecutter.json v1 template schema supported by cookieplone."
+    "description": "Reference for the legacy cookiecutter.json v1 format, which Cookieplone 2.0 does not support, with steps to migrate to cookieplone.json."
+    "property=og:description": "Reference for the legacy cookiecutter.json v1 format, which Cookieplone 2.0 does not support, with steps to migrate to cookieplone.json."
     "property=og:title": "Schema v1 reference (cookiecutter.json)"
-    "keywords": "Cookieplone, cookiecutter.json, schema, v1, legacy, __prompts__, __validators__"
+    "keywords": "Cookieplone, cookiecutter.json, schema, v1, legacy, migration, __prompts__, __validators__"
 ---
 
 # Schema v1 reference (`cookiecutter.json`)
 
-Cookieplone supports the standard `cookiecutter.json` format (v1) for backwards compatibility.
-New templates should use the v2 format (`cookieplone.json`) described in {doc}`/reference/schema-v2`.
+```{important}
+Cookieplone 2.0 does not support the v1 format, neither for templates nor for the root of a template repository.
+This page describes the format only to help you migrate to {doc}`/reference/schema-v2` and {doc}`/reference/repository-config`.
+```
 
 ## Basic structure
 
@@ -85,13 +87,27 @@ The reserved key `__validators__` maps field names to dotted import paths of val
 }
 ```
 
-Validators declared in `DEFAULT_VALIDATORS` are applied automatically by field name and do not need to appear in `__validators__`.
-See {doc}`/reference/validators`.
+## Migrate a template to v2
 
-## Root `cookiecutter.json` for template repositories
+To migrate a template's `cookiecutter.json` to `cookieplone.json`:
 
-The root of a template repository uses a special `cookiecutter.json` format with a `templates` key.
-This is different from the per-template schema described above.
+1. Rename `cookiecutter.json` to `cookieplone.json`.
+2. Add a top-level `id` with the template ID, and move `__cookieplone_template` there if the file has it.
+3. Move the fields under `schema.properties`, and add `schema.version: "2.0"`.
+   Turn each field into an object with `type`, `title`, and `default`.
+4. Move prompts from `__prompts__` into each field's `title`, and choice labels into `oneOf` entries.
+5. Move validators from `__validators__` into each field's `validator` key.
+6. Turn `__key` computed fields into properties with `"format": "computed"`, and `_key` constants into properties with `"format": "constant"`.
+7. Move `_extensions` to `config.extensions`, and list every Cookieplone filter the template uses there.
+8. Move `_copy_without_render` to `config.no_render`.
+9. Move `__cookieplone_subtemplates` to `config.subtemplates`, converting each `[id, title, enabled]` list to an object `{"id": "...", "title": "...", "enabled": "..."}`.
+10. Add version pins to `config.versions` as needed, and reference them in template files as `{{ versions.<key> }}`.
+
+(schema-v1-legacy-root)=
+
+## Migrate a repository's root `cookiecutter.json`
+
+Before 2.0, the root of a template repository could hold a `cookiecutter.json` with a `templates` key:
 
 ```json
 {
@@ -105,25 +121,16 @@ This is different from the per-template schema described above.
 }
 ```
 
-See {doc}`/concepts/template-repositories` for the full structure.
+To migrate it to `cookieplone-config.json`:
 
-## Upgrade path
+1. Rename the file to `cookieplone-config.json`.
+2. Add `"version": "1.0"` and a `title` for the repository.
+3. Add `groups`, and assign every template to exactly one group.
 
-To upgrade a v1 schema to v2:
-
-1. Rename `cookiecutter.json` to `cookieplone.json`.
-2. Wrap the field definitions under `schema.properties` and add `schema.version: "2.0"`.
-3. Move prompts from `__prompts__` into each field's `"title"` key.
-4. Move validators from `__validators__` into each field's `"validator"` key.
-5. Convert computed fields from `__key` to a property with `"format": "computed"`.
-6. Move `_extensions` to `config.extensions`.
-7. Move `_copy_without_render` to `config.no_render`.
-8. Move `__cookieplone_subtemplates` to `config.subtemplates`, converting each `[id, title, enabled]` tuple to an object `{"id": "...", "title": "...", "enabled": "..."}`.
-9. Move `__cookieplone_template` to the top-level `id` key.
-10. Add version pins to `config.versions` as needed (accessible in templates as `{{ version.<key> }}`).
+See {doc}`/concepts/template-repositories` for the structure of the result.
 
 ## Related pages
 
 - {doc}`/reference/schema-v2`: the v2 `cookieplone.json` format.
-- {doc}`/reference/validators`: built-in validators and autowiring by field name.
-- {doc}`/concepts/template-repositories`: root `cookiecutter.json` structure.
+- {doc}`/reference/repository-config`: the `cookieplone-config.json` format.
+- {doc}`/reference/validators`: built-in validators and automatic validators by field name.

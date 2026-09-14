@@ -1,73 +1,103 @@
 ---
 myst:
   html_meta:
-    "description": "How to use Cookieplone's built-in Jinja2 filters inside a template."
-    "property=og:description": "How to use Cookieplone's built-in Jinja2 filters inside a template."
+    "description": "How to enable and use Cookieplone's built-in Jinja2 filters inside a template."
+    "property=og:description": "How to enable and use Cookieplone's built-in Jinja2 filters inside a template."
     "property=og:title": "Use built-in filters"
-    "keywords": "Cookieplone, filters, Jinja2, template, package_name, pascal_case, latest_plone"
+    "keywords": "Cookieplone, filters, Jinja2, template, config.extensions, package_name, pascal_case, latest_plone"
 ---
 
 # Use built-in filters
 
-Cookieplone registers a set of Jinja2 filters that you can use in template files, computed field defaults, and any other Jinja2 expression within your template.
+Cookieplone ships Jinja2 filters for the names, paths, and versions that Plone projects need.
+A template enables the filters it uses, then applies them in computed fields and in file contents, file names, and directory names.
 
-## Use a filter in a template file
+The examples on this page come from the example repository `docs/_examples/template-features/` in the Cookieplone source tree.
 
-In any Jinja2-templated file inside your template, apply a filter with the `|` operator:
+## Enable filters
 
-```python
-# {{ cookiecutter.python_package_name | pascal_case }} package
-```
-
-If `python_package_name` is `my_plone_addon`, the rendered output is:
-
-```python
-# MyPloneAddon package
-```
-
-## Use a filter in a computed field default
-
-In `cookieplone.json`, use filters inside computed field expressions:
+In your template's `cookieplone.json`, list each filter under `config.extensions`, as `cookieplone.filters.` followed by the filter name:
 
 ```json
 {
-  "class_name": {
-    "type": "string",
-    "format": "computed",
-    "default": "{{ cookiecutter.python_package_name | pascal_case }}"
-  },
-  "namespace_path": {
-    "type": "string",
-    "format": "computed",
-    "default": "{{ cookiecutter.python_package_name | package_namespace_path }}"
+  "config": {
+    "extensions": [
+      "cookieplone.filters.package_name",
+      "cookieplone.filters.package_namespace",
+      "cookieplone.filters.package_path",
+      "cookieplone.filters.pascal_case"
+    ]
   }
 }
 ```
 
-## Use a filter in a directory or file name
+Cookieplone loads the listed filters for the wizard and for rendering the template files.
+A filter that is missing from the list stops the generation with an error such as `No filter named 'pascal_case'.`
 
-Jinja2 expressions in directory names and file names are also rendered.
-Name a directory `{{cookiecutter.python_package_name | package_path}}` and Cookieplone creates the path `src/my_namespace/my_plone_addon`.
+## Use a filter in a file
 
-## Available filters
+Apply a filter to a value with the `|` operator:
 
-See {doc}`/reference/filters` for the full list of built-in filters with signatures and examples.
-The most commonly used ones include:
+```text
+- Namespace: `{{ cookiecutter.python_package_name | package_namespace }}`
+```
 
-| Filter | Purpose |
-|---|---|
-| `package_name` | Last segment of a dotted package name |
-| `package_namespace` | All segments except the last |
-| `package_path` | Dotted name as a filesystem path under `src/` |
-| `pascal_case` | Underscore-separated name in PascalCase |
-| `latest_plone` | Latest released Plone version |
-| `latest_volto` | Latest released Volto version |
-| `python_versions` | Supported Python versions for a given Plone version |
-| `as_major_minor` | Version string truncated to `major.minor` |
+If `python_package_name` is `collective.example_addon`, the rendered line is:
+
+```text
+- Namespace: `collective`
+```
+
+Filters can be chained.
+`{{ cookiecutter.python_package_name | package_name | pascal_case }}` renders as `ExampleAddon`.
+
+## Use a filter in a computed field
+
+In `cookieplone.json`, apply filters in the `default` of a computed field:
+
+```json
+{
+  "package_path": {
+    "type": "string",
+    "format": "computed",
+    "default": "{{ cookiecutter.python_package_name | package_path }}"
+  }
+}
+```
+
+See {doc}`/how-to-guides/add-computed-fields`.
+
+## Use a filter in a directory name
+
+Cookieplone renders file and directory names too.
+To keep names readable, compute the value once, and use the computed field in the name.
+The example template contains this file:
+
+```text
+{{ cookiecutter.project_slug }}/src/{{ cookiecutter.package_path }}/__init__.py
+```
+
+With the default answers, Cookieplone generates `example-addon/src/collective/example_addon/__init__.py`.
+The slash in the rendered value creates nested directories.
+
+## Commonly used filters
+
+| Filter | Input | Output |
+|---|---|---|
+| `package_name` | `collective.example_addon` | `example_addon` |
+| `package_namespace` | `collective.example_addon` | `collective` |
+| `package_path` | `collective.example_addon` | `collective/example_addon` |
+| `package_namespace_path` | `collective.example_addon` | `src/collective` |
+| `pascal_case` | `example_addon` | `ExampleAddon` |
+| `latest_plone` | `Yes` or `No`: whether to consider prereleases | The latest Plone version |
+| `latest_volto` | `Yes` or `No`: whether to consider prereleases | The latest Volto version |
+
+The templates in [`cookieplone-templates`](https://github.com/plone/cookieplone-templates) call the version filters with an answer, as in `{{ cookiecutter.use_prerelease_versions | latest_plone }}`.
+See {doc}`/reference/filters` for every filter.
 
 ## Related pages
 
-- {doc}`/reference/filters`: all built-in filters with input/output examples.
+- {doc}`/reference/filters`: all built-in filters with input and output examples.
 - {doc}`/how-to-guides/add-computed-fields`: use filters in computed field defaults.
 - {doc}`/how-to-guides/add-a-filter`: add a new built-in filter to Cookieplone.
 - {doc}`/concepts/validators-and-filters`: how filters differ from validators.

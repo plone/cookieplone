@@ -4,93 +4,121 @@ myst:
     "description": "How to add computed fields to a Cookieplone template that derive their value from other fields."
     "property=og:description": "How to add computed fields to a Cookieplone template that derive their value from other fields."
     "property=og:title": "Add computed fields"
-    "keywords": "Cookieplone, computed fields, Jinja2, cookieplone.json, format computed, template"
+    "keywords": "Cookieplone, computed fields, constant fields, Jinja2, cookieplone.json, format computed, template"
 ---
 
 # Add computed fields
 
-Computed fields derive their value from other fields using Jinja2 expressions.
-They are never shown to the user as prompts; Cookieplone calculates their values automatically.
+A computed field is a property that the wizard never asks about.
+Cookieplone renders its `default` as a Jinja2 expression and stores the result with the other answers, so template files use it like any answer.
 
-## Define a computed field in `cookieplone.json`
+The examples on this page come from the example repository `docs/_examples/template-features/` in the Cookieplone source tree.
 
-Set `"format": "computed"` on the field and write a Jinja2 expression as the `default` value:
+## Define a computed field
 
-```json
-{
-  "version": "2.0",
-  "properties": {
-    "project_slug": {
-      "type": "string",
-      "title": "Project slug",
-      "default": "my-project"
-    },
-    "package_name": {
-      "type": "string",
-      "format": "computed",
-      "default": "{{ cookiecutter.project_slug | replace('-', '_') }}"
-    }
-  }
-}
-```
-
-The field `package_name` is computed from `project_slug` after the user answers the prompt.
-It is available to template files and to other fields that reference it.
-
-## Reference other computed fields
-
-Computed fields can reference previously computed fields as long as they appear later in the `properties` object:
+In your template's `cookieplone.json`, set `"format": "computed"` on a property, and write the expression in `default`:
 
 ```json
 {
-  "properties": {
-    "project_slug": {
-      "type": "string",
-      "default": "my-project"
-    },
-    "package_name": {
-      "type": "string",
-      "format": "computed",
-      "default": "{{ cookiecutter.project_slug | replace('-', '_') }}"
-    },
-    "module_path": {
-      "type": "string",
-      "format": "computed",
-      "default": "src/{{ cookiecutter.package_name }}"
-    }
-  }
-}
-```
-
-## Use built-in filters in computed fields
-
-Cookieplone's built-in filters are available in Jinja2 expressions:
-
-```json
-{
-  "class_name": {
+  "docs_enabled": {
     "type": "string",
     "format": "computed",
-    "default": "{{ cookiecutter.package_name | pascal_case }}"
+    "default": "{{ '1' if cookiecutter.has_docs else '0' }}"
   }
 }
 ```
 
-See {doc}`/reference/filters` for the full list of available filters.
+Expressions reach the answers through the `cookiecutter` namespace, for example `cookiecutter.has_docs`.
 
-## Constant fields
+## Use filters in computed fields
 
-Fields with `"format": "constant"` are similar to computed fields but are also hidden from prompts.
-Use them for values that are fixed regardless of user input:
+A computed field can transform an answer with a filter:
 
 ```json
 {
-  "schema_version": {
+  "package_path": {
     "type": "string",
-    "format": "constant",
-    "default": "2.0"
+    "format": "computed",
+    "default": "{{ cookiecutter.python_package_name | package_path }}"
   }
 }
+```
+
+Cookieplone's filters are not available by default.
+List each filter that the template uses in `config.extensions`:
+
+```json
+{
+  "config": {
+    "extensions": [
+      "cookieplone.filters.package_name",
+      "cookieplone.filters.package_namespace",
+      "cookieplone.filters.package_path",
+      "cookieplone.filters.pascal_case"
+    ]
+  }
+}
+```
+
+A filter that is missing from the list stops the generation with an error such as `No filter named 'pascal_case'.`
+See {doc}`/how-to-guides/use-built-in-filters`.
+
+## Order computed fields
+
+Cookieplone asks all visible questions first.
+Then it computes the hidden fields in the order they appear in `properties`.
+A computed field can use every answer to a visible question, and the computed fields that appear before it:
+
+```json
+{
+  "package_path": {
+    "type": "string",
+    "format": "computed",
+    "default": "{{ cookiecutter.python_package_name | package_path }}"
+  },
+  "module_path": {
+    "type": "string",
+    "format": "computed",
+    "default": "src/{{ cookiecutter.package_path }}"
+  }
+}
+```
+
+A reference to a computed field that appears later renders as an empty string, without an error.
+Check the order when a computed value comes out empty.
+
+## Add a constant field
+
+A property with `"format": "constant"` is hidden too, but Cookieplone uses its `default` as-is and doesn't render it:
+
+```json
+{
+  "generator": {
+    "type": "string",
+    "format": "constant",
+    "default": "example-templates 1.0"
+  }
+}
+```
+
+## Check the result
+
+The example template defines the computed and constant fields above:
+
+```{literalinclude} ../../_examples/template-features/my-templates/templates/features/cookieplone.json
+:language: json
+```
+
+Its `README.md` uses them:
+
+```{literalinclude} ../../_examples/template-features/my-templates/templates/features/{{ cookiecutter.project_slug }}/README.md
+:language: text
+```
+
+With the default answers, the generated `README.md` contains:
+
+```{literalinclude} ../../_examples/template-features/expected/example-addon/README.md
+:language: markdown
 ```
 
 ## Related pages

@@ -4,83 +4,106 @@ myst:
     "description": "How to add input validation to fields in a Cookieplone template."
     "property=og:description": "How to add input validation to fields in a Cookieplone template."
     "property=og:title": "Add validators to your template"
-    "keywords": "Cookieplone, validators, template, cookieplone.json, DEFAULT_VALIDATORS, custom validator"
+    "keywords": "Cookieplone, validators, template, cookieplone.json, DEFAULT_VALIDATORS, custom validator, ValidationError"
 ---
 
 # Add validators to your template
 
-Validators run when a user submits a field value during the interactive prompt.
-If the validator returns `False`, the prompt stays open and asks the user to enter a valid value.
+A validator checks an answer before Cookieplone accepts it.
+In the wizard, a rejected answer shows an error, and Cookieplone asks the question again.
+With `--no-input`, Cookieplone validates the values it would use instead, and a rejected value stops the generation.
+
+The examples on this page come from the example repository `docs/_examples/template-features/` in the Cookieplone source tree.
 
 ## Use a built-in validator
 
-Cookieplone automatically wires built-in validators to fields whose names match the `DEFAULT_VALIDATORS` table.
-The following field names are autowired without any configuration:
-
-| Field name | Validator applied |
-|---|---|
-| `plone_version` | `cookieplone.validators.plone_version` |
-| `volto_version` | `cookieplone.validators.volto_version` |
-| `python_package_name` | `cookieplone.validators.python_package_name` |
-| `hostname` | `cookieplone.validators.hostname` |
-| `language_code` | `cookieplone.validators.language_code` |
-
-Name your field `python_package_name` and the validator applies automatically.
-
-## Assign a validator explicitly in `cookieplone.json`
-
-Add a `validator` key to a field property in your `cookieplone.json`:
+In your template's `cookieplone.json`, set the `validator` key of a property to the dotted import path of a validator:
 
 ```json
 {
-  "version": "2.0",
-  "properties": {
-    "python_package_name": {
-      "type": "string",
-      "title": "Python package name",
-      "default": "my_package",
-      "validator": "cookieplone.validators.python_package_name"
-    }
+  "author_email": {
+    "type": "string",
+    "title": "Author email",
+    "default": "jane@example.com",
+    "validator": "cookieplone.validators.not_empty"
   }
 }
 ```
 
-The `validator` value is an import path to a callable that accepts the field value as a string and returns a boolean.
+Cookieplone provides validators for non-empty values, Python package names, npm package names, Volto add-on names, hostnames, language codes, and Plone and Volto versions.
+See {doc}`/reference/validators` for the list.
 
-## Assign a validator in `cookiecutter.json` (v1 format)
+## Rely on automatic validators
 
-In the v1 schema, add a `__validators__` key at the top level of `cookiecutter.json`:
+Some field names get a validator without any configuration.
+Name a property `python_package_name`, and Cookieplone applies `cookieplone.validators.python_package_name` to it:
 
 ```json
 {
-  "python_package_name": "my_package",
-  "__validators__": {
-    "python_package_name": "cookieplone.validators.python_package_name"
+  "python_package_name": {
+    "type": "string",
+    "title": "Python package name",
+    "default": "collective.example_addon"
   }
 }
 ```
+
+The same happens for properties named `plone_version`, `volto_version`, `hostname`, and `language_code`.
+A `validator` key on the property replaces the automatic validator.
 
 ## Write a custom validator
 
-Place a Python module in your template's hook directory or in a package that is importable when Cookieplone runs.
-A validator is any callable that takes a single string and returns `True` when valid and `False` when invalid.
+1.  Create a Python module in your template's directory, next to its `cookieplone.json`:
 
-```python
-def no_spaces(value: str) -> bool:
-    """Reject values that contain spaces."""
-    return " " not in value
+    ```{literalinclude} ../../_examples/template-features/my-templates/templates/features/my_validators.py
+    :language: python
+    ```
+
+    The function receives the answer as a string.
+    It returns `True` to accept the answer, or raises `ValidationError` with a message that tells the user what to fix.
+    See {ref}`validator-contract` for the complete contract.
+
+2.  Reference the function by its module and function name:
+
+    ```json
+    {
+      "project_slug": {
+        "type": "string",
+        "title": "Project slug",
+        "default": "example-addon",
+        "validator": "my_validators.no_spaces"
+      }
+    }
+    ```
+
+Cookieplone adds the template's directory to the Python import path while it generates the template, so it finds `my_validators` there.
+The directory goes at the end of the import path, so pick a module name that no installed package uses.
+
+To share validators between templates or repositories, publish them in a Python package, and install that package next to Cookieplone:
+
+```console
+uvx --with my-validators cookieplone
 ```
 
-Reference it by its import path in your schema:
+## Check the result
 
-```json
-{
-  "validator": "myhooks.validators.no_spaces"
-}
+With `--no-input`, Cookieplone runs the validators on the defaults and on any value you pass as extra context.
+A rejected value stops the generation with the validator's message:
+
+```console
+COOKIEPLONE_REPOSITORY=./my-templates uvx cookieplone features "project_slug=example addon" --no-input
+```
+
+The error includes `Use hyphens instead of spaces.`
+
+The complete `cookieplone.json` of the example template declares an explicit validator, a custom validator, and a property that gets an automatic validator:
+
+```{literalinclude} ../../_examples/template-features/my-templates/templates/features/cookieplone.json
+:language: json
 ```
 
 ## Related pages
 
-- {doc}`/reference/validators`: all built-in validators and their accepted values.
+- {doc}`/reference/validators`: the validator contract and all built-in validators.
 - {doc}`/concepts/validators-and-filters`: how validators and filters differ conceptually.
 - {doc}`/how-to-guides/add-a-validator`: add a new built-in validator to Cookieplone itself.

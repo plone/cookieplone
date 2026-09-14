@@ -1,0 +1,6 @@
+[project]
+name = "my-project"
+requires-python = ">=3.12"
+authors = [
+    {name = "Jane Developer", email = "jane@example.com"},
+]

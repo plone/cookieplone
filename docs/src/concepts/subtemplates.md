@@ -1,95 +1,68 @@
 ---
 myst:
   html_meta:
-    "description": "An explanation of how Cookieplone template repositories expose multiple sub-templates and how they compose."
-    "property=og:description": "An explanation of how Cookieplone template repositories expose multiple sub-templates and how they compose."
+    "description": "An explanation of how a Cookieplone template generates other templates as sub-templates, and how they are declared and run."
+    "property=og:description": "An explanation of how a Cookieplone template generates other templates as sub-templates, and how they are declared and run."
     "property=og:title": "Sub-templates"
-    "keywords": "Cookieplone, sub-templates, composite templates, post_gen_project, hidden, templates key"
+    "keywords": "Cookieplone, sub-templates, config.subtemplates, run_subtemplates, post_gen_project, hidden templates"
 ---
 
 # Sub-templates
 
-A Cookieplone template repository can expose multiple independent templates through a single root `cookiecutter.json`.
-These are called sub-templates.
+A sub-template is a template that another template generates during its own run.
+The `project` template of [`cookieplone-templates`](https://github.com/plone/cookieplone-templates), for example, generates a backend add-on, a frontend add-on, documentation, cache settings, editor settings, and CI configuration as sub-templates.
 
 ## Why sub-templates exist
 
-A large project (for example, a full Plone site) may consist of several composable parts:
+A large project, such as a full Plone site, consists of several composable parts:
 
 - A backend package.
 - A frontend add-on.
 - A Docker Compose configuration.
 - A CI/CD pipeline.
 
-Rather than bundling everything into one monolithic template, you can define each part as a separate sub-template.
-A post-generation hook in the main template then calls the sub-templates programmatically to assemble the final project.
+Rather than bundling everything into one monolithic template, you can define each part as a separate template.
+A post-generation hook in the main template then generates the parts to assemble the final project.
 
-This keeps each sub-template focused, testable, and reusable independently.
+This keeps each part focused, testable, and reusable on its own.
 
-## Declaring sub-templates
+## Declare sub-templates
 
-There are two levels where sub-templates appear in a Cookieplone repository.
-
-### Repository-level `templates` key
-
-The root `cookiecutter.json` lists all templates the repository provides under the `templates` key:
-
-```json
-{
-  "templates": {
-    "project": {
-      "path": "./templates/project",
-      "title": "A Plone project",
-      "description": "Full Plone project with backend and frontend."
-    },
-    "backend": {
-      "path": "./templates/backend",
-      "title": "Backend package",
-      "description": "Plone backend package only.",
-      "hidden": true
-    },
-    "frontend": {
-      "path": "./templates/frontend",
-      "title": "Volto frontend add-on",
-      "description": "Volto frontend add-on only.",
-      "hidden": true
-    }
-  }
-}
-```
-
-In this example:
-
-- `project` is the main template, visible to users.
-- `backend` and `frontend` are sub-templates called programmatically; they are hidden from the menu.
-
-### Template-level: `config.subtemplates`
-
-Inside each template's `cookieplone.json` (v2 format), the `config.subtemplates` array declares which sub-templates should run after generation.
-Each entry has an `id`, a `title`, and an `enabled` field:
+A template lists its sub-templates in `config.subtemplates` of its `cookieplone.json`.
+This excerpt comes from the `project` template of `cookieplone-templates`:
 
 ```json
 {
   "config": {
     "subtemplates": [
-      {"id": "sub/backend", "title": "Backend", "enabled": "1"},
-      {"id": "sub/frontend", "title": "Frontend", "enabled": "{{ cookiecutter.has_frontend }}"}
+      {"id": "add-ons/backend", "title": "Setup Backend", "enabled": "1"},
+      {"id": "add-ons/frontend", "title": "Setup Frontend", "enabled": "{{ '1' if cookiecutter.feature_headless else '0' }}"},
+      {"id": "sub/cache", "title": "Setup Cache", "enabled": "{{ '1' if cookiecutter.devops_cache else '0' }}"}
     ]
   }
 }
 ```
 
-The `enabled` field can be a static value (`"1"` or `"0"`) or a Jinja2 expression.
-Expressions are rendered against the current template context after the user completes the wizard, allowing sub-templates to be conditionally enabled based on user answers.
+| Key | Description |
+|---|---|
+| `id` | Path of the sub-template's directory under the repository's `templates/` directory: `add-ons/backend` is `templates/add-ons/backend`. It is not a template ID from `cookieplone-config.json`. |
+| `title` | Label that Cookieplone prints when it generates or skips the sub-template. |
+| `enabled` | `"1"` to generate the sub-template, `"0"` to skip it, or a Jinja2 expression that renders to one of them. |
 
-During generation, these entries are converted into `[id, title, enabled]` lists and injected into the template context as `__cookieplone_subtemplates`, where post-generation hooks can read them.
+```{important}
+`enabled` must render to `1` or `0`.
+A boolean answer renders as `True` or `False`, which `run_subtemplates` can't convert to a number, so the post-generation hook fails.
+Write `{{ '1' if cookiecutter.feature_headless else '0' }}`, not `{{ cookiecutter.feature_headless }}`.
+```
 
-See {doc}`/reference/schema-v2` for the full specification of the `config.subtemplates` format.
+After the wizard, Cookieplone renders each `enabled` value, and passes the entries to the template's hooks in the context key `__cookieplone_subtemplates`, as `[id, title, enabled]` lists.
 
-## Calling sub-templates from a hook
+See {doc}`/reference/schema-v2` for the full specification of `config.subtemplates`.
 
-A post-generation hook in the main template triggers the sub-templates after the top-level project is rendered.
-Cookieplone ships a helper, {py:func}`cookieplone.utils.subtemplates.run_subtemplates`, that reads the `__cookieplone_subtemplates` entries from the context and dispatches each one:
+## Generate sub-templates from a hook
+
+Cookieplone doesn't generate sub-templates by itself.
+The template's `hooks/post_gen_project.py` calls {py:func}`cookieplone.utils.subtemplates.run_subtemplates`:
 
 ```python
 # hooks/post_gen_project.py
@@ -99,76 +72,85 @@ from pathlib import Path
 from cookieplone.utils.subtemplates import run_subtemplates
 
 context: OrderedDict = {{cookiecutter}}
+versions: dict = {{versions}}
 
 
 def main():
-    output_dir = Path.cwd()
-    # {{ cookiecutter.__cookieplone_subtemplates }}
-    run_subtemplates(context, output_dir)
+    output_dir = Path().cwd()
+    run_subtemplates(context, output_dir, global_versions=versions)
 
 
 if __name__ == "__main__":
     main()
 ```
 
-For each enabled entry, `run_subtemplates()`:
+Cookieplone renders the hook before running it, so `context` holds the answers and `versions` holds the version pins.
+Passing `global_versions=versions` makes `{{ versions.<key> }}` work in the files of the sub-templates.
 
-1. Skips it (with a log line) when `enabled` evaluates to `0`.
-2. Calls a **custom handler** if you registered one for that sub-template `id`.
-3. Otherwise falls back to a default call to {py:func}`cookieplone.generator.generate_subtemplate` using the entry's `folder_name`.
+For each entry, `run_subtemplates`:
+
+1. Skips it when `enabled` is `0`, and prints its title as ignored.
+2. Calls the handler registered for its `id`, if there is one.
+3. Otherwise, generates `templates/<id>` with a copy of the current answers, without asking any question.
+   It generates in the project directory, with the project's name as folder name, which nests most sub-templates in a folder named like the project.
+   Register a handler whenever the location matters.
+
+It returns a dictionary that maps the `id` of each generated sub-template to the generated path.
 
 ### Custom handlers
 
-Most real projects need per-sub-template tweaks: injecting extra context keys, rewriting the output folder, or post-processing generated files.
-Pass a `handlers` dict mapping `template_id` → callable with signature `(context, output_dir) -> Path`:
+A handler adjusts the answers or the output location for one sub-template.
+It receives a deep copy of the context and the output directory, so its changes don't leak to other sub-templates, and it returns the generated path.
+This handler is adapted from the `project` template, and generates the backend add-on into a `backend` folder:
 
 ```python
-from cookieplone.utils.subtemplates import run_subtemplates
+from cookieplone import generator
 
 
-def generate_backend(context, output_dir):
-    context["feature_headless"] = "1"
+def generate_addons_backend(context: OrderedDict, output_dir: Path) -> Path:
+    """Generate the backend add-on into a backend folder."""
+    context["initialize_ci"] = False
+    context["initialize_documentation"] = False
     return generator.generate_subtemplate(
-        "templates/add-ons/backend", output_dir, "backend", context,
+        "templates/add-ons/backend",
+        output_dir,
+        "backend",
+        context,
+        global_versions=versions,
     )
 
 
 SUBTEMPLATE_HANDLERS = {
-    "add-ons/backend": generate_backend,
+    "add-ons/backend": generate_addons_backend,
 }
 
-run_subtemplates(context, output_dir, handlers=SUBTEMPLATE_HANDLERS)
+
+def main():
+    output_dir = Path().cwd()
+    run_subtemplates(
+        context, output_dir, handlers=SUBTEMPLATE_HANDLERS, global_versions=versions
+    )
 ```
 
-Handlers receive a deep copy of the context, so in-place mutations are safe and do not leak across sub-templates.
+The keys of the handlers dictionary are sub-template IDs.
+{py:func}`cookieplone.generator.generate_subtemplate` is deprecated for looping over sub-templates yourself, but handlers still call it: `run_subtemplates` runs handlers in quiet mode, which also silences its deprecation warning.
 
-For a full real-world example that registers seven handlers covering backend, frontend, docs, CI, IDE, and shared sub-templates, see {doc}`/how-to-guides/call-subtemplates-from-a-hook`.
+For the complete hook of the `project` template, with seven handlers, see {doc}`/how-to-guides/call-subtemplates-from-a-hook`.
 
-## Hidden sub-templates
+## Sub-templates and the menu
 
-Sub-templates that users should not invoke directly are marked `"hidden": true`.
-This keeps the main menu clean while still allowing programmatic access.
+A sub-template's `id` is a path, so a sub-template doesn't need an entry in `cookieplone-config.json`.
+A directory can still appear in both places, under different IDs:
 
-A user who wants to invoke a hidden template can pass `--all` to see it:
+- `templates/add-ons/backend` is the visible `backend_addon` template in the menu, and the `add-ons/backend` sub-template of `project`.
+- `templates/ci/gh_project` is the `ci/gh_project` sub-template of `project`, and the hidden `ci_gh_project` template, in the hidden `ci` group.
 
-```console
-cookieplone --all
-```
-
-Or pass the template name directly:
-
-```console
-cookieplone backend
-```
-
-## Independent sub-templates
-
-Sub-templates do not have to be hidden.
-A repository can expose several equally prominent templates—for example, a `project` template and a standalone `addon` template—each runnable on its own.
+List a sub-template in `cookieplone-config.json` when people should also run it on its own.
+Mark it hidden when they should not see it in the menu.
 
 ## Related pages
 
-- {doc}`/concepts/template-repositories`: how the root `cookiecutter.json` is structured.
+- {doc}`/concepts/template-repositories`: how `cookieplone-config.json` is structured.
 - {doc}`/how-to-guides/call-subtemplates-from-a-hook`: walk through a real post-generation hook using `run_subtemplates()`.
-- {doc}`/how-to-guides/create-a-hidden-template`: mark a template as hidden.
+- {doc}`/how-to-guides/create-a-hidden-template`: hide a template or a group.
 - {doc}`/reference/schema-v2`: the per-template schema format.

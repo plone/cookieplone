@@ -1,0 +1,6 @@
+[project]
+name = "{{ cookiecutter.project_slug }}"
+requires-python = ">={{ versions.python }}"
+authors = [
+    {name = "{{ cookiecutter.author_name }}", email = "{{ cookiecutter.author_email }}"},
+]

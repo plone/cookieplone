@@ -1,0 +1,16 @@
+{
+  "id": "internal",
+  "schema": {
+    "title": "Internal tool",
+    "description": "A template for maintainers.",
+    "version": "2.0",
+    "properties": {
+      "project_slug": {
+        "type": "string",
+        "title": "Project slug",
+        "default": "internal-tool"
+      }
+    }
+  },
+  "config": {}
+}

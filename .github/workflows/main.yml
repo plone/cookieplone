@@ -85,3 +85,4 @@ jobs:
       working-directory: "."
       check-links: true
       check-vale: true
+      check-snippets: true

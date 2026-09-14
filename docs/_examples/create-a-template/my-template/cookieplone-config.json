@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "title": "My templates",
+  "description": "Templates for my organization.",
+  "groups": {
+    "projects": {
+      "title": "Projects",
+      "description": "Generators that create a new project.",
+      "templates": ["myproject"]
+    }
+  },
+  "templates": {
+    "myproject": {
+      "path": "./templates/myproject",
+      "title": "My project",
+      "description": "A minimal example project."
+    }
+  }
+}

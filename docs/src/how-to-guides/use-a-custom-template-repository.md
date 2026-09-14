@@ -4,79 +4,104 @@ myst:
     "description": "How to use a custom template repository instead of the Cookieplone default."
     "property=og:description": "How to use a custom template repository instead of the Cookieplone default."
     "property=og:title": "Use a custom template repository"
-    "keywords": "Cookieplone, custom template, repository, COOKIEPLONE_REPOSITORY, local path, git URL, zip, abbreviation"
+    "keywords": "Cookieplone, custom template, repository, COOKIEPLONE_REPOSITORY, template ID, local path, git URL, zip, abbreviation"
 ---
 
 # Use a custom template repository
 
-Cookieplone supports any template source, not only the default `cookieplone-templates` repository.
-You can point it at a local path, a git URL, a zip archive, or a short abbreviation.
+Cookieplone generates projects from [`cookieplone-templates`](https://github.com/plone/cookieplone-templates) by default.
+To use another template repository, set the `COOKIEPLONE_REPOSITORY` environment variable to a local directory, a git URL, an abbreviation, or a zip archive.
 
-## Pass a template on the command line
+## Set the repository
 
-Pass the template source as the first positional argument:
-
-```console
-cookieplone /path/to/my-template
-```
+Set `COOKIEPLONE_REPOSITORY` for a single run:
 
 ```console
-cookieplone https://github.com/myorg/my-template.git
+COOKIEPLONE_REPOSITORY=gh:myorg/my-templates uvx cookieplone
 ```
 
-## Use an abbreviation
-
-Cookieplone supports the abbreviations `gh:`, `gl:`, and `bb:` for GitHub, GitLab, and Bitbucket respectively:
+Or export it for every run in the current shell:
 
 ```console
-cookieplone gh:myorg/my-template
+export COOKIEPLONE_REPOSITORY=gh:myorg/my-templates
+uvx cookieplone
 ```
 
-This expands to `https://github.com/myorg/my-template.git`.
+Cookieplone shows the menu of the repository's templates.
+To skip the menu, pass the ID of a template from the repository's `cookieplone-config.json`:
+
+```console
+COOKIEPLONE_REPOSITORY=gh:myorg/my-templates uvx cookieplone backend_addon
+```
+
+```{note}
+The positional argument of `cookieplone` is always a template ID.
+Cookieplone doesn't accept a repository path or URL there: set `COOKIEPLONE_REPOSITORY` instead.
+```
 
 ## Use a local directory
 
-Pass the path to a local directory that contains a `cookiecutter.json` or `cookieplone.json`:
+Set `COOKIEPLONE_REPOSITORY` to the directory that contains `cookieplone-config.json`.
+A relative path works:
 
 ```console
-cookieplone /home/jane/projects/my-template
+COOKIEPLONE_REPOSITORY=./my-templates uvx cookieplone
 ```
 
-This is the fastest way to develop and test a template—no network request is needed.
+Cookieplone reads the files directly from the directory, which makes this the fastest way to develop and test templates.
+The directory can be a plain directory or a git repository.
+A git repository needs at least one commit.
+
+## Use a git repository or an abbreviation
+
+HTTPS and SSH git URLs both work:
+
+```console
+COOKIEPLONE_REPOSITORY=https://github.com/myorg/my-templates.git uvx cookieplone
+```
+
+The abbreviations `gh:`, `gl:`, and `bb:` stand for GitHub, GitLab, and Bitbucket.
+For example, `gh:myorg/my-templates` expands to `https://github.com/myorg/my-templates.git`.
+
+Cookieplone clones git repositories with your git installation, so a private repository works with the credentials that git already uses, such as an SSH key.
 
 ## Use a zip archive
 
-Pass a URL to a zip archive:
+Set `COOKIEPLONE_REPOSITORY` to the web address or the path of a zip archive:
 
 ```console
-cookieplone https://example.com/my-template.zip
+COOKIEPLONE_REPOSITORY=https://example.com/my-templates.zip uvx cookieplone
 ```
 
-## Pin to a specific tag or branch
+For a password-protected archive, set `COOKIEPLONE_REPO_PASSWORD` to its password.
 
-Use `--tag` to check out a specific git ref:
+## Pin a tag or branch
+
+For a git repository, check out a tag or branch with `--tag`, or its alias `--branch`:
 
 ```console
-cookieplone gh:myorg/my-template --tag v1.2.0
+COOKIEPLONE_REPOSITORY=gh:myorg/my-templates uvx cookieplone --tag v1.2.0
 ```
 
-## Set the repository with an environment variable
-
-Set `COOKIEPLONE_REPOSITORY` to avoid typing the path on every run:
-
-```console
-export COOKIEPLONE_REPOSITORY=/path/to/my-template
-cookieplone
-```
-
-Set `COOKIEPLONE_REPOSITORY_TAG` to pin the ref:
+Or set `COOKIEPLONE_REPOSITORY_TAG`:
 
 ```console
 export COOKIEPLONE_REPOSITORY_TAG=v1.2.0
 ```
 
+`--tag` takes precedence over the variable.
+Without either, Cookieplone checks out `main`, so set one of them when your repository's default branch has another name.
+Cookieplone ignores the tag for local directories and zip archives.
+
+To check which repository and tag Cookieplone resolves, run:
+
+```console
+uvx cookieplone --info
+```
+
 ## Related pages
 
-- {doc}`/reference/cli`: `--tag` and positional `template` argument.
-- {doc}`/reference/environment-variables`: `COOKIEPLONE_REPOSITORY` and `COOKIEPLONE_REPOSITORY_TAG`.
+- {doc}`/reference/cli`: the `TEMPLATE` argument and the `--tag` option.
+- {doc}`/reference/environment-variables`: `COOKIEPLONE_REPOSITORY`, `COOKIEPLONE_REPOSITORY_TAG`, and `COOKIEPLONE_REPO_PASSWORD`.
 - {doc}`/concepts/template-repositories`: how Cookieplone discovers and loads templates.
+- {doc}`/tutorials/create-a-template`: build a local template repository from scratch.

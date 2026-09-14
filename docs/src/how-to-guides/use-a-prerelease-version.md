@@ -9,44 +9,47 @@ myst:
 
 # Use a prerelease version of Cookieplone
 
-By default, `uvx cookieplone` installs the latest **stable** release. Prerelease versions (those with an `aN`, `bN`, `rcN`, or `.devN` suffix like `2.0.0a1`) are excluded from automatic resolution.
+By default, `uvx cookieplone` installs the latest **stable** release, such as Cookieplone 2.0.0.
+Before a new release, Cookieplone publishes prerelease versions: those with an `aN`, `bN`, `rcN`, or `.devN` suffix, like `2.1.0a1`.
+Prereleases are excluded from automatic resolution.
 This matches [PEP 440](https://peps.python.org/pep-0440/) and the `uv` resolver defaults, and it is the right behavior for everyday use: you want the tested, stable version when you scaffold a real project.
 
-When testing a new major version, reproducing a bug against an unreleased fix, or evaluating upcoming features, you need to opt in explicitly.
+When testing an upcoming release, reproducing a bug against an unreleased fix, or evaluating upcoming features, you need to opt in explicitly.
 This guide shows the three supported ways to do that.
+The examples use `2.1.0a1` as a placeholder; replace it with the prerelease you want to run.
 
 ## Why `uvx cookieplone` skips prereleases
 
 `uvx cookieplone` is shorthand for `uv tool run cookieplone`.
 `uv` resolves the `cookieplone` requirement against PyPI the same way `pip` does, and PEP 440 says that prereleases are only picked when:
 
-1. The requirement specifier itself is a prerelease (for example, `cookieplone==2.0.0a1`), or
+1. The requirement specifier itself is a prerelease (for example, `cookieplone==2.1.0a1`), or
 2. Only prereleases satisfy the requirement (no stable release matches at all), or
 3. The caller explicitly enables prereleases.
 
-With a stable 1.x line published on PyPI alongside a 2.x alpha, condition (1) and (2) do not apply, so stable wins.
+When a stable release and a newer prerelease are both published on PyPI, conditions (1) and (2) do not apply, so the stable release wins.
 
 ## Option 1: Pin the exact prerelease version (recommended)
 
 The clearest and most reproducible option is to pin the version directly in the `uvx` command:
 
 ```console
-uvx cookieplone@2.0.0a1
+uvx cookieplone@2.1.0a1
 ```
 
-This tells `uv` to create an ephemeral tool environment with exactly `cookieplone==2.0.0a1`, run it once, and throw the environment away.
+This tells `uv` to create an ephemeral tool environment with exactly `cookieplone==2.1.0a1`, run it once, and throw the environment away.
 Because the version specifier is itself a prerelease, the resolver is happy to install it without any extra flags.
 
 Confirm the running version:
 
 ```console
-uvx cookieplone@2.0.0a1 --version
+uvx cookieplone@2.1.0a1 --version
 ```
 
 You should see a line like:
 
 ```
-Cookieplone 2.0.0a1 from ...
+Cookieplone 2.1.0a1 from ...
 ```
 
 ## Option 2: Allow prereleases for one run
@@ -62,7 +65,7 @@ This is a per-invocation flag: the next plain `uvx cookieplone` reverts to the s
 
 ## Option 3: Install the prerelease as a persistent tool
 
-If you expect to run the prerelease repeatedly (for example, while working through a tutorial for the new major version), install it as a persistent `uv` tool:
+If you expect to run the prerelease repeatedly (for example, while testing your templates against it), install it as a persistent `uv` tool:
 
 ```console
 uv tool install --prerelease=allow cookieplone
@@ -99,17 +102,17 @@ cookieplone --version
 Or, for the `uvx` ephemeral forms:
 
 ```console
-uvx cookieplone@2.0.0a1 --version
+uvx cookieplone@2.1.0a1 --version
 uvx --prerelease=allow cookieplone --version
 ```
 
-The output includes the full version string, so you can tell `2.0.0a1` apart from `2.0.0` or `1.x` at a glance.
+The output includes the full version string, so you can tell `2.1.0a1` apart from `2.0.0` at a glance.
 
 ## When to use a prerelease
 
-- You are following a tutorial or migration guide explicitly written against the upcoming major version.
+- You are following a guide explicitly written against an upcoming release.
 - You are reproducing a bug against an unreleased fix.
-- You are a template author validating your template against the new Cookieplone API surface before general availability.
+- You are a template author validating your template against a new Cookieplone version before general availability.
 - You are evaluating new features before they land in a stable release.
 
 For generating a real production project, prefer the stable release.

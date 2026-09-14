@@ -9,6 +9,9 @@ myst:
 
 # Repository configuration (`cookieplone-config.json`)
 
+```{versionadded} 2.0.0
+```
+
 The `cookieplone-config.json` file lives at the root of a template repository.
 It declares the available templates, organizes them into groups for display, and provides global configuration shared across all templates.
 
@@ -34,9 +37,9 @@ It declares the available templates, organizes them into groups for display, and
 | `extends` | string \| object | no | Repository to inherit templates from (see {ref}`repo-extends`). |
 | `groups` | object | no | Template groups for the selection menu (see {ref}`repo-groups`). |
 | `templates` | object | yes¹ | Template definitions (see {ref}`repo-templates`). |
+| `config` | object | no | Global configuration shared by all templates (see {ref}`repo-config`). |
 
 ¹ `templates` is optional when `extends` is set—see {ref}`repo-extends`.
-| `config` | object | no | Global configuration shared by all templates (see {ref}`repo-config`). |
 
 (repo-templates)=
 ## `templates`
@@ -87,6 +90,9 @@ cookieplone --all
 (repo-groups)=
 ## `groups`
 
+```{versionadded} 2.0.0
+```
+
 Groups organize templates into categories for the selection menu.
 Each key is a unique group identifier.
 
@@ -132,7 +138,7 @@ Global configuration shared across all templates in the repository.
 ```json
 {
   "config": {
-    "min_version": "2.0.0a2",
+    "min_version": "2.0.0",
     "summary": {
       "enabled": true,
       "message": "Now, code it, create a git repository, push to your organization.",
@@ -168,6 +174,9 @@ See {doc}`/reference/schema-v2` for details on the per-template `config.versions
 
 ### `config.renderer`
 
+```{versionadded} 2.0.0
+```
+
 Selects which `tui_forms` renderer is used by the wizard for interactive runs in this repository.
 Valid values are the renderer names registered with `tui_forms`: `cookiecutter` (default), `rich`, and `stdlib`.
 
@@ -188,13 +197,16 @@ See {doc}`/reference/environment-variables` for the corresponding environment va
 
 ### `config.min_version`
 
+```{versionadded} 2.0.0
+```
+
 Declares the minimum Cookieplone version required by the templates in this repository.
-The value must be a valid [PEP 440](https://peps.python.org/pep-0440/) version string, including pre-release versions such as `2.0.0a1`.
+The value must be a valid [PEP 440](https://peps.python.org/pep-0440/) version string, including prerelease versions such as `2.1.0a1`.
 
 ```json
 {
   "config": {
-    "min_version": "2.0.0a2"
+    "min_version": "2.0.0"
   }
 }
 ```
@@ -203,13 +215,16 @@ When present, Cookieplone compares the installed version against this value befo
 If the installed version is older, generation stops with an actionable error message:
 
 ```text
-This template requires cookieplone >= 2.0.0a2, but you have 1.3.0 installed.
-Please upgrade:  uvx --no-cache cookieplone@2.0.0a2
+This repository requires cookieplone >= 2.0.0, but you have 1.1.0 installed.
+Please upgrade:  uvx --no-cache cookieplone@2.0.0
 ```
 
-When the key is absent or empty, no version check is performed (backwards compatible with existing repositories).
+When the key is absent or empty, no version check is performed.
 
 ### `config.summary`
+
+```{versionadded} 2.0.0
+```
 
 Configures the summary screen shown after a codebase is generated.
 This is rendered automatically once generation completes, so templates no longer need to print a closing panel from their own post-generation hooks.
@@ -243,6 +258,9 @@ Any omitted key falls back to the default shown above, so a repository can overr
 
 (repo-extends)=
 ## `extends`
+
+```{versionadded} 2.0.0
+```
 
 The `extends` field declares that this repository builds on top of another template repository.
 It lets organizations keep a minimal repository with only their local templates and overrides while transparently consuming an upstream, mirroring how `extends` works in GitLab CI and similar inheritance systems.
@@ -350,10 +368,14 @@ A circular chain (`A → B → A`) is detected and reported with the full cycle.
 
 See {ref}`extend-an-upstream-template-repository` for a worked walkthrough.
 
-## Backward compatibility
+## Legacy `cookiecutter.json`
 
-Repositories that use the legacy `cookiecutter.json` format (a flat `templates` mapping without groups or versioning) continue to work.
-Cookieplone checks for `cookieplone-config.json` first, then falls back to `cookiecutter.json`.
+```{versionchanged} 2.0.0
+Cookieplone does not support a root `cookiecutter.json` in template repositories.
+```
+
+Rename the file to `cookieplone-config.json`, and add `version`, `title`, and `groups`.
+See {ref}`schema-v1-legacy-root` for the steps.
 
 ## Full example
 
@@ -416,7 +438,7 @@ Cookieplone checks for `cookieplone-config.json` first, then falls back to `cook
     }
   },
   "config": {
-    "min_version": "2.0.0a2",
+    "min_version": "2.0.0",
     "versions": {
       "gha_version_checkout": "v6",
       "frontend_pnpm": "10.20.0"

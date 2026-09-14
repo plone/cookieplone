@@ -20,7 +20,7 @@ There was no single entry point that worked for all Plone project types.
 
 ## Starting as a Cookiecutter wrapper
 
-Cookieplone started as a thin wrapper around [Cookiecutter](https://cookiecutter.readthedocs.io/), a widely used Python project scaffolding tool.
+Cookieplone started as a thin wrapper around [Cookiecutter](https://cookiecutter.readthedocs.io/en/stable/), a widely used Python project scaffolding tool.
 Cookiecutter already handled template rendering via Jinja2, git-based template fetching, and a simple JSON-based schema (`cookiecutter.json`).
 
 Rather than replace it, Cookieplone extended it with:
@@ -32,11 +32,11 @@ Rather than replace it, Cookieplone extended it with:
 
 ## Evolving into a fuller solution
 
-As the community consolidated templates into a single `cookieplone-templates` repository, Cookieplone took on more responsibilities:
+As the community consolidated templates into a single [`cookieplone-templates`](https://github.com/plone/cookieplone-templates) repository, Cookieplone took on more responsibilities:
 
 - A terminal user interface (TUI) for interactive prompts, replacing Cookiecutter's plain `input()` calls.
-- A richer schema format (`cookieplone.json`) that supports typed fields, computed defaults, and per-field validators, while remaining backward-compatible with plain `cookiecutter.json`.
-- Template discovery: a root `cookiecutter.json` in a repository can declare multiple templates, and Cookieplone presents them as a menu.
+- A richer schema format (`cookieplone.json`) that supports typed fields, computed defaults, and per-field validators. Since 2.0, it is the only template format Cookieplone supports.
+- Template discovery: a repository's `cookieplone-config.json` declares multiple templates in groups, and Cookieplone presents them as a menu.
 - Support for any template source—local paths, git URLs, zip archives, and abbreviations such as `gh:`, `gl:`, and `bb:`: not only `cookieplone-templates`.
 
 ## Design decisions

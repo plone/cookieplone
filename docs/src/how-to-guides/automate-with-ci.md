@@ -66,19 +66,25 @@ jobs:
             --output-dir /tmp/generated
 ```
 
-## Specifying a fixed template version
+## Pin the template version
 
-Pin the template repository to a specific tag to ensure reproducible builds:
+By default, Cookieplone uses the `main` branch of [`cookieplone-templates`](https://github.com/plone/cookieplone-templates), which changes over time.
+For reproducible builds, pin a release tag.
+Release tags use the `YYYYMMDD.N` format: replace `YYYYMMDD.N` in the commands below with the tag you want.
 
 ```console
-cookieplone --no-input --tag v1.2.3 --answers-file answers.json
+cookieplone --no-input --tag YYYYMMDD.N --answers-file answers.json
 ```
 
 Or set the tag with an environment variable:
 
 ```console
-COOKIEPLONE_REPOSITORY_TAG=v1.2.3 cookieplone --no-input --answers-file answers.json
+COOKIEPLONE_REPOSITORY_TAG=YYYYMMDD.N cookieplone --no-input --answers-file answers.json
 ```
+
+Pin a tag that contains a `cookieplone-config.json` file.
+The tags released before Cookieplone 2.0 use the legacy format, which Cookieplone 2.0 doesn't support.
+A pinned tag also turns off the fallback to the `next` branch.
 
 ## Related pages
 

@@ -11,7 +11,7 @@ myst:
 
 # Extend an upstream template repository
 
-If your organization only needs to add one or two templates on top of the official `plone/cookieplone-templates` repository, you don't need to fork it.
+If your organization only needs to add one or two templates on top of the official [`plone/cookieplone-templates`](https://github.com/plone/cookieplone-templates) repository, you don't need to fork it.
 
 Declare `extends` in your `cookieplone-config.json` and Cookieplone will resolve the upstream at runtime, merging your local overrides on top.
 

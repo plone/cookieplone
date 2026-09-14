@@ -26,7 +26,7 @@ Cookieplone writes `.cookieplone.json` into the generated project directory afte
 3. Re-run Cookieplone with the corrected file and the overwrite flag:
 
    ```console
-   Cookieplone -f --answers-file /path/to/generated-project/.cookieplone.json
+   cookieplone -f --answers-file /path/to/generated-project/.cookieplone.json
    ```
 
    Cookieplone regenerates the project with the corrected values.

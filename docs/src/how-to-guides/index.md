@@ -18,6 +18,7 @@ Each guide walks you through completing a specific task.
 :maxdepth: 1
 
 use-an-answers-file
+use-extra-context
 automate-with-ci
 update-existing-project
 recover-from-mistakes

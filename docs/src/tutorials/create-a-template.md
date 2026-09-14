@@ -4,139 +4,146 @@ myst:
     "description": "A step-by-step tutorial for building a minimal Cookieplone template repository from scratch."
     "property=og:description": "A step-by-step tutorial for building a minimal Cookieplone template repository from scratch."
     "property=og:title": "Create a template"
-    "keywords": "Cookieplone, tutorial, template, template repository, cookieplone.json, Plone"
+    "keywords": "Cookieplone, tutorial, template, template repository, cookieplone-config.json, cookieplone.json, Plone"
 ---
 
 # Create a template
 
 This tutorial walks you through building a minimal Cookieplone template repository.
-By the end, you will have a working template that you can run locally with `cookieplone`.
+By the end, you will have a working template that generates a small project on your machine.
 
 **Prerequisites:**
 
 - [uv](https://docs.astral.sh/uv/) installed.
 - Basic familiarity with Jinja2 templating syntax.
-- Git installed.
 
 ## Step 1: Create the repository structure
 
-A Cookieplone template repository requires at minimum a root `cookiecutter.json` and at least one template directory.
-Create the following structure:
+A template repository needs a repository configuration file at its root and at least one template directory.
+You will build this structure:
 
-```console
-mkdir my-template
-cd my-template
-git init
-```
-
-Then create these files:
-
-```
+```text
 my-template/
-├── cookiecutter.json          ← root manifest (lists templates)
+├── cookieplone-config.json            ← repository configuration: lists the templates
 └── templates/
-    └── myproject/             ← one template
-        ├── cookieplone.json   ← schema for this template
-        └── {{cookiecutter.project_slug}}/
+    └── myproject/                     ← one template
+        ├── cookieplone.json           ← the questions this template asks
+        └── {{ cookiecutter.project_slug }}/
             ├── README.md
             └── pyproject.toml
 ```
 
-## Step 2: Write the root manifest
+Create the directories:
 
-The root `cookiecutter.json` tells Cookieplone which templates this repository provides.
-Create `cookiecutter.json`:
-
-```json
-{
-  "templates": {
-    "myproject": {
-      "path": "./templates/myproject",
-      "title": "My project template",
-      "description": "A minimal example project."
-    }
-  }
-}
+```console
+mkdir -p "my-template/templates/myproject/{{ cookiecutter.project_slug }}"
 ```
 
-## Step 3: Write the template schema
+Cookieplone renders directory names too: in the generated output, `{{ cookiecutter.project_slug }}` takes the value of the `project_slug` answer.
 
-The `cookieplone.json` file inside each template defines the questions asked during generation.
-Create `templates/myproject/cookieplone.json`:
-
-```json
-{
-  "title": "My project template",
-  "description": "A minimal example project.",
-  "version": "2.0",
-  "properties": {
-    "project_title": {
-      "type": "string",
-      "title": "Project title",
-      "description": "The human-readable name of your project.",
-      "default": "My Project"
-    },
-    "project_slug": {
-      "type": "string",
-      "title": "Project slug",
-      "description": "Identifier used for the directory name.",
-      "default": "my-project"
-    },
-    "author_name": {
-      "type": "string",
-      "title": "Author name",
-      "default": "Jane Developer"
-    },
-    "author_email": {
-      "type": "string",
-      "title": "Author email",
-      "default": "jane@example.com"
-    }
-  }
-}
+```{note}
+A plain directory is enough for this tutorial.
+If you keep your template repository in git, commit your files before you run Cookieplone.
+A git repository without any commit fails with an error such as `ValueError: Reference at 'refs/heads/main' does not exist`.
 ```
+
+## Step 2: Write the repository configuration
+
+The `cookieplone-config.json` file tells Cookieplone which templates the repository provides and how to group them in the selection menu.
+Create `my-template/cookieplone-config.json`:
+
+```{literalinclude} ../../_examples/create-a-template/my-template/cookieplone-config.json
+:language: json
+```
+
+- `version` is the version of the repository configuration format and must be `"1.0"`.
+- `templates` maps each template ID to the directory that contains it.
+- `groups` organizes templates into categories. Each template must belong to exactly one group.
+
+See {doc}`/reference/repository-config` for every available key.
+
+## Step 3: Write the template questions
+
+Each template has a `cookieplone.json` file that defines the questions asked during generation.
+Create `my-template/templates/myproject/cookieplone.json`:
+
+```{literalinclude} ../../_examples/create-a-template/my-template/templates/myproject/cookieplone.json
+:language: json
+```
+
+- `id` identifies the template.
+- `schema` holds the form: its `version` must be `"2.0"`, and each entry in `properties` becomes a question, asked in the order it appears.
+- `config` holds generator settings that the user doesn't see. Here, `versions` pins a Python version that the template files can use.
+
+See {doc}`/reference/schema-v2` for every field type and setting.
 
 ## Step 4: Write the template files
 
-Create the Jinja2-templated files that Cookieplone will render.
-The directory name `{{cookiecutter.project_slug}}` becomes the generated folder name.
+Cookieplone renders the files inside `{{ cookiecutter.project_slug }}` with Jinja2.
+Answers are available as `{{ cookiecutter.<question> }}`, and version pins as `{{ versions.<key> }}`.
 
-Create `templates/myproject/{{cookiecutter.project_slug}}/README.md`:
+Create `my-template/templates/myproject/{{ cookiecutter.project_slug }}/README.md`:
 
-```markdown
-# {{cookiecutter.project_title}}
-
-Created by {{cookiecutter.author_name}} <{{cookiecutter.author_email}}>.
+```{literalinclude} ../../_examples/create-a-template/my-template/templates/myproject/{{ cookiecutter.project_slug }}/README.md
+:language: markdown
 ```
 
-Create `templates/myproject/{{cookiecutter.project_slug}}/pyproject.toml`:
+Create `my-template/templates/myproject/{{ cookiecutter.project_slug }}/pyproject.toml`:
 
-```toml
-[project]
-name = "{{cookiecutter.project_slug}}"
-authors = [
-    {name = "{{cookiecutter.author_name}}", email = "{{cookiecutter.author_email}}"},
-]
+```{literalinclude} ../../_examples/create-a-template/my-template/templates/myproject/{{ cookiecutter.project_slug }}/pyproject.toml
+:language: toml
 ```
 
-## Step 5: Run your template locally
+## Step 5: Run your template
 
-Test your template by pointing Cookieplone at the local directory:
+Cookieplone reads the template repository from the `COOKIEPLONE_REPOSITORY` environment variable.
+From the directory that contains `my-template`, run:
 
 ```console
-uvx cookieplone /path/to/my-template
+COOKIEPLONE_REPOSITORY=./my-template uvx cookieplone
 ```
 
-Cookieplone reads the root `cookiecutter.json`, presents your template in the menu, asks the questions from `cookieplone.json`, and generates output in the current directory.
+Cookieplone shows a numbered list of categories, then a numbered list of the templates in the chosen category.
+Your repository has one of each, so press {kbd}`Enter` twice to select the only category, then the only template.
+Answer the questions, or press {kbd}`Enter` to accept each default.
+After the last question, Cookieplone shows your answers and asks you to confirm them.
+
+To skip the prompts and accept every default, pass the template ID and `--no-input`:
+
+```console
+COOKIEPLONE_REPOSITORY=./my-template uvx cookieplone myproject --no-input
+```
 
 ## Step 6: Inspect the output
 
-After answering the prompts, a new directory appears with your rendered files.
-Open `README.md` to confirm the values were substituted correctly.
+Cookieplone generates the project in the current directory:
+
+```text
+my-project/
+├── .cookieplone.json
+├── pyproject.toml
+└── README.md
+```
+
+With the default answers, `my-project/README.md` contains:
+
+```{literalinclude} ../../_examples/create-a-template/expected/my-project/README.md
+:language: markdown
+```
+
+And `my-project/pyproject.toml` contains:
+
+```{literalinclude} ../../_examples/create-a-template/expected/my-project/pyproject.toml
+:language: toml
+```
+
+`.cookieplone.json` records your answers, so you can generate the project again with the same values.
+See {doc}`/how-to-guides/use-an-answers-file`.
 
 ## What's next?
 
 - {doc}`/how-to-guides/add-validators-to-your-template`: validate user input on specific fields.
 - {doc}`/how-to-guides/add-computed-fields`: derive field values automatically from other fields.
 - {doc}`/how-to-guides/use-built-in-filters`: use Cookieplone's built-in Jinja2 filters.
-- {doc}`/reference/schema-v2`: the complete `cookieplone.json` schema reference.
+- {doc}`/reference/repository-config`: the complete `cookieplone-config.json` reference.
+- {doc}`/reference/schema-v2`: the complete `cookieplone.json` reference.

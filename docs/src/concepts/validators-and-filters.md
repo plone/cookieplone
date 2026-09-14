@@ -1,45 +1,51 @@
 ---
 myst:
   html_meta:
-    "description": "An explanation of how Cookieplone validators and Jinja2 filters differ, when each runs, and how DEFAULT_VALIDATORS auto-wires by field name."
-    "property=og:description": "An explanation of how Cookieplone validators and Jinja2 filters differ, when each runs, and how DEFAULT_VALIDATORS auto-wires by field name."
+    "description": "An explanation of how Cookieplone validators and Jinja2 filters differ, when each runs, and how templates enable them."
+    "property=og:description": "An explanation of how Cookieplone validators and Jinja2 filters differ, when each runs, and how templates enable them."
     "property=og:title": "Validators and filters"
-    "keywords": "Cookieplone, validators, filters, Jinja2, DEFAULT_VALIDATORS, autowiring, prompt time"
+    "keywords": "Cookieplone, validators, filters, Jinja2, DEFAULT_VALIDATORS, config.extensions, ValidationError"
 ---
 
 # Validators and filters
 
-Validators and filters both process field values, but they run at different points in the pipeline and serve different purposes.
+Validators and filters both work on field values, but they run at different moments and serve different purposes.
+A validator decides whether Cookieplone accepts an answer.
+A filter transforms a value when Cookieplone renders a Jinja2 expression.
 
 ## Validators
 
-A validator is a function that checks whether a user's answer meets a constraint.
-It runs at **prompt time**, immediately after the user submits an answer.
+A validator is a Python function that checks whether an answer meets a constraint.
+It runs when the user submits an answer in the wizard.
+With `--no-input`, it runs on the values Cookieplone would use instead, such as the defaults.
 
-- **Input**: the raw string the user typed.
-- **Output**: `bool` (`True` means the answer is accepted; `False` means the prompt repeats).
-- **Effect**: a rejected answer causes Cookieplone to ask the question again until the value is valid.
+- **Input**: the answer, converted to a string.
+- **Output**: `True` accepts the answer. Raising `ValidationError` rejects it with a message; returning `False` rejects it with a generic error.
+- **Effect**: in the wizard, a rejected answer shows the error, and Cookieplone asks the question again. With `--no-input`, a rejected value stops the generation.
 
-Validators enforce correctness—they prevent invalid data from entering the template context.
+Validators enforce correctness: they keep invalid data out of the template context.
+See {ref}`validator-contract` for the complete contract.
 
 ### Example
 
-The `python_package_name` validator checks that the value is a valid Python identifier or dotted name:
+The `python_package_name` validator rejects values that aren't valid dotted Python names:
 
 ```python
 def python_package_name(value: str) -> bool:
     """Validate python_package_name is an identifier."""
     result = validators.validate_python_package_name(value)
-    return not result
+    if result:
+        raise ValidationError(result)
+    return True
 ```
 
-If you type `my-addon` (with a hyphen), the prompt repeats.
-If you type `my_addon`, the answer is accepted and the wizard moves on.
+If you type `my-addon` (with a hyphen), Cookieplone shows the error and asks again.
+If you type `my_addon`, it accepts the answer and moves on.
 
-### Autowiring with DEFAULT_VALIDATORS
+### Automatic validators
 
-Cookieplone maintains a table of field names mapped to validators.
-Any field whose name appears in this table is validated automatically—no configuration in the template schema is needed.
+Cookieplone keeps a table of field names mapped to validators, `DEFAULT_VALIDATORS`.
+A field whose name appears in this table gets its validator without any configuration in the template:
 
 | Field name | Validator applied |
 |---|---|
@@ -49,18 +55,23 @@ Any field whose name appears in this table is validated automatically—no confi
 | `hostname` | `cookieplone.validators.hostname` |
 | `language_code` | `cookieplone.validators.language_code` |
 
-A template can override any autowired validator by providing an explicit `validator` key in `cookieplone.json`.
+A `validator` key on the property in `cookieplone.json` replaces the automatic validator.
 
 ## Filters
 
 A filter is a Jinja2 function that transforms a value.
-It runs at **render time**: after the wizard has collected all answers, when Cookiecutter renders the template files.
+A template enables each Cookieplone filter it uses by listing it in `config.extensions` of its `cookieplone.json`.
 
-- **Input**: any value already in the template context.
-- **Output**: a transformed value (string, integer, or list).
-- **Effect**: the rendered output in files, filenames, or computed defaults reflects the transformed value.
+Filters run whenever Cookieplone renders a Jinja2 expression:
 
-Filters shape data—they convert raw answers into the exact form needed in the generated output.
+- in the wizard, when it renders defaults and computed fields;
+- during generation, when it renders file contents, file names, and directory names.
+
+- **Input**: a value, usually an answer from the template context.
+- **Output**: a transformed value, such as a string or a list.
+- **Effect**: computed fields and generated files contain the transformed value.
+
+Filters shape data: they convert raw answers into the exact form needed in the generated output.
 
 ### Example
 
@@ -69,20 +80,20 @@ The `pascal_case` filter converts an underscore-separated name to PascalCase:
 ```python
 @simple_filter
 def pascal_case(package_name: str) -> str:
-    """Return the package name as a string in the PascalCase format."""
+    """Return the package name as a string in the PascalCase format ."""
     parts = [name.title() for name in package_name.split("_")]
     return "".join(parts)
 ```
 
-In a template file:
+With `cookieplone.filters.pascal_case` in `config.extensions`, a template file can contain:
 
-```python
+```text
 # {{ cookiecutter.python_package_name | pascal_case }}
 ```
 
 If `python_package_name` is `collective.myaddon`, the rendered line becomes:
 
-```python
+```text
 # Collective.Myaddon
 ```
 
@@ -90,43 +101,53 @@ If `python_package_name` is `collective.myaddon`, the rendered line becomes:
 
 | Aspect | Validator | Filter |
 |---|---|---|
-| When it runs | Prompt time (after user types) | Render time (after all answers collected) |
-| Input | Raw user input string | Any template context value |
-| Output | `bool` (accept or reject) | Transformed value |
-| Purpose | Reject invalid answers | Convert values for use in files |
-| Configured in | `validator` key or `DEFAULT_VALIDATORS` | `|` operator in Jinja2 expressions |
-| User sees result? | Indirectly (rejected prompts) | In generated files |
+| When it runs | When an answer is submitted, or on the values used with `--no-input` | Whenever a Jinja2 expression is rendered: in the wizard and during generation |
+| Input | The answer as a string | Any value in the template context |
+| Output | Accept or reject | A transformed value |
+| Purpose | Reject invalid answers | Convert values for use in computed fields and files |
+| Configured in | The `validator` key, or automatically by field name | `config.extensions`, then the pipe operator in Jinja2 expressions |
+| What the user sees | An error message and the question again | The transformed value in the generated files |
 
 ## Using both together
 
-Validators and filters often work together on the same field.
-
-The `python_package_name` field uses `python_package_name` (validator) to ensure the value is a valid Python identifier,
-then uses `pascal_case` (filter) in computed fields and template files to derive a class name:
+Validators and filters often work on the same field.
+The `python_package_name` field gets the `python_package_name` validator automatically, which keeps the value a valid Python name.
+A computed field then derives a class name from it with filters:
 
 ```json
 {
-  "python_package_name": {
-    "type": "string",
-    "title": "Python package name",
-    "default": "collective.myaddon"
+  "schema": {
+    "version": "2.0",
+    "properties": {
+      "python_package_name": {
+        "type": "string",
+        "title": "Python package name",
+        "default": "collective.example_addon"
+      },
+      "class_name": {
+        "type": "string",
+        "format": "computed",
+        "default": "{{ cookiecutter.python_package_name | package_name | pascal_case }}"
+      }
+    }
   },
-  "class_name": {
-    "type": "string",
-    "format": "computed",
-    "default": "{{ cookiecutter.python_package_name | pascal_case }}"
+  "config": {
+    "extensions": [
+      "cookieplone.filters.package_name",
+      "cookieplone.filters.pascal_case"
+    ]
   }
 }
 ```
 
-The validator runs first (at prompt time) to ensure the value is valid.
-The filter runs later (at render time) to produce the derived class name.
+The validator runs first, when the user answers the question.
+The filters run after all questions are answered, when Cookieplone computes `class_name`, which is `ExampleAddon` for the default answer.
 
 ## Related pages
 
-- {doc}`/reference/validators`: all built-in validators and the DEFAULT_VALIDATORS table.
+- {doc}`/reference/validators`: the validator contract and all built-in validators.
 - {doc}`/reference/filters`: all built-in Jinja2 filters with examples.
-- {doc}`/how-to-guides/add-validators-to-your-template`: wire validators to template fields.
-- {doc}`/how-to-guides/use-built-in-filters`: use filters in template files and computed fields.
+- {doc}`/how-to-guides/add-validators-to-your-template`: add validators to template fields.
+- {doc}`/how-to-guides/use-built-in-filters`: enable and use filters in a template.
 - {doc}`/how-to-guides/add-a-validator`: add a new built-in validator.
 - {doc}`/how-to-guides/add-a-filter`: add a new built-in filter.

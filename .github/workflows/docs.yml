@@ -21,6 +21,9 @@ on:
       check-vale:
         default: true
         type: boolean
+      check-snippets:
+        default: true
+        type: boolean
     outputs:
       url:
         description: "URL of the deployed documentation"
@@ -52,19 +55,31 @@ jobs:
       - name: Build HTML documentation
         shell: bash
         run: |
-          make docs-html
+          make docs-html SPHINXOPTS="-W --keep-going"
 
-      - name: Check for broken links
+      - name: Check links
         if: ${{ inputs.check-links }}
         shell: bash
         run: |
-          make docs-linkcheckbroken
+          make docs-linkcheck
 
       - name: Run vale checks
         if: ${{ inputs.check-vale }}
         shell: bash
         run: |
           make docs-vale VALEOPTS="--minAlertLevel='warning'"
+
+      - name: Set up Node.js
+        if: ${{ inputs.check-snippets }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Check generated templates and examples
+        if: ${{ inputs.check-snippets }}
+        shell: bash
+        run: |
+          make docs-snippets
 
       - name: Upload static files as artifact
         id: deployment

@@ -9,16 +9,19 @@ myst:
 
 # Call sub-templates from a hook
 
+```{versionadded} 2.0.0
+```
+
 This guide shows how to drive sub-template generation from a top-level template's `post_gen_project.py`, using {py:func}`cookieplone.utils.subtemplates.run_subtemplates` and a dictionary of custom handlers.
-It uses the `monorepo` project template from [`plone/cookieplone-templates`](https://github.com/plone/cookieplone-templates) as a reference: that template composes a full Plone project out of seven sub-templates (backend, frontend, docs, cache, project settings, CI, and VS Code configuration).
+It follows the `project` template of [`plone/cookieplone-templates`](https://github.com/plone/cookieplone-templates), in `templates/projects/monorepo`, which composes a full Plone project out of seven sub-templates: backend, frontend, documentation, cache, project settings, CI, and VS Code configuration.
+The code samples are adapted from that template's hook.
 
 ## Prerequisites
 
-- You already have a template repository that declares sub-templates (see {doc}`/concepts/subtemplates`).
-- Your main template's `cookieplone.json` lists the sub-templates to run under `config.subtemplates`.
-- You know which sub-templates need custom handling (extra context, folder rewrites, post-processing) and which can fall through to the default generator.
+- Your template's `cookieplone.json` lists the sub-templates under `config.subtemplates` (see {doc}`/concepts/subtemplates`).
+- You know which sub-templates need custom handling, such as extra context, a specific output folder, or post-processing.
 
-## Step 1: Import the helper
+## Step 1: Import the helpers
 
 At the top of `hooks/post_gen_project.py`:
 
@@ -27,72 +30,90 @@ from collections import OrderedDict
 from pathlib import Path
 
 from cookieplone import generator
-from cookieplone.utils import console, files, git, npm, plone
+from cookieplone.utils import post_gen
 from cookieplone.utils.subtemplates import run_subtemplates
 
 context: OrderedDict = {{cookiecutter}}
 versions: dict | OrderedDict = {{versions}}
+
+TEMPLATES_FOLDER: str = "templates"
 ```
 
-The `{{cookiecutter}}` and `{{versions}}` markers are Jinja substitutions that Cookiecutter fills in with the rendered context and the loaded `global_versions` mapping.
+Cookieplone renders the hook with Jinja2 before running it.
+`{{cookiecutter}}` becomes the answers, and `{{versions}}` becomes the version pins from `config.versions`.
+The answers include `__cookieplone_subtemplates`: the entries of `config.subtemplates`, with `enabled` already rendered.
 
 ## Step 2: Write one handler per sub-template
 
-A handler must have the signature `(context: OrderedDict, output_dir: Path) -> Path` and return the directory that the sub-template generated into.
-`run_subtemplates()` passes a deep copy of the context to each handler, so mutating `context` in place is safe.
+A handler has the signature `(context: OrderedDict, output_dir: Path) -> Path`, and returns the directory that the sub-template generated.
+`run_subtemplates()` passes each handler a deep copy of the context, so changing `context` in place is safe.
 
-### A simple handler
+Handlers call {py:func}`cookieplone.generator.generate_subtemplate` with:
 
-The backend sub-template needs a headless flavor and should skip CI/docs scaffolding (those belong to the parent project), then clean up residual `.git` artifacts:
+- the path of the sub-template, `templates/<id>`;
+- the directory to generate in;
+- the folder name for the sub-template's top-level directory;
+- the context;
+- optionally, a list of paths to remove from the generated folder, and the version pins as `global_versions`.
+
+The sub-templates in `cookieplone-templates` name their top-level directory `{{ cookiecutter.__folder_name }}`, and `generate_subtemplate` sets `__folder_name` to the folder name you pass.
+
+### Generate into a new folder
+
+The backend add-on goes into a `backend` folder of the project, without the CI and documentation that a stand-alone add-on would have:
 
 ```python
-BACKEND_ADDON_REMOVE = [".git"]
-TEMPLATES_FOLDER = "templates"
+BACKEND_ADDON_REMOVE: list[str] = [
+    ".git",
+]
 
 
 def generate_addons_backend(context: OrderedDict, output_dir: Path) -> Path:
-    """Run the Plone backend add-on generator."""
+    """Run Plone Addon generator."""
     folder_name = "backend"
-    context["feature_headless"] = "1"
-    context["initialize_ci"] = "0"
-    context["initialize_documentation"] = "0"
+    # Headless
+    feature_headless = bool(context.get("feature_headless", True))
+    context["feature_headless"] = feature_headless
+    context["initialize_ci"] = False
+    context["initialize_documentation"] = False
     path = generator.generate_subtemplate(
         f"{TEMPLATES_FOLDER}/add-ons/backend",
         output_dir,
         folder_name,
         context,
         BACKEND_ADDON_REMOVE,
+        global_versions=versions,
     )
-    files.remove_files(output_dir / folder_name, BACKEND_ADDON_REMOVE)
     return path
 ```
 
-Key points:
+### Post-process the generated files
 
-- The handler **mutates context** freely; the copy is local.
-- It returns the `Path` produced by {py:func}`cookieplone.generator.generate_subtemplate`.
-- Extra cleanup (`files.remove_files`) happens after generation but still inside the handler.
-
-### A handler with post-processing
-
-The frontend handler does more work: it normalizes scoped npm package names, disables release automation in `.release-it.json`, and rewrites hard-coded repository URLs in the generated files.
+The frontend handler changes the generated files after generation, turning off the release automation that only a stand-alone add-on needs:
 
 ```python
+import json
+
+FRONTEND_ADDON_REMOVE: list[str] = []
+
+
 def generate_addons_frontend(context: OrderedDict, output_dir: Path) -> Path:
-    """Run the Volto add-on generator."""
+    """Run volto generator."""
     folder_name = "frontend"
+    # Handle packages inside an organization
     context = _fix_frontend_addon_name(context)
     frontend_addon_name = context["frontend_addon_name"]
-    context["initialize_documentation"] = "0"
-    context["initialize_ci"] = "0"
+    context["initialize_documentation"] = False
+    context["initialize_ci"] = False
     path = generator.generate_subtemplate(
         f"{TEMPLATES_FOLDER}/add-ons/frontend",
         output_dir,
         folder_name,
         context,
         FRONTEND_ADDON_REMOVE,
+        global_versions=versions,
     )
-    # Disable release automation that only makes sense for stand-alone add-ons.
+    # Handle .release-it.json
     release_it_path = path / "packages" / frontend_addon_name / ".release-it.json"
     if release_it_path.is_file():
         data = json.loads(release_it_path.read_text())
@@ -100,29 +121,27 @@ def generate_addons_frontend(context: OrderedDict, output_dir: Path) -> Path:
         data["plonePrePublish"]["publish"] = False
         data["npm"]["publish"] = False
         release_it_path.write_text(json.dumps(data, indent=2))
-    # Rewrite stand-alone repository URLs to point at the parent monorepo.
-    _find_replace_in_folder(path, {
-        "https://github.com/.../frontend_addon_name":
-            "{{ cookiecutter.__repository_url }}",
-    })
     return path
 ```
 
-### A handler with a composed context
+In the real hook, `_fix_frontend_addon_name` is a helper in the same file that handles scoped npm package names, and the handler also replaces the add-on's repository addresses with the project's.
 
-Some sub-templates run against a narrower context built from the parent's answers. For example, the GitHub Actions CI sub-template only needs a handful of derived values:
+### Generate with a smaller context
+
+Some sub-templates need only a few values derived from the parent's answers.
+The GitHub Actions sub-template gets a context of its own:
 
 ```python
 def generate_ci_gh_project(context: OrderedDict, output_dir: Path) -> Path:
-    """Generate GitHub Actions workflows for the monorepo."""
+    """Generate GitHub CI."""
+    feature_headless = bool(context.get("feature_headless", True))
     ci_context = OrderedDict({
-        "npm_package_name": context["__npm_package_name"],
-        "container_image_prefix": context["__container_image_prefix"],
+        "feature_headless": feature_headless,
         "python_version": versions["backend_python"],
-        "node_version": context["__node_version"],
-        "has_cache": context["devops_cache"],
-        "has_docs": context["initialize_documentation"],
-        "has_deploy": context["devops_gha_deploy"],
+        "node_version": context.get("__node_version", ""),
+        "has_cache": "1" if context["devops_cache"] else "0",
+        "has_docs": "1" if context["initialize_documentation"] else "0",
+        "has_deploy": "1" if context["devops_gha_deploy"] else "0",
         "__cookieplone_repository_path": context["__cookieplone_repository_path"],
     })
     return generator.generate_subtemplate(
@@ -130,28 +149,37 @@ def generate_ci_gh_project(context: OrderedDict, output_dir: Path) -> Path:
         output_dir,
         ".github",
         ci_context,
+        global_versions=versions,
     )
 ```
 
-The generated files land in `.github/` at the project root, which is why the handler passes `folder_name=".github"` explicitly.
+The generated files land in `.github/` at the project root, because the handler passes `.github` as the folder name.
+The smaller context keeps `__cookieplone_repository_path`, which `generate_subtemplate` uses to find the sub-template.
 
-### A handler that rewrites the output directory
+### Merge into the project folder
 
-Some sub-templates need to be rendered **as** the parent directory. For example, a cache sub-template that adds files next to the project without introducing a new folder:
+Some sub-templates add files to the project folder itself, without a folder of their own:
 
 ```python
 def generate_sub_cache(context: OrderedDict, output_dir: Path) -> Path:
-    """Add cache structure to the existing project folder."""
+    """Add cache structure."""
+    # Use the same base folder
     folder_name = output_dir.name
     parent_dir = output_dir.parent
     return generator.generate_subtemplate(
-        f"{TEMPLATES_FOLDER}/sub/cache", parent_dir, folder_name, context,
+        f"{TEMPLATES_FOLDER}/sub/cache",
+        parent_dir,
+        folder_name,
+        context,
+        global_versions=versions,
     )
 ```
 
+Generating in the project's parent directory, with the project's name as folder name, makes the sub-template's top-level directory the project directory, so its files merge into the project.
+
 ## Step 3: Register the handlers
 
-Collect every handler in a module-level dict keyed by the sub-template `id` (the same `id` declared in `config.subtemplates` in your `cookieplone.json`):
+Collect the handlers in a module-level dictionary, keyed by the `id` of each entry in `config.subtemplates`:
 
 ```python
 SUBTEMPLATE_HANDLERS = {
@@ -165,66 +193,36 @@ SUBTEMPLATE_HANDLERS = {
 }
 ```
 
-If a sub-template is declared in `config.subtemplates` but **not** present in this dict, `run_subtemplates()` will fall back to a default call with the entry's `folder_name`.
-That fallback is useful for straightforward sub-templates that only need the defaults.
+For an entry without a handler, `run_subtemplates()` generates `templates/<id>` in the project directory, with the project's name as folder name.
+A sub-template whose top-level directory is `{{ cookiecutter.__folder_name }}` then lands in a nested folder: for a project in `my-project`, in `my-project/my-project/`.
+Register a handler for every sub-template whose output location matters, as the `project` template does for all seven.
 
-## Step 4: Invoke `run_subtemplates()` from `main()`
+## Step 4: Call `run_subtemplates()` from `main()`
 
-Inside the `main()` function of your post-generation hook, replace any manual loop over `__cookieplone_subtemplates` with a single call:
+In the `main()` function of the hook, generate the sub-templates, then run the remaining post-generation actions:
 
 ```python
 def main():
-    output_dir = Path.cwd()
-
-    # {{ cookiecutter.__cookieplone_subtemplates }}
+    """Final fixes."""
+    output_dir = Path().cwd()
     run_subtemplates(
-        context,
-        output_dir,
-        handlers=SUBTEMPLATE_HANDLERS,
-        global_versions=versions,
+        context, output_dir, handlers=SUBTEMPLATE_HANDLERS, global_versions=versions
     )
-
-    # Continue with other post-generation tasks (namespace packages,
-    # code formatting, git initialization, ...).
-    plone.create_namespace_packages(
-        output_dir / "backend/src/packagename",
-        context.get("python_package_name"),
-        style="native",
-    )
+    # Action handlers
+    post_gen.run_post_gen_actions(context, output_dir, action_handlers(context))
 
 
 if __name__ == "__main__":
     main()
 ```
 
-### Propagating version pins
+`action_handlers(context)` is a function in the same hook that returns the list of post-generation actions, such as formatting code and initializing a git repository.
+See {doc}`run-post-gen-actions`.
 
-The `global_versions` parameter passes the parent template's version pins (from {ref}`config.versions <repo-config>`) to each child sub-template.
-Without it, child templates cannot use `{{ versions.X }}` expressions because the `versions` dict would be empty when the sub-template renders.
+### Propagate version pins
 
-Pass the `versions` variable that Cookiecutter renders from the repository's `cookieplone-config.json`:
-
-```python
-versions: dict | OrderedDict = {{versions}}
-
-# later, in main():
-run_subtemplates(context, output_dir, handlers=SUBTEMPLATE_HANDLERS, global_versions=versions)
-```
-
-If your handlers call {py:func}`cookieplone.generator.generate_subtemplate` directly, pass `global_versions` there too:
-
-```python
-def generate_addons_backend(context: OrderedDict, output_dir: Path) -> Path:
-    return generator.generate_subtemplate(
-        f"{TEMPLATES_FOLDER}/add-ons/backend",
-        output_dir,
-        "backend",
-        context,
-        global_versions=versions,
-    )
-```
-
-The trailing `# {{ cookiecutter.__cookieplone_subtemplates }}` comment is **important**: it ensures Cookiecutter treats the sub-templates list as a rendered context value, which is what `run_subtemplates()` then reads at runtime.
+The `global_versions` parameter passes the parent template's version pins (from {ref}`config.versions <repo-config>`) to the sub-templates, so their files can use `{{ versions.<key> }}`.
+Pass the `versions` variable that Cookieplone renders into the hook, both to `run_subtemplates()` and to each `generate_subtemplate()` call in your handlers, as the examples above do.
 
 ## Why use `run_subtemplates()`
 
@@ -244,14 +242,14 @@ for template_id, title, enabled in subtemplates:
 
 Using `run_subtemplates()` gives you:
 
-- **Explicit dispatch.** Handlers are wired up in a visible dict rather than discovered by name munging.
-- **Consistent logging and deep-copying.** The helper prints each step and guarantees that handlers can not accidentally mutate a shared context.
-- **Default fallback.** Simple sub-templates no longer require a matching handler at all.
-- **Schema compatibility.** Both the legacy `[id, title, enabled]` format and the dict format with `folder_name` are accepted transparently.
+- **Explicit dispatch.** Handlers are wired up in a visible dictionary rather than discovered by name munging.
+- **Consistent logging and deep copies.** The helper prints each step, gives each handler its own copy of the context, and runs handlers in quiet mode, which keeps the console output of nested generations out of the main run.
+- **A default for entries without a handler.** See Step 3 for where it generates.
+- **Flexible entries.** Besides the `[id, title, enabled]` lists that Cookieplone passes, a hook that rewrites `context["__cookieplone_subtemplates"]` can use dictionaries with a `folder_name` key, or lists with `folder_name` as a fourth item. A `folder_name` of `.` merges the sub-template into the project directory.
 
 ## Full example
 
-The complete reference implementation is the monorepo template in the `cookieplone-templates` repository:
+The complete reference implementation is the hook of the `project` template in the `cookieplone-templates` repository:
 
 > [`templates/projects/monorepo/hooks/post_gen_project.py`](https://github.com/plone/cookieplone-templates/blob/next/templates/projects/monorepo/hooks/post_gen_project.py)
 
@@ -260,5 +258,6 @@ Read it alongside this guide when you build your own multi-part template.
 ## Related pages
 
 - {doc}`/concepts/subtemplates`: background on how sub-templates are declared and composed.
+- {doc}`run-post-gen-actions`: the post-generation actions that run after the sub-templates.
 - {doc}`/reference/schema-v2`: the per-template schema, including `config.subtemplates`.
 - {doc}`/how-to-guides/create-a-hidden-template`: hide sub-templates from the main menu.
