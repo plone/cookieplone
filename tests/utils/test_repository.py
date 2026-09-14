@@ -44,7 +44,8 @@ class TestGetRepositoryConfigLegacy:
     """Tests for get_repository_config with legacy cookiecutter.json."""
 
     @pytest.fixture(scope="class")
-    def project_source(self, resources_folder) -> Path:
+    @classmethod
+    def project_source(cls, resources_folder) -> Path:
         return (resources_folder / "templates_sub_folder").resolve()
 
     def test_returns_dict(self, project_source):
@@ -64,7 +65,8 @@ class TestGetRepositoryConfigNew:
     """Tests for get_repository_config with cookieplone-config.json."""
 
     @pytest.fixture(scope="class")
-    def project_source(self, resources_folder) -> Path:
+    @classmethod
+    def project_source(cls, resources_folder) -> Path:
         return (resources_folder / "templates_repo_config").resolve()
 
     def test_returns_dict(self, project_source):
@@ -115,7 +117,8 @@ class TestGetRepositoryConfigVersions:
     """Tests for config.versions extraction from cookieplone-config.json."""
 
     @pytest.fixture(scope="class")
-    def project_source(self, resources_folder) -> Path:
+    @classmethod
+    def project_source(cls, resources_folder) -> Path:
         return (resources_folder / "templates_repo_config").resolve()
 
     def test_config_versions_present(self, project_source):
@@ -134,7 +137,8 @@ class TestGetTemplateOptionsLegacy:
     """Tests for get_template_options with legacy cookiecutter.json."""
 
     @pytest.fixture(scope="class")
-    def project_source(self, resources_folder) -> Path:
+    @classmethod
+    def project_source(cls, resources_folder) -> Path:
         return (resources_folder / "templates_sub_folder").resolve()
 
     @pytest.mark.parametrize("template_name,title,description,path", TEMPLATE_PARAMS)
@@ -172,7 +176,8 @@ class TestGetTemplateOptionsNew:
     """Tests for get_template_options with cookieplone-config.json."""
 
     @pytest.fixture(scope="class")
-    def project_source(self, resources_folder) -> Path:
+    @classmethod
+    def project_source(cls, resources_folder) -> Path:
         return (resources_folder / "templates_repo_config").resolve()
 
     @pytest.mark.parametrize("template_name,title,description,path", TEMPLATE_PARAMS)
@@ -210,7 +215,8 @@ class TestGetTemplateGroupsNew:
     """Tests for get_template_groups with cookieplone-config.json."""
 
     @pytest.fixture(scope="class")
-    def project_source(self, resources_folder) -> Path:
+    @classmethod
+    def project_source(cls, resources_folder) -> Path:
         return (resources_folder / "templates_repo_config").resolve()
 
     def test_returns_dict(self, project_source):
@@ -260,7 +266,8 @@ class TestGetTemplateGroupsLegacy:
     """Tests for get_template_groups with legacy cookiecutter.json (no groups)."""
 
     @pytest.fixture(scope="class")
-    def project_source(self, resources_folder) -> Path:
+    @classmethod
+    def project_source(cls, resources_folder) -> Path:
         return (resources_folder / "templates_sub_folder").resolve()
 
     def test_returns_none(self, project_source):

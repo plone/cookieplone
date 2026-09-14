@@ -1,0 +1,1 @@
+Relaxed the `gitpython` requirement from `==3.1.50` to `>=3.1.62`, fixing several GitPython security advisories and letting installations pick up future GitPython security releases. @ericof
