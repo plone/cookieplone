@@ -1,5 +1,8 @@
 from cookieplone import _types as t
 from cookieplone import repository
+from cookieplone.exceptions import RepositoryException
+from cookieplone.exceptions import VersionTooOldException
+from git import Repo
 from pathlib import Path
 
 import json
@@ -291,3 +294,81 @@ class TestRepositoryHasConfig:
 
     def test_nonexistent_dir(self, tmp_path):
         assert repository._repository_has_config(tmp_path / "nope") is False
+
+
+class TestCheckoutFallbackTag:
+    """Tests for checkout_fallback_tag."""
+
+    @pytest.fixture
+    def make_clone(self, tmp_path, resources_folder):
+        """Clone a repository whose ``main`` branch has the legacy layout.
+
+        On ``next``, ``cookiecutter.json`` is replaced by the
+        ``cookieplone-config.json`` of ``templates_repo_config``, with
+        *config_section* merged into its ``config`` block.  With
+        ``with_config=False``, ``next`` has no repository configuration.
+        """
+        source = resources_folder / "templates_repo_config" / "cookieplone-config.json"
+        source_config = json.loads(source.read_text())
+
+        def func(with_config: bool = True, config_section: dict | None = None) -> Path:
+            origin_dir = tmp_path / "origin"
+            origin_dir.mkdir()
+            origin = Repo.init(origin_dir, initial_branch="main")
+            (origin_dir / "cookiecutter.json").write_text(json.dumps({"templates": {}}))
+            origin.index.add(["cookiecutter.json"])
+            origin.index.commit("Legacy layout")
+
+            origin.git.checkout("-b", "next")
+            origin.index.remove(["cookiecutter.json"], working_tree=True)
+            (origin_dir / "README.md").write_text("Templates\n")
+            origin.index.add(["README.md"])
+            if with_config:
+                config = dict(source_config)
+                config["config"] = {
+                    **config.get("config", {}),
+                    **(config_section or {}),
+                }
+                (origin_dir / "cookieplone-config.json").write_text(json.dumps(config))
+                origin.index.add(["cookieplone-config.json"])
+            origin.index.commit("New layout")
+            origin.git.checkout("main")
+
+            clone_dir = tmp_path / "clone"
+            Repo.clone_from(origin_dir, clone_dir)
+            return clone_dir
+
+        return func
+
+    def test_checks_out_tag(self, make_clone):
+        """The clone ends up on a local branch for the remote ``next``."""
+        clone_dir = make_clone()
+        result = repository.checkout_fallback_tag(clone_dir, "next")
+        assert result == clone_dir.resolve()
+        assert Repo(result).active_branch.name == "next"
+        assert (result / "cookieplone-config.json").exists()
+
+    def test_replaces_cached_config(self, make_clone):
+        """The configuration cached for the previous checkout is discarded."""
+        clone_dir = make_clone()
+        assert "groups" not in repository.get_repository_config(clone_dir)
+        repository.checkout_fallback_tag(clone_dir, "next")
+        assert "groups" in repository.get_repository_config(clone_dir)
+
+    def test_unknown_tag_raises(self, make_clone):
+        """A tag missing from the clone surfaces as a RepositoryException."""
+        clone_dir = make_clone()
+        with pytest.raises(RepositoryException, match="Failed to check out"):
+            repository.checkout_fallback_tag(clone_dir, "does-not-exist")
+
+    def test_tag_without_config_raises(self, make_clone):
+        """A tag without ``cookieplone-config.json`` is rejected."""
+        clone_dir = make_clone(with_config=False)
+        with pytest.raises(RepositoryException, match="not found"):
+            repository.checkout_fallback_tag(clone_dir, "next")
+
+    def test_min_version_checked(self, make_clone):
+        """The ``min_version`` of the configuration at the new tag is enforced."""
+        clone_dir = make_clone(config_section={"min_version": "999.0.0"})
+        with pytest.raises(VersionTooOldException):
+            repository.checkout_fallback_tag(clone_dir, "next")

@@ -28,10 +28,11 @@ cookieplone
 ## `COOKIEPLONE_REPOSITORY_TAG`
 
 - **Type**: string (git tag or branch name)
-- **Default**: `next`
+- **Default**: `main`
 
 Specifies the git tag or branch to check out when cloning the template repository.
 An explicit `--tag`/`--branch` CLI flag takes precedence over this variable.
+When neither this variable, `--tag`, nor `COOKIEPLONE_REPOSITORY` is set, and the `main` branch has no `cookieplone-config.json`, Cookieplone checks out `next` instead.
 
 ```console
 export COOKIEPLONE_REPOSITORY_TAG="2024.10.1"

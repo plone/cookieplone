@@ -33,7 +33,8 @@ Cookieplone resolves the template repository from one of these sources (in prior
 
 The resolved source is a git URL, local path, zip archive, or abbreviated form (`gh:`, `gl:`, `bb:`).
 Cookieplone clones or copies the repository to a temporary directory,
-checking out the tag or branch specified by `--tag` (default: `next`) or `COOKIEPLONE_REPOSITORY_TAG`.
+checking out the tag or branch specified by `--tag` (default: `main`) or `COOKIEPLONE_REPOSITORY_TAG`.
+When none of `COOKIEPLONE_REPOSITORY`, `--tag`, and `COOKIEPLONE_REPOSITORY_TAG` is set, and the `main` branch has no `cookieplone-config.json`, Cookieplone checks out `next` instead.
 
 ---
 

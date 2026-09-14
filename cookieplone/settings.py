@@ -81,7 +81,10 @@ MIN_DOCKER_VERSION = "20.10"
 COOKIEPLONE_REPO = "https://github.com/plone/cookieplone"
 TEMPLATES_REPO = "https://github.com/plone/cookieplone-templates"
 REPO_DEFAULT = "gh:plone/cookieplone-templates"
-REPO_DEFAULT_TAG = "next"  # Default branch of cookieplone-templates
+REPO_DEFAULT_TAG = "main"  # Default branch of cookieplone-templates
+# Checked out instead of REPO_DEFAULT_TAG, when using the default repository,
+# while that branch does not provide a cookieplone-config.json yet.
+REPO_FALLBACK_TAG = "next"
 
 # Subtemplates
 TEMPLATES_FOLDER = "templates"

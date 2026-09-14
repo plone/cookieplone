@@ -14,6 +14,8 @@ from cookieplone.exceptions import VersionTooOldException
 from cookieplone.generator import generate
 from cookieplone.logger import configure_logger
 from cookieplone.logger import logger
+from cookieplone.repository import REPO_CONFIG_FILENAME
+from cookieplone.repository import checkout_fallback_tag
 from cookieplone.repository import get_base_repository
 from cookieplone.repository import get_template_groups
 from cookieplone.repository import get_template_options
@@ -112,7 +114,23 @@ def resolve_tag(tag: str) -> str:
     return tag or os.environ.get(settings.REPO_TAG) or settings.REPO_DEFAULT_TAG
 
 
-def resolve_base_repository(repository: str, tag: str, no_input: bool) -> Path:
+def uses_default_repository(tag: str) -> bool:
+    """Check whether the run uses the default templates repository and tag.
+
+    :param tag: Value of ``--tag`` from the CLI; empty string when unset.
+    :returns: ``True`` when none of ``COOKIEPLONE_REPOSITORY``, ``--tag`` and
+        ``COOKIEPLONE_REPOSITORY_TAG`` is set.
+    """
+    return not (
+        os.environ.get(settings.REPO_LOCATION)
+        or tag
+        or os.environ.get(settings.REPO_TAG)
+    )
+
+
+def resolve_base_repository(
+    repository: str, tag: str, no_input: bool, fallback_tag: str = ""
+) -> tuple[Path, str]:
     """Resolve the templates repository, exiting cleanly on pre-flight errors.
 
     Wraps :func:`~cookieplone.repository.get_base_repository` so that
@@ -120,13 +138,33 @@ def resolve_base_repository(repository: str, tag: str, no_input: bool) -> Path:
     :class:`~cookieplone.exceptions.VersionTooOldException` are surfaced via
     the standard error panel instead of bubbling up as tracebacks.
 
+    When *fallback_tag* is set and the clone at *tag* has no
+    ``cookieplone-config.json``, the clone is switched to *fallback_tag* with
+    :func:`~cookieplone.repository.checkout_fallback_tag`.
+
+    :param repository: Repository identifier (URL, path, or abbreviation).
+    :param tag: Branch or tag to check out.
+    :param no_input: When ``True`` suppress interactive prompts.
+    :param fallback_tag: Branch or tag to use when *tag* does not provide a
+        ``cookieplone-config.json``; an empty string disables the fallback.
+    :returns: The local repository path and the tag it is checked out at.
     :raises typer.Exit: With code ``1`` after rendering the sanity screen.
     """
     try:
-        return get_base_repository(repository, tag, no_input=no_input)
+        repo_path = get_base_repository(repository, tag, no_input=no_input)
+        if fallback_tag and not (repo_path / REPO_CONFIG_FILENAME).exists():
+            logger.info(
+                f"{repository} at {tag!r} has no {REPO_CONFIG_FILENAME}, "
+                f"using {fallback_tag!r} instead."
+            )
+            repo_path = checkout_fallback_tag(
+                repo_path, fallback_tag, no_input=no_input
+            )
+            tag = fallback_tag
     except (RepositoryException, VersionTooOldException) as exc:
         console.sanity_screen(exc.message)
         raise typer.Exit(1) from exc
+    return repo_path, tag
 
 
 def annotate_context(context: dict, repo_path: Path, template: str) -> dict:
@@ -295,10 +333,13 @@ def cli(
         repository = settings.REPO_DEFAULT
 
     passwd = get_password_from_env()
+    # Decided before resolve_tag, which replaces an empty tag with the default.
+    fallback_tag = settings.REPO_FALLBACK_TAG if uses_default_repository(tag) else ""
     tag = resolve_tag(tag)
 
     if info:
-        console.info_screen(repository=repository, passwd=passwd, tag=tag)
+        tag_info = f"{tag} (falls back to {fallback_tag})" if fallback_tag else tag
+        console.info_screen(repository=repository, passwd=passwd, tag=tag_info)
         raise typer.Exit()
 
     # Process template and extra_context
@@ -308,7 +349,10 @@ def cli(
     if answers_data := parse_answers_file(answers_file):
         template = answers_data.pop("__template__", template)
 
-    repo_path = resolve_base_repository(repository, tag, no_input=no_input)
+    # The fallback may switch the clone to another tag; generate from that one.
+    repo_path, tag = resolve_base_repository(
+        repository, tag, no_input=no_input, fallback_tag=fallback_tag
+    )
 
     # Template info
     cookieplone_template = get_template(template, repo_path, all_, no_input=no_input)
