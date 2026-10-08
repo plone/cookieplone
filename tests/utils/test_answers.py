@@ -116,3 +116,16 @@ class TestWriteAnswers:
         )
         path = answers.write_answers(wizard, "fallback-template", no_input=False)
         assert path.name == ".cookieplone_answers_fallback-template.json"
+
+    def test_template_name_with_slash(self, tmp_path, monkeypatch):
+        """A template name with ``/`` (sub-templates) yields a flat filename."""
+        monkeypatch.chdir(tmp_path)
+        wizard = Answers(
+            answers={},
+            user_answers={"title": "Test"},
+            initial_answers={"title": "Test"},
+        )
+        path = answers.write_answers(wizard, "sub/frontend_project", no_input=True)
+        assert path.name == ".cookieplone_answers_sub_frontend_project.json"
+        data = json.loads((tmp_path / path.name).read_text())
+        assert data["__template__"] == "sub/frontend_project"

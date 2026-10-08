@@ -38,7 +38,8 @@ def write_answers(
 
     In both cases the file is created in the current working directory and
     named after the generated folder (``_folder_name`` answer key), falling
-    back to *template_name*.
+    back to *template_name*, passed through
+    :func:`~cookieplone.utils.files.safe_file_name`.
 
     :param wizard_answers: The :class:`~cookieplone.config.state.Answers`
         instance produced by the run.
@@ -56,6 +57,6 @@ def write_answers(
     # replayed (or fed to ``--answers-file``) without having to specify the
     # template again on the CLI.
     persisted_answers["__template__"] = template_name
-    file_name = answers.get("_folder_name", template_name)
+    file_name = files.safe_file_name(answers.get("_folder_name", template_name))
     path = Path(f".cookieplone_answers_{file_name}.json")
     return files.save_json(path, persisted_answers)

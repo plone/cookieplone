@@ -16,6 +16,7 @@ from cookieplone.repository import get_repository
 from cookieplone.settings import COOKIEPLONE_ANSWERS_FILE
 from cookieplone.settings import QUIET_MODE_VAR
 from cookieplone.utils import answers
+from cookieplone.utils import console
 from cookieplone.utils import cookiecutter
 from cookieplone.utils import files
 from cookieplone.utils.console import quiet_mode
@@ -157,13 +158,20 @@ def generate(
         return Path(result) if not return_state else (Path(result), state)
     finally:
         if config.dump_answers:
-            path = _dump_answers(state.answers, config.template_name, config.no_input)
-            if dump_location:
-                # Move file
-                path.rename(dump_location / COOKIEPLONE_ANSWERS_FILE)
-            cookiecutter.dump_replay(
-                state.answers, repository_info.replay_dir, config.template_name
-            )
+            # Writing these files must never hide the outcome of the run:
+            # an exception raised here would replace the generation error.
+            try:
+                path = _dump_answers(
+                    state.answers, config.template_name, config.no_input
+                )
+                if dump_location:
+                    # Move file
+                    path.rename(dump_location / COOKIEPLONE_ANSWERS_FILE)
+                cookiecutter.dump_replay(
+                    state.answers, repository_info.replay_dir, config.template_name
+                )
+            except OSError as e:
+                console.warning(f"Could not save the answers: {e}")
 
 
 def generate_subtemplate(

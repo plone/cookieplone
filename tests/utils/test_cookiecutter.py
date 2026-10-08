@@ -131,6 +131,16 @@ class TestLoadReplay:
         result = load_replay(tmp_path, replay_dir, True, "mytemplate")
         assert result == context
 
+    def test_loads_template_name_with_slash(self, tmp_path):
+        """A sub-template name loads the flat file written by dump_replay."""
+        replay_dir = tmp_path / "replay"
+        replay_dir.mkdir()
+        context = {"cookiecutter": {"name": "test"}}
+        replay_file = replay_dir / "sub_frontend_project.json"
+        replay_file.write_text(json.dumps(context))
+        result = load_replay(tmp_path, replay_dir, True, "sub/frontend_project")
+        assert result == context
+
     def test_loads_from_explicit_path(self, tmp_path):
         context = {"cookiecutter": {"name": "test"}}
         replay_file = tmp_path / "custom.json"
@@ -151,6 +161,16 @@ class TestDumpReplay:
         assert replay_file.exists()
         data = json.loads(replay_file.read_text())
         assert data["cookiecutter"] == {"name": "test-project"}
+
+    def test_dump_template_name_with_slash(self, tmp_path):
+        """A sub-template name is written as a flat file in replay_dir."""
+        from cookieplone.config import Answers
+
+        answers = Answers(answers={"name": "test-project"})
+        dump_replay(answers, tmp_path, "sub/frontend_project")
+        replay_file = tmp_path / "sub_frontend_project.json"
+        assert replay_file.exists()
+        assert not (tmp_path / "sub").exists()
 
 
 class TestParseUndefinedError:

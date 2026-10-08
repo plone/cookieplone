@@ -27,6 +27,19 @@ def tmp_files(tmp_path):
     return file1
 
 
+@pytest.mark.parametrize(
+    "name,expected",
+    [
+        ("project", "project"),
+        ("sub/frontend_project", "sub_frontend_project"),
+        ("a/b/c", "a_b_c"),
+        ("sub\\frontend_project", "sub_frontend_project"),
+    ],
+)
+def test_safe_file_name(name: str, expected: str):
+    assert files.safe_file_name(name) == expected
+
+
 def test_remove_paths(tmp_paths: list[Path]):
     assert {p.exists() for p in tmp_paths} == {True}
     files.remove_paths(tmp_paths)
