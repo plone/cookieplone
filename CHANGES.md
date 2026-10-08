@@ -9,6 +9,13 @@
 
 <!-- towncrier release notes start -->
 
+## 2.0.2 (2026-10-07)
+
+
+### Bug fixes:
+
+- Fixed a `No such file or directory` error when generating a template whose name contains `/` (for example, `sub/frontend_project`): the answers and replay file names now replace path separators with `_`. A failure to save these files is now reported as a warning, instead of hiding the actual generation error. @ericof [#215](https://github.com/plone/cookieplone/issues/215)
+
 ## 2.0.0 (2026-09-14)
 
 
