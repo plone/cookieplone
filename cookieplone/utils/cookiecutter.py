@@ -19,6 +19,7 @@ from cookiecutter.replay import load
 from cookiecutter.utils import create_env_with_context
 from cookieplone.config import Answers
 from cookieplone.settings import DEFAULT_DATA_KEY
+from cookieplone.utils.files import safe_file_name
 from jinja2.exceptions import UndefinedError
 
 
@@ -53,7 +54,8 @@ def load_replay(
         *replay_dir*.  If a :class:`~pathlib.Path`, treat it as an explicit
         path to a replay file.  If falsy, return an empty dict.
     :param template_name: Name used to locate the replay file when *replay*
-        is ``True``.
+        is ``True``, passed through
+        :func:`~cookieplone.utils.files.safe_file_name`.
     :returns: A dict with a ``"cookiecutter"`` key containing the recorded
         answers, or an empty dict when replay is disabled.
     """
@@ -61,7 +63,7 @@ def load_replay(
     if replay:
         with import_patch(repo_dir):
             if isinstance(replay, bool):
-                context = load(replay_dir, template_name)
+                context = load(replay_dir, safe_file_name(template_name))
             else:
                 path, template_name = os.path.split(os.path.splitext(replay)[0])
                 context = load(path, template_name)
@@ -69,9 +71,15 @@ def load_replay(
 
 
 def dump_replay(answers: Answers, replay_dir: Path, template_name: str) -> None:
-    """Dump data to replay this session."""
+    """Dump data to replay this session.
+
+    :param answers: The answers collected during the run.
+    :param replay_dir: Directory where the replay file is written.
+    :param template_name: Stem of the replay file, passed through
+        :func:`~cookieplone.utils.files.safe_file_name`.
+    """
     context = {DEFAULT_DATA_KEY: answers.answers}
-    dump(replay_dir, template_name, context)
+    dump(replay_dir, safe_file_name(template_name), context)
 
 
 def create_jinja_env(context: dict) -> Environment:

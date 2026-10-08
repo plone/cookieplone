@@ -1,0 +1,1 @@
+Fixed a `No such file or directory` error when generating a template whose name contains `/` (for example, `sub/frontend_project`): the answers and replay file names now replace path separators with `_`. A failure to save these files is now reported as a warning, instead of hiding the actual generation error. @ericof

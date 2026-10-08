@@ -176,6 +176,54 @@ def test_dumps_answers_without_move_on_failure(
     assert answers_path.exists()
 
 
+def test_dump_failure_does_not_hide_generation_error(
+    mock_get_repository,
+    mock_load_replay,
+    mock_generate_state,
+    mock_cookieplone_entry,
+    mock_write_answers,
+    mock_dump_replay,
+    repository_info_with_config,
+    state,
+    generate_config,
+):
+    """A failure writing the answers does not replace the generation error."""
+    mock_get_repository.return_value = repository_info_with_config
+    original = GeneratorException(message="gen fail", state=state, original=None)
+    mock_cookieplone_entry.side_effect = original
+    mock_write_answers.side_effect = FileNotFoundError("answers")
+
+    with pytest.raises(GeneratorException) as exc_info:
+        generate(generate_config)
+    assert exc_info.value is original
+
+
+def test_dump_failure_warns_on_success(
+    mock_get_repository,
+    mock_load_replay,
+    mock_generate_state,
+    mock_cookieplone_entry,
+    mock_write_answers,
+    mock_dump_replay,
+    repository_info_with_config,
+    generate_config,
+    tmp_path,
+    capsys,
+):
+    """A failure writing the replay file is reported, the run still succeeds."""
+    expected = tmp_path / "output"
+    expected.mkdir()
+    mock_get_repository.return_value = repository_info_with_config
+    mock_cookieplone_entry.return_value = expected
+    answers_path = tmp_path / "answers.json"
+    answers_path.write_text("{}")
+    mock_write_answers.return_value = answers_path
+    mock_dump_replay.side_effect = FileNotFoundError("replay")
+
+    assert generate(generate_config) == expected
+    assert "Could not save the answers: replay" in capsys.readouterr().out
+
+
 def test_failed_hook_reraised_as_repository_exception(
     mock_get_repository,
     mock_load_replay,

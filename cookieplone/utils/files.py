@@ -17,6 +17,19 @@ def resolve_path(path: Path | str) -> Path:
     return path.resolve()
 
 
+def safe_file_name(name: str) -> str:
+    """Return *name* with path separators replaced by ``_``.
+
+    Template names may contain ``/`` (for example ``sub/frontend_project``).
+    Used as-is in a file name, the separator points into a directory that
+    does not exist.
+
+    :param name: Template or folder name used to build a file name.
+    :returns: The name with ``/`` and ``\\`` replaced by ``_``.
+    """
+    return name.replace("/", "_").replace("\\", "_")
+
+
 def remove_paths(paths: list[Path]):
     """Remove paths."""
     for path in paths:
