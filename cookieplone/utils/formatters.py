@@ -8,6 +8,10 @@ import subprocess
 # (collective/zpretty#256). Require it, so an older zpretty is never used
 # to format the files.
 ZPRETTY_REQUIREMENT = "zpretty>=5.0.0"
+# zpretty 5.0.0 needs Python 3.11 or newer, while this project supports 3.10.
+# Ask uvx for an interpreter that fits, so a Python 3.10 environment
+# (for example UV_PYTHON=3.10) does not make the requirement unsatisfiable.
+ZPRETTY_PYTHON = ">=3.11"
 
 
 def _uvx(
@@ -16,6 +20,7 @@ def _uvx(
     base_path: Path,
     *,
     from_: str | None = None,
+    python: str | None = None,
 ) -> None:
     """Run a formatting tool via ``uvx``.
 
@@ -25,9 +30,12 @@ def _uvx(
     :param from_: Requirement spec the tool is installed from, passed as
         ``--from <spec>``. It goes before the tool name, because ``uvx``
         reads its own flags first.
+    :param python: Python version spec the tool runs on, passed as
+        ``--python <spec>``. It goes before the tool name for the same reason.
     """
+    python_flags = ["--python", python] if python else []
     from_flags = ["--from", from_] if from_ else []
-    cmd = ["uvx", *from_flags, tool, *args]
+    cmd = ["uvx", *python_flags, *from_flags, tool, *args]
     logger.debug(f"Formatter {tool}: {' '.join(cmd)}")
     subprocess.run(cmd, capture_output=True, check=True, cwd=base_path)  # noqa: S603
 
@@ -45,7 +53,13 @@ def run_zpretty(base_path: Path):
     ]
     if not files:
         return
-    _uvx("zpretty", ["-i", *files], base_path, from_=ZPRETTY_REQUIREMENT)
+    _uvx(
+        "zpretty",
+        ["-i", *files],
+        base_path,
+        from_=ZPRETTY_REQUIREMENT,
+        python=ZPRETTY_PYTHON,
+    )
 
 
 def run_isort(base_path: Path):
