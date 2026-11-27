@@ -4,11 +4,10 @@ from pathlib import Path
 import subprocess
 
 
-# lxml 6.2.0 passes an empty nsmap to the parser-target start() callback, so
-# BeautifulSoup (used by zpretty) drops the xmlns declarations from ZCML.
-# Keep this bound until lxml or zpretty ships a fix; then lift it.
-# See https://github.com/collective/zpretty/issues/255
-ZPRETTY_REQUIREMENTS = ("lxml<6.2",)
+# zpretty 5.0.0 keeps the ZCML namespace declarations with lxml 6.2.0
+# (collective/zpretty#256). Require it, so an older zpretty is never used
+# to format the files.
+ZPRETTY_REQUIREMENT = "zpretty>=5.0.0"
 
 
 def _uvx(
@@ -16,18 +15,19 @@ def _uvx(
     args: list[str],
     base_path: Path,
     *,
-    with_: list[str] | None = None,
+    from_: str | None = None,
 ) -> None:
     """Run a formatting tool via ``uvx``.
 
     :param tool: The PyPI package / tool name (e.g. ``"ruff"``).
     :param args: Extra CLI arguments passed after the tool name.
     :param base_path: Working directory for the subprocess.
-    :param with_: Extra requirements, each passed as ``--with <req>``. They
-        go before the tool name, because ``uvx`` reads its own flags first.
+    :param from_: Requirement spec the tool is installed from, passed as
+        ``--from <spec>``. It goes before the tool name, because ``uvx``
+        reads its own flags first.
     """
-    with_flags = [flag for req in with_ or [] for flag in ("--with", req)]
-    cmd = ["uvx", *with_flags, tool, *args]
+    from_flags = ["--from", from_] if from_ else []
+    cmd = ["uvx", *from_flags, tool, *args]
     logger.debug(f"Formatter {tool}: {' '.join(cmd)}")
     subprocess.run(cmd, capture_output=True, check=True, cwd=base_path)  # noqa: S603
 
@@ -45,7 +45,7 @@ def run_zpretty(base_path: Path):
     ]
     if not files:
         return
-    _uvx("zpretty", ["-i", *files], base_path, with_=list(ZPRETTY_REQUIREMENTS))
+    _uvx("zpretty", ["-i", *files], base_path, from_=ZPRETTY_REQUIREMENT)
 
 
 def run_isort(base_path: Path):

@@ -1,0 +1,1 @@
+Fixed the loss of ZCML namespace declarations (`xmlns`, `xmlns:i18n`) in generated files: the `zpretty` formatter now requires `zpretty>=5.0.0`, which keeps them with the current lxml, instead of pinning `lxml<6.2`. @ericof
