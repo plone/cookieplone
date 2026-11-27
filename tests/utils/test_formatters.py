@@ -28,6 +28,16 @@ class TestUvx:
             cwd=tmp_path,
         )
 
+    @patch("cookieplone.utils.formatters.subprocess.run")
+    def test_places_with_requirements_before_tool(self, mock_run, tmp_path):
+        formatters._uvx("zpretty", ["-i", "a.zcml"], tmp_path, with_=["lxml<6.2"])
+        mock_run.assert_called_once_with(
+            ["uvx", "--with", "lxml<6.2", "zpretty", "-i", "a.zcml"],
+            capture_output=True,
+            check=True,
+            cwd=tmp_path,
+        )
+
     @patch(
         "cookieplone.utils.formatters.subprocess.run",
         side_effect=subprocess.CalledProcessError(1, "uvx"),
@@ -66,6 +76,15 @@ class TestRunZpretty:
         extensions = {f.rsplit(".", 1)[-1] for f in file_args}
         assert extensions <= {"xml", "zcml"}
         assert len(file_args) == 3  # configure.zcml, metadata.xml, rolemap.xml
+        assert args[1]["with_"] == list(formatters.ZPRETTY_REQUIREMENTS)
+
+    @patch("cookieplone.utils.formatters.subprocess.run")
+    def test_zpretty_command_pins_lxml_before_tool(self, mock_run, dummy_package):
+        formatters.run_zpretty(dummy_package)
+        cmd = mock_run.call_args[0][0]
+        assert cmd[0] == "uvx"
+        assert cmd.index("--with") < cmd.index("zpretty")
+        assert cmd[cmd.index("--with") + 1] == "lxml<6.2"
 
 
 class TestRunIsort:

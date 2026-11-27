@@ -4,14 +4,30 @@ from pathlib import Path
 import subprocess
 
 
-def _uvx(tool: str, args: list[str], base_path: Path) -> None:
+# lxml 6.2.0 passes an empty nsmap to the parser-target start() callback, so
+# BeautifulSoup (used by zpretty) drops the xmlns declarations from ZCML.
+# Keep this bound until lxml or zpretty ships a fix; then lift it.
+# See https://github.com/collective/zpretty/issues/255
+ZPRETTY_REQUIREMENTS = ("lxml<6.2",)
+
+
+def _uvx(
+    tool: str,
+    args: list[str],
+    base_path: Path,
+    *,
+    with_: list[str] | None = None,
+) -> None:
     """Run a formatting tool via ``uvx``.
 
     :param tool: The PyPI package / tool name (e.g. ``"ruff"``).
     :param args: Extra CLI arguments passed after the tool name.
     :param base_path: Working directory for the subprocess.
+    :param with_: Extra requirements, each passed as ``--with <req>``. They
+        go before the tool name, because ``uvx`` reads its own flags first.
     """
-    cmd = ["uvx", tool, *args]
+    with_flags = [flag for req in with_ or [] for flag in ("--with", req)]
+    cmd = ["uvx", *with_flags, tool, *args]
     logger.debug(f"Formatter {tool}: {' '.join(cmd)}")
     subprocess.run(cmd, capture_output=True, check=True, cwd=base_path)  # noqa: S603
 
@@ -29,7 +45,7 @@ def run_zpretty(base_path: Path):
     ]
     if not files:
         return
-    _uvx("zpretty", ["-i", *files], base_path)
+    _uvx("zpretty", ["-i", *files], base_path, with_=list(ZPRETTY_REQUIREMENTS))
 
 
 def run_isort(base_path: Path):
